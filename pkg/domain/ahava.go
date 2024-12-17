@@ -167,3 +167,11 @@ type Wishlist struct {
 	Products  Products `json:"-" gorm:"foreignkey:ProductID"`
 	IsDeleted bool     `json:"is_deleted" gorm:"default:false"`
 }
+
+type SearchHistory struct {
+	ID        uint      `json:"id" gorm:"primarykey"`
+	UserID    uint      `json:"user_id" gorm:"not null"`
+	Users     Users     `json:"-" gorm:"foreignkey:UserID"`
+	SearchKey string    `json:"search_key" gorm:"not null"`
+	CreateAt  time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
+}

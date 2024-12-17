@@ -190,9 +190,9 @@ func (u *userUseCase) LoginHandler(user models.UserLogin) (models.TokenUsers, er
 
 // }
 
-func (i *userUseCase) GetUserDetails(id int) (models.UserDetailsResponse, error) {
+func (u *userUseCase) GetUserDetails(id int) (models.UserDetailsResponse, error) {
 
-	details, err := i.userRepo.GetUserDetails(id)
+	details, err := u.userRepo.GetUserDetails(id)
 	if err != nil {
 		return models.UserDetailsResponse{}, errors.New("error in getting details")
 	}
@@ -201,14 +201,14 @@ func (i *userUseCase) GetUserDetails(id int) (models.UserDetailsResponse, error)
 
 }
 
-func (i *userUseCase) ChangePassword(id int, old string, password string, repassword string) error {
+func (u *userUseCase) ChangePassword(id int, old string, password string, repassword string) error {
 
-	userPassword, err := i.userRepo.GetPassword(id)
+	userPassword, err := u.userRepo.GetPassword(id)
 	if err != nil {
 		return errors.New(InternalError)
 	}
 
-	err = i.helper.CompareHashAndPassword(userPassword, old)
+	err = u.helper.CompareHashAndPassword(userPassword, old)
 	if err != nil {
 		return errors.New("password incorrect")
 	}
@@ -217,12 +217,12 @@ func (i *userUseCase) ChangePassword(id int, old string, password string, repass
 		return errors.New("passwords does not match")
 	}
 
-	newpassword, err := i.helper.PasswordHashing(password)
+	newpassword, err := u.helper.PasswordHashing(password)
 	if err != nil {
 		return errors.New("error in hashing password")
 	}
 
-	return i.userRepo.ChangePassword(id, string(newpassword))
+	return u.userRepo.ChangePassword(id, string(newpassword))
 
 }
 
@@ -268,9 +268,9 @@ func (i *userUseCase) ChangePassword(id int, old string, password string, repass
 // 	return nil
 // }
 
-func (i *userUseCase) EditProfile(user_id int, name, email, phone string) (models.UserDetailsResponse, error) {
+func (u *userUseCase) EditProfile(user_id int, name, email, phone string) (models.UserDetailsResponse, error) {
 
-	result, err := i.userRepo.EditProfile(user_id, name, email, phone)
+	result, err := u.userRepo.EditProfile(user_id, name, email, phone)
 	if err != nil {
 		return models.UserDetailsResponse{}, errors.New("could not change")
 	}
@@ -279,11 +279,11 @@ func (i *userUseCase) EditProfile(user_id int, name, email, phone string) (model
 
 }
 
-func (i *userUseCase) GetMyReferenceLink(id int) (string, error) {
+func (u *userUseCase) GetMyReferenceLink(id int) (string, error) {
 
 	baseURL := "ahava.com/users/signup"
 
-	referralCode, err := i.userRepo.GetReferralCodeFromID(id)
+	referralCode, err := u.userRepo.GetReferralCodeFromID(id)
 	if err != nil {
 		return "", errors.New("error getting ref code")
 	}

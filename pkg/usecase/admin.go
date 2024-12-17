@@ -126,9 +126,9 @@ func (ad *adminUseCase) GetUsers(page int) ([]models.UserDetailsAtAdmin, error) 
 
 }
 
-func (i *adminUseCase) NewPaymentMethod(id string) error {
+func (ad *adminUseCase) NewPaymentMethod(id string) error {
 
-	exists, err := i.adminRepository.CheckIfPaymentMethodAlreadyExists(id)
+	exists, err := ad.adminRepository.CheckIfPaymentMethodAlreadyExists(id)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (i *adminUseCase) NewPaymentMethod(id string) error {
 		return errors.New("payment method already exists")
 	}
 
-	err = i.adminRepository.NewPaymentMethod(id)
+	err = ad.adminRepository.NewPaymentMethod(id)
 	if err != nil {
 		return err
 	}
@@ -146,9 +146,9 @@ func (i *adminUseCase) NewPaymentMethod(id string) error {
 
 }
 
-func (a *adminUseCase) ListPaymentMethods() ([]domain.PaymentMethod, error) {
+func (ad *adminUseCase) ListPaymentMethods() ([]domain.PaymentMethod, error) {
 
-	categories, err := a.adminRepository.ListPaymentMethods()
+	categories, err := ad.adminRepository.ListPaymentMethods()
 	if err != nil {
 		return []domain.PaymentMethod{}, err
 	}
@@ -156,9 +156,9 @@ func (a *adminUseCase) ListPaymentMethods() ([]domain.PaymentMethod, error) {
 
 }
 
-func (a *adminUseCase) DeletePaymentMethod(id int) error {
+func (ad *adminUseCase) DeletePaymentMethod(id int) error {
 
-	err := a.adminRepository.DeletePaymentMethod(id)
+	err := ad.adminRepository.DeletePaymentMethod(id)
 	if err != nil {
 		return err
 	}

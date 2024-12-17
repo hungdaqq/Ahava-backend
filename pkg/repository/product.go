@@ -23,6 +23,8 @@ type ProductRepository interface {
 	CheckStock(product_id int) (int, error)
 	// CheckPrice(product_id int) (float64, error)
 	SearchProducts(key string) ([]models.Products, error)
+	SaveSearchHistory(user_id int, key string) error
+	GetSearchHistory(user_id int) ([]models.SearchHistory, error)
 }
 
 type productRepository struct {
@@ -94,13 +96,13 @@ func (i *productRepository) ShowProductDetails(product_id int) (models.Products,
 	return product, nil
 }
 
-func (ad *productRepository) ListProducts(limit, offset int) (models.ListProducts, error) {
+func (i *productRepository) ListProducts(limit, offset int) (models.ListProducts, error) {
 
 	var listProducts models.ListProducts
 	var productDetails []models.Products
 	var total int64
 
-	query := ad.DB.Model(&models.Products{})
+	query := i.DB.Model(&models.Products{})
 	// Get the total count of records
 	if err := query.Count(&total).Error; err != nil {
 		return models.ListProducts{}, err
@@ -123,10 +125,10 @@ type ProductWithCategory struct {
 	CategoryName string `json:"category_name"`
 }
 
-func (ad *productRepository) ListCategoryProducts() ([]models.CategoryProducts, error) {
+func (i *productRepository) ListCategoryProducts() ([]models.CategoryProducts, error) {
 
 	var productWithCategories []ProductWithCategory
-	err := ad.DB.Raw("SELECT products.*, categories.category_name FROM products JOIN categories ON categories.id = products.category_id").
+	err := i.DB.Raw("SELECT products.*, categories.category_name FROM products JOIN categories ON categories.id = products.category_id").
 		Scan(&productWithCategories).Error
 	if err != nil {
 		return nil, err
@@ -169,17 +171,41 @@ func (i *productRepository) CheckPrice(pid int) (float64, error) {
 	return k, nil
 }
 
-func (ad *productRepository) SearchProducts(key string) ([]models.Products, error) {
+func (i *productRepository) SearchProducts(key string) ([]models.Products, error) {
 
 	var productDetails []models.Products
 
 	query := `SELECT i.* FROM products i LEFT JOIN categories c ON i.category_id = c.id 
 				WHERE i.product_name ILIKE '%' || ? || '%' OR c.category_name ILIKE '%' || ? || '%'`
-	if err := ad.DB.Raw(query, key, key).Scan(&productDetails).Error; err != nil {
+	if err := i.DB.Raw(query, key, key).Scan(&productDetails).Error; err != nil {
 		return []models.Products{}, err
 	}
 
 	return productDetails, nil
+}
+
+func (i *productRepository) SaveSearchHistory(user_id int, key string) error {
+
+	err := i.DB.Exec(`INSERT INTO search_histories (user_id,search_key) VALUES (?,?)`,
+		user_id, key).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (i *productRepository) GetSearchHistory(user_id int) ([]models.SearchHistory, error) {
+
+	var searchHistory []models.SearchHistory
+
+	err := i.DB.Raw(`SELECT * FROM search_histories WHERE user_id=$1 ORDER BY created_at DESC`,
+		user_id).Scan(&searchHistory).Error
+	if err != nil {
+		return []models.SearchHistory{}, err
+	}
+
+	return searchHistory, nil
 }
 
 func (i *productRepository) UpdateProductImage(product_id int, url string) (models.Products, error) {

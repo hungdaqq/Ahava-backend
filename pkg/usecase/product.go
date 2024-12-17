@@ -17,7 +17,8 @@ type ProductUseCase interface {
 	ListProductsForUser() ([]models.CategoryProducts, error)
 	ListProductsForAdmin(limit, offest int) (models.ListProducts, error)
 
-	SearchProducts(key string) ([]models.Products, error)
+	SearchProducts(user_id int, key string) ([]models.Products, error)
+	GetSearchHistory(user_id int) ([]models.SearchHistory, error)
 }
 
 type productUseCase struct {
@@ -196,13 +197,19 @@ func (i *productUseCase) ListProductsForAdmin(limit, offset int) (models.ListPro
 
 }
 
-func (i *productUseCase) SearchProducts(key string) ([]models.Products, error) {
+func (i *productUseCase) SearchProducts(user_id int, key string) ([]models.Products, error) {
 
 	productDetails, err := i.repository.SearchProducts(key)
 	if err != nil {
 		return []models.Products{}, err
 	}
 
+	err = i.repository.SaveSearchHistory(user_id, key)
+	if err != nil {
+		return []models.Products{}, err
+	}
+
+	return productDetails, nil
 	// //loop inside products and then calculate discounted price of each then return
 	// for j := range productDetails {
 	// 	discount_percentage, err := i.offerRepository.FindDiscountPercentage(productDetails[j].CategoryID)
@@ -219,6 +226,15 @@ func (i *productUseCase) SearchProducts(key string) ([]models.Products, error) {
 
 	// }
 
-	return productDetails, nil
+}
+
+func (i *productUseCase) GetSearchHistory(user_id int) ([]models.SearchHistory, error) {
+
+	searchHistory, err := i.repository.GetSearchHistory(user_id)
+	if err != nil {
+		return []models.SearchHistory{}, err
+	}
+
+	return searchHistory, nil
 
 }

@@ -1,10 +1,5 @@
 package models
 
-type AddToCart struct {
-	ProductID int `json:"product_id"`
-	Quantity  int `json:"quantity"`
-}
-
 type ProductOffer struct {
 	ID              uint    `json:"id"`
 	CategoryID      int     `json:"category_id"`

@@ -131,3 +131,24 @@ type CartItem struct {
 	ItemPrice       float64 `json:"item_price"`
 	DiscountedPrice float64 `json:"discounted_price"`
 }
+
+type UpdateCartItem struct {
+	ProductID int  `json:"product_id"`
+	Quantity  uint `json:"quantity"`
+}
+
+type CartDetails struct {
+	ID        int `json:"cart_id"`
+	UserID    int `json:"user_id"`
+	ProductID int `json:"product_id"`
+	Quantity  int `json:"quantity"`
+	// CreateAt  time.Time `json:"create_at"`
+	// UpdateAt  time.Time `json:"update_at"`
+}
+
+type SearchHistory struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	SearchKey string    `json:"search_key"`
+	CreateAt  time.Time `json:"create_at"`
+}

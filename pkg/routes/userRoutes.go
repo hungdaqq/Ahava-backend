@@ -46,6 +46,7 @@ func UserRoutes(
 			// home.POST("/add-to-cart", cartHandler.AddToCart)
 			// home.POST("/wishlist/add", wishlisthandler.AddToWishlist)
 			home.POST("/search", productHandler.SearchProducts)
+			home.GET("/search", productHandler.GetSearchHistory)
 
 		}
 
@@ -83,10 +84,10 @@ func UserRoutes(
 		{
 			cart.GET("", cartHandler.GetCart)
 			cart.POST("", cartHandler.AddToCart)
-			// cart.DELETE("", cartHandler.RemoveFromCart)
-			cart.PUT("/quantity/plus", cartHandler.UpdateQuantityAdd)
-			// cart.PUT("/updateQuantity/minus", cartHandler.UpdateQuantityLess)
-			// hello
+			cart.DELETE("/:cart_id", cartHandler.RemoveFromCart)
+			cart.PUT("/:cart_id/plus", cartHandler.UpdateQuantityAdd)
+			cart.PUT("/:cart_id/minus", cartHandler.UpdateQuantityLess)
+			cart.PUT("/:cart_id", cartHandler.UpdateQuantityLess)
 		}
 
 		// wishlist := engine.Group("/wishlist")
