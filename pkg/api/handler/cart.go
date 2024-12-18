@@ -6,6 +6,7 @@ import (
 	"ahava/pkg/utils/response"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,28 +41,11 @@ func (i *CartHandler) AddToCart(c *gin.Context) {
 	c.JSON(http.StatusOK, successRes)
 }
 
-// func (i *CartHandler) CheckOut(c *gin.Context) {
-// 	id, err := strconv.Atoi(c.Query("id"))
-// 	if err != nil {
-// 		errorRes := response.ClientResponse(http.StatusBadRequest, "user_id not in right format", nil, err.Error())
-// 		c.JSON(http.StatusBadRequest, errorRes)
-// 		return
-// 	}
-
-// 	products, err := i.usecase.CheckOut(id)
-// 	if err != nil {
-// 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not open checkout", nil, err.Error())
-// 		c.JSON(http.StatusBadRequest, errorRes)
-// 		return
-// 	}
-// 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", products, nil)
-// 	c.JSON(http.StatusOK, successRes)
-// }
-
 func (i *CartHandler) GetCart(c *gin.Context) {
 
 	user_id := c.MustGet("id").(int)
-	products, err := i.usecase.GetCart(user_id)
+
+	products, err := i.usecase.GetCart(user_id, []int{})
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve cart", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -167,5 +151,33 @@ func (i *CartHandler) UpdateQuantity(c *gin.Context) {
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully subtracted quantity", result, nil)
+	c.JSON(http.StatusOK, successRes)
+}
+
+func (i *CartHandler) CheckOut(c *gin.Context) {
+	user_id := c.MustGet("id").(int)
+
+	cartIDs := c.Query("cart_id")
+	var cart_ids []int
+
+	if cartIDs != "" {
+		ids := strings.Split(cartIDs, ",") // Split the comma-separated string
+		for _, id := range ids {
+			cart_id, err := strconv.Atoi(strings.TrimSpace(id)) // Convert to int
+			if err != nil {
+				errorRes := response.ClientResponse(http.StatusBadRequest, "Invalid cart_id parameter", nil, err.Error())
+				c.JSON(http.StatusBadRequest, errorRes)
+				return
+			}
+			cart_ids = append(cart_ids, cart_id)
+		}
+	}
+	checkout, err := i.usecase.CheckOut(user_id, cart_ids)
+	if err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "could not open checkout", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", checkout, nil)
 	c.JSON(http.StatusOK, successRes)
 }

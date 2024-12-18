@@ -3,11 +3,13 @@ package repository
 import (
 	"ahava/pkg/utils/models"
 
+	"github.com/lib/pq"
+
 	"gorm.io/gorm"
 )
 
 type CartRepository interface {
-	GetCart(user_id int) ([]models.CartItem, error)
+	GetCart(user_id int, cart_ids []int) ([]models.CartItem, error)
 	AddToCart(user_id, product_id int, quantity uint) (models.CartDetails, error)
 	CheckIfItemIsAlreadyAdded(user_id, product_id int) (int, error)
 	UpdateQuantityAdd(cart_id int, quantity uint) (models.CartDetails, error)
@@ -46,28 +48,30 @@ func NewCartRepository(db *gorm.DB) *cartRepository {
 
 // }
 
-func (ad *cartRepository) GetCart(user_id int) ([]models.CartItem, error) {
-
+func (ad *cartRepository) GetCart(user_id int, cart_ids []int) ([]models.CartItem, error) {
 	var cart []models.CartItem
 
-	if err := ad.DB.Raw(`SELECT ci.id AS cart_id, p.id as product_id, p.product_name, p.image, p.price, ci.quantity, (ci.quantity * p.price) AS item_price 
-						FROM cart_items ci JOIN products p ON ci.product_id = p.id WHERE ci.user_id = $1;`, user_id).Scan(&cart).Error; err != nil {
+	query := `
+        SELECT ci.id AS cart_id, p.id as product_id, p.product_name, p.image, p.price, ci.quantity, 
+               (ci.quantity * p.price) AS item_price 
+        FROM cart_items ci JOIN products p ON ci.product_id = p.id WHERE ci.user_id = $1`
+
+	if len(cart_ids) > 0 {
+		query += " AND ci.id = ANY($2)"
+	}
+
+	var err error
+	if len(cart_ids) > 0 {
+		err = ad.DB.Raw(query, user_id, pq.Array(cart_ids)).Scan(&cart).Error
+	} else {
+		err = ad.DB.Raw(query, user_id).Scan(&cart).Error
+	}
+
+	if err != nil {
 		return []models.CartItem{}, err
 	}
 
 	return cart, nil
-}
-
-func (ad *cartRepository) GetPaymentOptions() ([]models.PaymentMethod, error) {
-
-	var payment []models.PaymentMethod
-
-	if err := ad.DB.Raw("SELECT * FROM payment_methods WHERE is_deleted = false").Scan(&payment).Error; err != nil {
-		return []models.PaymentMethod{}, err
-	}
-
-	return payment, nil
-
 }
 
 // func (ad *cartRepository) GetCartId(user_id int) (int, error) {

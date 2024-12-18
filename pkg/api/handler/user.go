@@ -86,39 +86,40 @@ func (u *UserHandler) LoginHandler(c *gin.Context) {
 
 }
 
-// func (i *UserHandler) AddAddress(c *gin.Context) {
+func (i *UserHandler) AddAddress(c *gin.Context) {
 
-// 	user_id := c.MustGet("id").(int)
-// 	var address models.AddAddress
-// 	if err := c.BindJSON(&address); err != nil {
-// 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-// 		c.JSON(http.StatusBadRequest, errorRes)
-// 		return
-// 	}
+	user_id := c.MustGet("id").(int)
+	var address models.Address
+	if err := c.BindJSON(&address); err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
 
-// 	if err := i.userUseCase.AddAddress(user_id, address); err != nil {
-// 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add the address", nil, err.Error())
-// 		c.JSON(http.StatusBadRequest, errorRes)
-// 		return
-// 	}
+	result, err := i.userUseCase.AddAddress(user_id, address)
+	if err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add the address", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
 
-// 	successRes := response.ClientResponse(http.StatusOK, "Successfully added address", nil, nil)
-// 	c.JSON(http.StatusOK, successRes)
+	successRes := response.ClientResponse(http.StatusOK, "Successfully added address", result, nil)
+	c.JSON(http.StatusOK, successRes)
 
-// }
+}
 
-// func (i *UserHandler) GetAddresses(c *gin.Context) {
+func (i *UserHandler) GetAddresses(c *gin.Context) {
 
-// 	user_id := c.MustGet("id").(int)
-// 	addresses, err := i.userUseCase.GetAddresses(user_id)
-// 	if err != nil {
-// 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
-// 		c.JSON(http.StatusBadRequest, errorRes)
-// 		return
-// 	}
-// 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", addresses, nil)
-// 	c.JSON(http.StatusOK, successRes)
-// }
+	user_id := c.MustGet("id").(int)
+	addresses, err := i.userUseCase.GetAddresses(user_id)
+	if err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", addresses, nil)
+	c.JSON(http.StatusOK, successRes)
+}
 
 func (i *UserHandler) GetUserDetails(c *gin.Context) {
 

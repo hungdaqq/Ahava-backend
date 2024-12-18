@@ -84,6 +84,7 @@ type UserDetailsResponse struct {
 
 type UserLogin struct {
 	Email    string `json:"email" validate:"email"`
+	Phone    string `json:"phone"`
 	Password string `json:"password" validate:"required"`
 }
 
@@ -99,7 +100,7 @@ type UserDetails struct {
 	Password        string    `json:"password"`
 	ConfirmPassword string    `json:"confirmpassword"`
 	BirthDate       time.Time `json:"birth_date"`
-	Address         string    `json:"address"`
+	Address         Address   `json:"address"`
 }
 
 type UserDetailsAtAdmin struct {
@@ -151,4 +152,27 @@ type SearchHistory struct {
 	UserID    int       `json:"user_id"`
 	SearchKey string    `json:"search_key"`
 	CreateAt  time.Time `json:"create_at"`
+}
+
+type CheckOut struct {
+	CartID          int
+	Addresses       []Address
+	Products        []CartItem
+	PaymentMethods  []PaymentMethod
+	TotalPrice      float64
+	DiscountedPrice float64
+}
+
+type Address struct {
+	Id       int       `json:"id"`
+	UserID   int       `json:"user_id"`
+	Name     string    `json:"name"`
+	Street   string    `json:"street"`
+	Ward     string    `json:"ward"`
+	District string    `json:"district"`
+	City     string    `json:"city"`
+	Phone    string    `json:"phone"`
+	Default  bool      `json:"default"`
+	CreateAt time.Time `json:"create_at"`
+	UpdateAt time.Time `json:"update_at"`
 }

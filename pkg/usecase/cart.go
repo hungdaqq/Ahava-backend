@@ -6,14 +6,14 @@ import (
 )
 
 type CartUseCase interface {
-	GetCart(user_id int) ([]models.CartItem, error)
+	GetCart(user_id int, cart_ids []int) ([]models.CartItem, error)
 	AddToCart(user_id, product_id int, quantity uint) (models.CartDetails, error)
 	UpdateQuantityAdd(cart_id int, quantity uint) (models.CartDetails, error)
 	UpdateQuantityLess(cart_id int, quantity uint) (models.CartDetails, error)
 	UpdateQuantity(cart_id int, quantity uint) (models.CartDetails, error)
 	RemoveFromCart(cart_id int) error
 
-	// CheckOut(id int) (models.CheckOut, error)
+	CheckOut(user_id int, cart_ids []int) (models.CheckOut, error)
 }
 
 type cartUseCase struct {
@@ -53,44 +53,44 @@ func (i *cartUseCase) AddToCart(user_id, product_id int, quantity uint) (models.
 	}
 }
 
-// func (i *cartUseCase) CheckOut(id int) (models.CheckOut, error) {
+func (i *cartUseCase) CheckOut(user_id int, cart_ids []int) (models.CheckOut, error) {
 
-// 	// address, err := i.repo.GetAddresses(id)
-// 	// if err != nil {
-// 	// 	return models.CheckOut{}, err
-// 	// }
+	// address, err := i.repo.GetAddresses(id)
+	// if err != nil {
+	// 	return models.CheckOut{}, err
+	// }
 
-// 	// payment, err := i.repo.GetPaymentOptions()
-// 	// if err != nil {
-// 	// 	return models.CheckOut{}, err
-// 	// }
+	// payment, err := i.repo.GetPaymentOptions()
+	// if err != nil {
+	// 	return models.CheckOut{}, err
+	// }
 
-// 	// products, err := i.repo.GetCart(id)
-// 	// if err != nil {
-// 	// 	return models.CheckOut{}, err
-// 	// }
+	// products, err := i.repo.GetCart(user_id, cart_ids)
+	// if err != nil {
+	// 	return models.CheckOut{}, err
+	// }
 
-// 	// var discountedPrice, totalPrice float64
-// 	// for _, v := range products.Data {
-// 	// 	discountedPrice += v.DiscountedPrice
-// 	// 	totalPrice += v.Total
-// 	// }
+	// var discountedPrice, totalPrice float64
+	// for _, v := range products.Data {
+	// 	discountedPrice += v.DiscountedPrice
+	// 	totalPrice += v.Total
+	// }
 
-// 	var checkout models.CheckOut
+	var checkout models.CheckOut
 
-// 	// checkout.CartID = products.ID
-// 	// checkout.Addresses = address
-// 	// checkout.Products = products.Data
-// 	// checkout.PaymentMethods = payment
-// 	// checkout.TotalPrice = totalPrice
-// 	// checkout.DiscountedPrice = discountedPrice
+	// checkout.CartID = products.ID
+	// checkout.Addresses = address
+	// checkout.Products = products.Data
+	// checkout.PaymentMethods = payment
+	// checkout.TotalPrice = totalPrice
+	// checkout.DiscountedPrice = discountedPrice
 
-// 	return checkout, nil
-// }
+	return checkout, nil
+}
 
-func (i *cartUseCase) GetCart(user_id int) ([]models.CartItem, error) {
+func (i *cartUseCase) GetCart(user_id int, cart_ids []int) ([]models.CartItem, error) {
 
-	cart, err := i.repo.GetCart(user_id)
+	cart, err := i.repo.GetCart(user_id, cart_ids)
 	if err != nil {
 		return []models.CartItem{}, err
 	}
@@ -243,38 +243,5 @@ func (i *cartUseCase) UpdateQuantity(cart_id int, quantity uint) (models.CartDet
 // 	//then return in appropriate format
 
 // 	return response, nil
-
-// }
-
-// func (i *cartUseCase) RemoveFromCart(cart, product int) error {
-
-// 	err := i.repo.RemoveFromCart(cart, product)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-
-// }
-
-// func (i *cartUseCase) UpdateQuantityAdd(id, inv int) error {
-
-// 	err := i.repo.UpdateQuantityAdd(id, inv)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-
-// }
-
-// func (i *userUseCase) UpdateQuantityLess(id, inv int) error {
-
-// 	err := i.repo.UpdateQuantityLess(id, inv)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
 
 // }

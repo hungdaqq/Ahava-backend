@@ -60,7 +60,7 @@ func UserRoutes(
 		profile := engine.Group("/profile")
 		{
 			profile.GET("/detail", userHandler.GetUserDetails)
-			// profile.GET("/address", userHandler.GetAddresses)
+			profile.GET("/address", userHandler.GetAddresses)
 			// profile.POST("/address", userHandler.AddAddress)
 			profile.GET("/reference-link", userHandler.GetMyReferenceLink)
 
@@ -96,11 +96,11 @@ func UserRoutes(
 		// 	wishlist.DELETE("/remove", wishlisthandler.RemoveFromWishlist)
 		// }
 
-		// checkout := engine.Group("/check-out")
-		// {
-		// 	checkout.GET("", cartHandler.CheckOut)
-		// 	checkout.POST("/order", orderHandler.OrderItemsFromCart)
-		// }
+		checkout := engine.Group("/check-out")
+		{
+			checkout.POST("", cartHandler.CheckOut)
+			// checkout.POST("/order", orderHandler.OrderItemsFromCart)
+		}
 
 		// engine.GET("/coupon", couponHandler.GetAllCoupons)
 

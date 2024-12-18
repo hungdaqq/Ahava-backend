@@ -13,8 +13,8 @@ import (
 type UserUseCase interface {
 	UserSignUp(user models.UserDetails, ref string) (models.TokenUsers, error)
 	LoginHandler(user models.UserLogin) (models.TokenUsers, error)
-	// AddAddress(user_id int, address models.AddAddress) error
-	// GetAddresses(user_id int) ([]domain.Address, error)
+	AddAddress(user_id int, address models.Address) (models.Address, error)
+	GetAddresses(user_id int) ([]models.Address, error)
 	GetUserDetails(user_id int) (models.UserDetailsResponse, error)
 
 	ChangePassword(user_id int, old string, password string, repassword string) error
@@ -57,7 +57,7 @@ var ErrorHashingPassword = "Error In Hashing Password"
 
 func (u *userUseCase) UserSignUp(user models.UserDetails, ref string) (models.TokenUsers, error) {
 	// Check whether the user already exist. If yes, show the error message, since this is signUp
-	userExist := u.userRepo.CheckUserAvailability(user.Email)
+	userExist := u.userRepo.CheckUserAvailability(user.Email, user.Phone)
 	if userExist {
 		return models.TokenUsers{}, errors.New("user already exist, sign in")
 	}
@@ -89,6 +89,13 @@ func (u *userUseCase) UserSignUp(user models.UserDetails, ref string) (models.To
 	if err != nil {
 		return models.TokenUsers{}, errors.New("could not add the user")
 	}
+	user.Address.Name = user.Name
+	user.Address.Phone = user.Phone
+	user.Address.Default = true
+	_, err = u.userRepo.AddAddress(userData.Id, user.Address)
+	if err != nil {
+		return models.TokenUsers{}, errors.New("could not add the address")
+	}
 
 	// crete a JWT token string for the user
 	tokenString, err := u.helper.GenerateTokenClients(userData)
@@ -115,7 +122,7 @@ func (u *userUseCase) UserSignUp(user models.UserDetails, ref string) (models.To
 func (u *userUseCase) LoginHandler(user models.UserLogin) (models.TokenUsers, error) {
 
 	// checking if a username exist with this email address
-	ok := u.userRepo.CheckUserAvailability(user.Email)
+	ok := u.userRepo.CheckUserAvailability(user.Email, user.Phone)
 	if !ok {
 		return models.TokenUsers{}, errors.New("the user does not exist")
 	}
@@ -159,36 +166,36 @@ func (u *userUseCase) LoginHandler(user models.UserLogin) (models.TokenUsers, er
 
 }
 
-// func (i *userUseCase) AddAddress(id int, address models.AddAddress) error {
+func (i *userUseCase) AddAddress(user_id int, address models.Address) (models.Address, error) {
 
-// 	rslt := i.userRepo.CheckIfFirstAddress(id)
-// 	var result bool
+	// rslt := i.userRepo.CheckIfFirstAddress(user_id)
+	// var setDefault bool
 
-// 	if !rslt {
-// 		result = true
-// 	} else {
-// 		result = false
-// 	}
+	// if !rslt {
+	// 	setDefault = true
+	// } else {
+	// 	setDefault = false
+	// }
 
-// 	err := i.userRepo.AddAddress(id, address, result)
-// 	if err != nil {
-// 		return errors.New("error in adding address")
-// 	}
+	address, err := i.userRepo.AddAddress(user_id, address)
+	if err != nil {
+		return models.Address{}, errors.New("error in adding address")
+	}
 
-// 	return nil
+	return address, nil
 
-// }
+}
 
-// func (i *userUseCase) GetAddresses(id int) ([]domain.Address, error) {
+func (i *userUseCase) GetAddresses(user_id int) ([]models.Address, error) {
 
-// 	addresses, err := i.userRepo.GetAddresses(id)
-// 	if err != nil {
-// 		return []domain.Address{}, errors.New("error in getting addresses")
-// 	}
+	addresses, err := i.userRepo.GetAddresses(user_id)
+	if err != nil {
+		return []models.Address{}, errors.New("error in getting addresses")
+	}
 
-// 	return addresses, nil
+	return addresses, nil
 
-// }
+}
 
 func (u *userUseCase) GetUserDetails(id int) (models.UserDetailsResponse, error) {
 
