@@ -6,7 +6,6 @@ import (
 	"ahava/pkg/utils/response"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -157,22 +156,14 @@ func (i *CartHandler) UpdateQuantity(c *gin.Context) {
 func (i *CartHandler) CheckOut(c *gin.Context) {
 	user_id := c.MustGet("id").(int)
 
-	cartIDs := c.Query("cart_id")
-	var cart_ids []int
-
-	if cartIDs != "" {
-		ids := strings.Split(cartIDs, ",") // Split the comma-separated string
-		for _, id := range ids {
-			cart_id, err := strconv.Atoi(strings.TrimSpace(id)) // Convert to int
-			if err != nil {
-				errorRes := response.ClientResponse(http.StatusBadRequest, "Invalid cart_id parameter", nil, err.Error())
-				c.JSON(http.StatusBadRequest, errorRes)
-				return
-			}
-			cart_ids = append(cart_ids, cart_id)
-		}
+	var model models.CartCheckout
+	if err := c.BindJSON(&model); err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
 	}
-	checkout, err := i.usecase.CheckOut(user_id, cart_ids)
+
+	checkout, err := i.usecase.CheckOut(user_id, model.CartIDs)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not open checkout", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)

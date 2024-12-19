@@ -108,6 +108,53 @@ func (i *UserHandler) AddAddress(c *gin.Context) {
 
 }
 
+func (i *UserHandler) UpdateAddress(c *gin.Context) {
+
+	address_id, err := strconv.Atoi(c.Param("address_id"))
+	if err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+
+	var model models.Address
+	if err := c.BindJSON(&model); err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+
+	result, err := i.userUseCase.UpdateAddress(address_id, model)
+	if err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not update the address", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+
+	successRes := response.ClientResponse(http.StatusOK, "Successfully updated address", result, nil)
+	c.JSON(http.StatusOK, successRes)
+}
+
+func (i *UserHandler) DeleteAddress(c *gin.Context) {
+
+	address_id, err := strconv.Atoi(c.Param("address_id"))
+	if err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+
+	err = i.userUseCase.DeleteAddress(address_id)
+	if err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not delete the address", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+
+	successRes := response.ClientResponse(http.StatusOK, "Successfully deleted address", nil, nil)
+	c.JSON(http.StatusOK, successRes)
+}
+
 func (i *UserHandler) GetAddresses(c *gin.Context) {
 
 	user_id := c.MustGet("id").(int)

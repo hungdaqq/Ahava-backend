@@ -27,7 +27,7 @@ func NewServerHTTP(
 	// couponHandler *handler.CouponHandler,
 	// paymentHandler *handler.PaymentHandler,
 	// offerhandler *handler.OfferHandler,
-	// wishlistHandler *handler.WishlistHandler,
+	wishlistHandler *handler.WishlistHandler,
 ) *ServerHTTP {
 
 	engine := gin.New()
@@ -49,7 +49,7 @@ func NewServerHTTP(
 		// orderHandler,
 		cartHandler,
 		// paymentHandler,
-		// wishlistHandler,
+		wishlistHandler,
 		// categoryHandler,
 		// couponHandler,
 	)

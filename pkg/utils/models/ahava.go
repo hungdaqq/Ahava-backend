@@ -154,13 +154,16 @@ type SearchHistory struct {
 	CreateAt  time.Time `json:"create_at"`
 }
 
+type CartCheckout struct {
+	CartIDs []int `json:"cart_ids"`
+}
+
 type CheckOut struct {
-	CartID          int
-	Addresses       []Address
-	Products        []CartItem
-	PaymentMethods  []PaymentMethod
-	TotalPrice      float64
-	DiscountedPrice float64
+	Addresses       []Address       `json:"addresses"`
+	CartItems       []CartItem      `json:"cart_items"`
+	PaymentMethods  []PaymentMethod `json:"payment_methods"`
+	TotalPrice      float64         `json:"total_price"`
+	DiscountedPrice float64         `json:"discounted_price"`
 }
 
 type Address struct {
@@ -173,6 +176,13 @@ type Address struct {
 	City     string    `json:"city"`
 	Phone    string    `json:"phone"`
 	Default  bool      `json:"default"`
+	Type     string    `json:"type"`
 	CreateAt time.Time `json:"create_at"`
 	UpdateAt time.Time `json:"update_at"`
+}
+
+type Wishlist struct {
+	ID        int `json:"id"`
+	UserID    int `json:"user_id"`
+	ProductID int `json:"product_id"`
 }

@@ -17,17 +17,17 @@ type CartUseCase interface {
 }
 
 type cartUseCase struct {
-	repo              repository.CartRepository
-	productRepository repository.ProductRepository
+	repo           repository.CartRepository
+	userRepository repository.UserRepository
 }
 
 func NewCartUseCase(
 	repo repository.CartRepository,
-	productRepo repository.ProductRepository,
+	userRepository repository.UserRepository,
 ) *cartUseCase {
 	return &cartUseCase{
-		repo:              repo,
-		productRepository: productRepo,
+		repo:           repo,
+		userRepository: userRepository,
 	}
 }
 
@@ -55,35 +55,35 @@ func (i *cartUseCase) AddToCart(user_id, product_id int, quantity uint) (models.
 
 func (i *cartUseCase) CheckOut(user_id int, cart_ids []int) (models.CheckOut, error) {
 
-	// address, err := i.repo.GetAddresses(id)
-	// if err != nil {
-	// 	return models.CheckOut{}, err
-	// }
+	addresses, err := i.userRepository.GetAddresses(user_id)
+	if err != nil {
+		return models.CheckOut{}, err
+	}
 
 	// payment, err := i.repo.GetPaymentOptions()
 	// if err != nil {
 	// 	return models.CheckOut{}, err
 	// }
 
-	// products, err := i.repo.GetCart(user_id, cart_ids)
-	// if err != nil {
-	// 	return models.CheckOut{}, err
-	// }
+	cart_items, err := i.repo.GetCart(user_id, cart_ids)
+	if err != nil {
+		return models.CheckOut{}, err
+	}
 
-	// var discountedPrice, totalPrice float64
-	// for _, v := range products.Data {
-	// 	discountedPrice += v.DiscountedPrice
-	// 	totalPrice += v.Total
-	// }
+	var discountedPrice, totalPrice float64
+	for _, v := range cart_items {
+		totalPrice += v.ItemPrice
+		discountedPrice += v.DiscountedPrice
+	}
 
 	var checkout models.CheckOut
 
 	// checkout.CartID = products.ID
-	// checkout.Addresses = address
-	// checkout.Products = products.Data
+	checkout.Addresses = addresses
+	checkout.CartItems = cart_items
 	// checkout.PaymentMethods = payment
-	// checkout.TotalPrice = totalPrice
-	// checkout.DiscountedPrice = discountedPrice
+	checkout.TotalPrice = totalPrice
+	checkout.DiscountedPrice = discountedPrice
 
 	return checkout, nil
 }

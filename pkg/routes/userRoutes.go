@@ -15,7 +15,7 @@ func UserRoutes(
 	// orderHandler *handler.OrderHandler,
 	cartHandler *handler.CartHandler,
 	// paymentHandler *handler.PaymentHandler,
-	// wishlisthandler *handler.WishlistHandler,
+	wishlisthandler *handler.WishlistHandler,
 	// categoryHandler *handler.CategoryHandler,
 	// couponHandler *handler.CouponHandler
 ) {
@@ -61,8 +61,11 @@ func UserRoutes(
 		{
 			profile.GET("/detail", userHandler.GetUserDetails)
 			profile.GET("/address", userHandler.GetAddresses)
-			// profile.POST("/address", userHandler.AddAddress)
-			profile.GET("/reference-link", userHandler.GetMyReferenceLink)
+			profile.POST("/address", userHandler.AddAddress)
+			profile.PUT("/address", userHandler.UpdateAddress)
+			profile.DELETE("/address", userHandler.DeleteAddress)
+
+			// profile.GET("/reference-link", userHandler.GetMyReferenceLink)
 
 			// orders := profile.Group("/orders")
 			// {
@@ -88,19 +91,22 @@ func UserRoutes(
 			cart.PUT("/:cart_id/plus", cartHandler.UpdateQuantityAdd)
 			cart.PUT("/:cart_id/minus", cartHandler.UpdateQuantityLess)
 			cart.PUT("/:cart_id", cartHandler.UpdateQuantityLess)
+
+			cart.POST("/check-out", cartHandler.CheckOut)
 		}
 
-		// wishlist := engine.Group("/wishlist")
-		// {
-		// 	wishlist.GET("/", wishlisthandler.GetWishList)
-		// 	wishlist.DELETE("/remove", wishlisthandler.RemoveFromWishlist)
-		// }
-
-		checkout := engine.Group("/check-out")
+		wishlist := engine.Group("/wishlist")
 		{
-			checkout.POST("", cartHandler.CheckOut)
-			// checkout.POST("/order", orderHandler.OrderItemsFromCart)
+			wishlist.POST("/:product_id", wishlisthandler.AddToWishlist)
+			wishlist.GET("/:product_id", wishlisthandler.GetWishList)
+			wishlist.DELETE(":product_id", wishlisthandler.RemoveFromWishlist)
 		}
+
+		// checkout := engine.Group("/check-out")
+		// {
+		// checkout.POST("", cartHandler.CheckOut)
+		// checkout.POST("/order", orderHandler.OrderItemsFromCart)
+		// }
 
 		// engine.GET("/coupon", couponHandler.GetAllCoupons)
 

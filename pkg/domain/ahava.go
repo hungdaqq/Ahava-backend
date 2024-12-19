@@ -149,6 +149,7 @@ type Address struct {
 	City     string    `json:"city" validate:"required"`
 	Phone    string    `json:"phone" gorm:"phone"`
 	Default  bool      `json:"default" gorm:"default:false"`
+	Type     string    `json:"type" gorm:"default:'HOME';check:type IN ('HOME', 'WORK')"`
 	CreateAt time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateAt time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
@@ -166,7 +167,7 @@ type Wishlist struct {
 	Users     Users    `json:"-" gorm:"foreignkey:UserID"`
 	ProductID uint     `json:"product_id" gorm:"not null"`
 	Products  Products `json:"-" gorm:"foreignkey:ProductID"`
-	IsDeleted bool     `json:"is_deleted" gorm:"default:false"`
+	// IsDeleted bool     `json:"is_deleted" gorm:"default:false"`
 }
 
 type SearchHistory struct {

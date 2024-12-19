@@ -15,6 +15,9 @@ type UserUseCase interface {
 	LoginHandler(user models.UserLogin) (models.TokenUsers, error)
 	AddAddress(user_id int, address models.Address) (models.Address, error)
 	GetAddresses(user_id int) ([]models.Address, error)
+	UpdateAddress(address_id int, address models.Address) (models.Address, error)
+	DeleteAddress(address_id int) error
+
 	GetUserDetails(user_id int) (models.UserDetailsResponse, error)
 
 	ChangePassword(user_id int, old string, password string, repassword string) error
@@ -168,21 +171,34 @@ func (u *userUseCase) LoginHandler(user models.UserLogin) (models.TokenUsers, er
 
 func (i *userUseCase) AddAddress(user_id int, address models.Address) (models.Address, error) {
 
-	// rslt := i.userRepo.CheckIfFirstAddress(user_id)
-	// var setDefault bool
-
-	// if !rslt {
-	// 	setDefault = true
-	// } else {
-	// 	setDefault = false
-	// }
-
-	address, err := i.userRepo.AddAddress(user_id, address)
+	addAddress, err := i.userRepo.AddAddress(user_id, address)
 	if err != nil {
 		return models.Address{}, errors.New("error in adding address")
 	}
 
-	return address, nil
+	return addAddress, nil
+
+}
+
+func (i *userUseCase) UpdateAddress(address_id int, address models.Address) (models.Address, error) {
+
+	updateAddress, err := i.userRepo.UpdateAddress(address_id, address)
+	if err != nil {
+		return models.Address{}, errors.New("error in updating address")
+	}
+
+	return updateAddress, nil
+
+}
+
+func (i *userUseCase) DeleteAddress(address_id int) error {
+
+	err := i.userRepo.DeleteAddress(address_id)
+	if err != nil {
+		return errors.New("error in deleting address")
+	}
+
+	return nil
 
 }
 

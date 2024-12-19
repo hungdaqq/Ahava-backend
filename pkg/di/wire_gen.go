@@ -30,9 +30,12 @@ func InitializeAPI(cfg config.Config) (*http.ServerHTTP, error) {
 	// offerUseCase := usecase.NewOfferUseCase(offerRepository)
 	// offerHandler := handler.NewOfferHandler(offerUseCase)
 
-	// wishlistRepository := repository.NewWishlistRepository(gormDB)
-	// wishlistUseCase := usecase.NewWishlistUseCase(wishlistRepository,offerRepository)
-	// wishlistHandler := handler.NewWishlistHandler(wishlistUseCase)
+	wishlistRepository := repository.NewWishlistRepository(gormDB)
+	wishlistUseCase := usecase.NewWishlistUseCase(
+		wishlistRepository,
+			// offerRepository,
+		)
+	wishlistHandler := handler.NewWishlistHandler(wishlistUseCase)
 
 
 	adminRepository := repository.NewAdminRepository(gormDB)
@@ -49,7 +52,8 @@ func InitializeAPI(cfg config.Config) (*http.ServerHTTP, error) {
 	productHandler := handler.NewProductHandler(productUseCase)
 
 	categoryRepository := repository.NewCategoryRepository(gormDB)
-	categoryUseCase := usecase.NewCategoryUseCase(categoryRepository,
+	categoryUseCase := usecase.NewCategoryUseCase(
+		categoryRepository,
 		// productRepository,
 		// offerRepository,
 	)
@@ -84,7 +88,7 @@ func InitializeAPI(cfg config.Config) (*http.ServerHTTP, error) {
 	cartRepository := repository.NewCartRepository(gormDB)
 	cartUseCase := usecase.NewCartUseCase(
 		cartRepository,
-		productRepository,
+		userRepository,
 		// userUseCase,
 	)
 	cartHandler := handler.NewCartHandler(cartUseCase)
@@ -106,7 +110,7 @@ func InitializeAPI(cfg config.Config) (*http.ServerHTTP, error) {
 		// couponHandler,
 		// paymentHandler,
 		// offerHandler,
-		// wishlistHandler,
+		wishlistHandler,
 	)
 
 

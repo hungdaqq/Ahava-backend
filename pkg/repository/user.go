@@ -15,6 +15,8 @@ type UserRepository interface {
 	UserBlockStatus(email string) (bool, error)
 	AddAddress(user_id int, address models.Address) (models.Address, error)
 	GetAddresses(user_id int) ([]models.Address, error)
+	UpdateAddress(address_id int, address models.Address) (models.Address, error)
+	DeleteAddress(address_id int) error
 
 	GetUserDetails(user_id int) (models.UserDetailsResponse, error)
 	ChangePassword(user_id int, password string) error
@@ -22,7 +24,7 @@ type UserRepository interface {
 	FindIdFromPhone(phone string) (int, error)
 	EditProfile(user_id int, name, email, phone string) (models.UserDetailsResponse, error)
 
-	CheckIfFirstAddress(user_id int) bool
+	// CheckIfFirstAddress(user_id int) bool
 
 	CreditReferencePointsToWallet(user_id int) error
 	FindUserFromReference(ref string) (int, error)
@@ -79,11 +81,8 @@ func (c *userDatabase) FindUserByEmail(user models.UserLogin) (models.UserSignIn
 
 	var user_details models.UserSignInResponse
 
-	err := c.DB.Raw(`
-		SELECT *
-		FROM users where email = ? and blocked = false
-		`, user.Email).Scan(&user_details).Error
-
+	err := c.DB.Raw(`SELECT * FROM users where email = ? and blocked = false`,
+		user.Email).Scan(&user_details).Error
 	if err != nil {
 		return models.UserSignInResponse{}, errors.New("error checking user details")
 	}
@@ -96,9 +95,9 @@ func (i *userDatabase) AddAddress(user_id int, address models.Address) (models.A
 
 	var addAddress models.Address
 
-	err := i.DB.Raw(`INSERT INTO addresses (user_id, name, street, ward, district, city, phone,"default") 
-					VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-		user_id, address.Name, address.Street, address.Ward, address.District, address.City, address.Phone, address.Default).Scan(&addAddress).Error
+	err := i.DB.Raw(`INSERT INTO addresses (user_id, name, street, ward, district, city, phone, type, "default") 
+					VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+		user_id, address.Name, address.Street, address.Ward, address.District, address.City, address.Phone, address.Type, address.Default).Scan(&addAddress).Error
 	if err != nil {
 		return models.Address{}, errors.New("could not add address")
 	}
@@ -106,17 +105,44 @@ func (i *userDatabase) AddAddress(user_id int, address models.Address) (models.A
 	return addAddress, nil
 }
 
-func (c *userDatabase) CheckIfFirstAddress(user_id int) bool {
+func (i *userDatabase) UpdateAddress(address_id int, address models.Address) (models.Address, error) {
 
-	var count int
-	// query := fmt.Sprintf("select count(*) from addresses where user_id='%s'", id)
-	if err := c.DB.Raw("SELECT COUNT(*) FROM addresses WHERE user_id=$1", user_id).Scan(&count).Error; err != nil {
-		return false
+	var addAddress models.Address
+
+	err := i.DB.Raw(`UPDATE addresses SET name=$1,street=$2,ward=$3,district=$4,city=$5,phone=$6,type=$7,"default"=$8 
+					WHERE id=$9 RETURNING *`,
+		address.Name, address.Street, address.Ward, address.District, address.City, address.Phone, address.Type, address.Default, address_id).Scan(&addAddress).Error
+	if err != nil {
+		return models.Address{}, errors.New("could not add address")
 	}
-	// if count is greater than 0 that means the user already exist
-	return count > 0
 
+	return addAddress, nil
 }
+
+func (i *userDatabase) DeleteAddress(address_id int) error {
+
+	var addAddress models.Address
+
+	err := i.DB.Exec(`DELETE FROM addresses WHERE id=?`,
+		address_id).Scan(&addAddress).Error
+	if err != nil {
+		return errors.New("could not delete address")
+	}
+
+	return nil
+}
+
+// func (c *userDatabase) CheckIfFirstAddress(user_id int) bool {
+
+// 	var count int
+// 	// query := fmt.Sprintf("select count(*) from addresses where user_id='%s'", id)
+// 	if err := c.DB.Raw("SELECT COUNT(*) FROM addresses WHERE user_id=$1", user_id).Scan(&count).Error; err != nil {
+// 		return false
+// 	}
+// 	// if count is greater than 0 that means the user already exist
+// 	return count > 0
+
+// }
 
 func (ad *userDatabase) GetAddresses(user_id int) ([]models.Address, error) {
 
