@@ -4,39 +4,33 @@ import (
 	"log"
 
 	"ahava/cmd/api/docs"
-	config "ahava/pkg/config"
+	"ahava/pkg/config"
 	di "ahava/pkg/di"
 
 	"github.com/joho/godotenv"
 )
 
-// @SecurityDefinition BearerAuth
-// @TokenUrl /auth/token
-
-// @securityDefinitions.Bearer		type apiKey
-// @securityDefinitions.Bearer		name Authorization
-// @securityDefinitions.Bearer		in header
-// @securityDefinitions.BasicAuth	type basic
 func main() {
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("error loading the env file")
+	// Load environment variables from .env file if it exists
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found. Using system environment variables...")
 	}
 
+	// Load the configuration
 	config, configErr := config.LoadConfig()
 	if configErr != nil {
 		log.Fatal("cannot load config: ", configErr)
 	}
 
-	// // swagger 2.0 Meta Information
-	docs.SwaggerInfo.Title = "ahava"
-	docs.SwaggerInfo.Description = "Here passion meets the fashion,This is an online store for purchasing high quality jerseys of your favorite clubs.."
+	// Swagger configuration
+	docs.SwaggerInfo.Title = "Ahava"
+	docs.SwaggerInfo.Description = "An online store for purchasing high-quality jerseys of your favorite clubs."
 	docs.SwaggerInfo.Version = "1.0"
 	docs.SwaggerInfo.Host = config.BASE_URL
 	docs.SwaggerInfo.BasePath = ""
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
+	// Initialize DI and start the server
 	server, diErr := di.InitializeAPI(config)
 	if diErr != nil {
 		log.Fatal("cannot start server: ", diErr)
