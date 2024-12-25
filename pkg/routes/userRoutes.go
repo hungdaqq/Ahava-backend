@@ -98,7 +98,7 @@ func UserRoutes(
 		wishlist := engine.Group("/wishlist")
 		{
 			wishlist.POST("/:product_id", wishlisthandler.AddToWishlist)
-			wishlist.GET("/:product_id", wishlisthandler.GetWishList)
+			wishlist.GET("", wishlisthandler.GetWishList)
 			wishlist.DELETE(":product_id", wishlisthandler.RemoveFromWishlist)
 		}
 

@@ -102,11 +102,14 @@ func (h *helper) AddImageToS3(file *multipart.FileHeader) (string, error) {
 	// }
 
 	// client := s3.NewFromConfig(cfg)
-
-	client := s3.NewFromConfig(aws.Config{Region: "us-east-1"}, func(o *s3.Options) {
-		o.BaseEndpoint = aws.String(h.cfg.AWS_HOST)
-		o.Credentials = credentials.NewStaticCredentialsProvider(h.cfg.AWS_ACCESS_KEY_ID, h.cfg.AWS_SECRET_ACCESS_KEY, "")
-	})
+	client := s3.NewFromConfig(
+		aws.Config{Region: "us-east-1",
+			Credentials: credentials.NewStaticCredentialsProvider(h.cfg.AWS_ACCESS_KEY_ID, h.cfg.AWS_SECRET_ACCESS_KEY, ""),
+		},
+		func(o *s3.Options) {
+			// o.BaseEndpoint = aws.String(h.cfg.AWS_HOST)
+			o.BaseEndpoint = aws.String("http://localhost:9000")
+		})
 
 	uploader := manager.NewUploader(client)
 

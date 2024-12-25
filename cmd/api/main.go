@@ -13,7 +13,7 @@ import (
 func main() {
 	// Load environment variables from .env file if it exists
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found. Using system environment variables...")
+		log.Println("No .env file found. Using system environment variables.")
 	}
 
 	// Load the configuration
