@@ -44,7 +44,7 @@ func NewProductUseCase(
 
 func (i *productUseCase) AddProduct(product models.Products, image *multipart.FileHeader) (models.Products, error) {
 
-	url, err := i.helper.AddImageToS3(image)
+	url, err := i.helper.AddImageToS3(image, "ahava")
 	if err != nil {
 		return models.Products{}, err
 	}
@@ -61,7 +61,7 @@ func (i *productUseCase) AddProduct(product models.Products, image *multipart.Fi
 
 func (i *productUseCase) UpdateProductImage(id int, file *multipart.FileHeader) (models.Products, error) {
 
-	url, err := i.helper.AddImageToS3(file)
+	url, err := i.helper.AddImageToS3(file, "ahava")
 	if err != nil {
 		return models.Products{}, err
 	}

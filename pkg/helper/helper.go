@@ -5,13 +5,14 @@ import (
 	"ahava/pkg/utils/models"
 	"context"
 	"fmt"
+	"log"
 	"mime/multipart"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
+
+	// "github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/golang-jwt/jwt"
 	"github.com/jinzhu/copier"
 	"golang.org/x/crypto/bcrypt"
@@ -27,7 +28,7 @@ import (
 
 type Helper interface {
 	GenerateTokenAdmin(admin models.AdminDetailsResponse) (string, string, error)
-	AddImageToS3(file *multipart.FileHeader) (string, error)
+	AddImageToS3(file *multipart.FileHeader, bucketName string) (string, error)
 	TwilioSetup(username string, password string)
 	TwilioSendOTP(phone string, serviceID string) (string, error)
 	TwilioVerifyOTP(serviceID string, code string, phone string) error
@@ -93,47 +94,81 @@ func (helper *helper) GenerateTokenAdmin(admin models.AdminDetailsResponse) (str
 	return accessTokenString, refreshTokenString, nil
 }
 
-func (h *helper) AddImageToS3(file *multipart.FileHeader) (string, error) {
-
-	// cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("ap-south-1"))
-	// if err != nil {
-	// 	fmt.Println("configuration error:", err)
-	// 	return "", err
-	// }
-
-	// client := s3.NewFromConfig(cfg)
-	client := s3.NewFromConfig(
-		aws.Config{Region: "us-east-1",
-			Credentials: credentials.NewStaticCredentialsProvider(h.cfg.AWS_ACCESS_KEY_ID, h.cfg.AWS_SECRET_ACCESS_KEY, ""),
-		},
-		func(o *s3.Options) {
-			// o.BaseEndpoint = aws.String(h.cfg.AWS_HOST)
-			o.BaseEndpoint = aws.String("http://localhost:9000")
-		})
-
-	uploader := manager.NewUploader(client)
-
-	f, openErr := file.Open()
-	if openErr != nil {
-		fmt.Println("opening error:", openErr)
-		return "", openErr
-	}
-	defer f.Close()
-
-	result, uploadErr := uploader.Upload(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String("ahava"),
-		Key:    aws.String(file.Filename),
-		Body:   f,
-		ACL:    "public-read",
+func (h *helper) AddImageToS3(file *multipart.FileHeader, bucketName string) (string, error) {
+	// Initialize MinIO client
+	minioClient, err := minio.New(h.cfg.MINIO_ENDPOINT, &minio.Options{
+		Creds:  credentials.NewStaticV4(h.cfg.MINIO_ACCESS_KEY_ID, h.cfg.MINIO_SECRET_ACCESS_KEY, ""),
+		Secure: false,
 	})
-
-	if uploadErr != nil {
-		fmt.Println("uploading error:", uploadErr)
-		return "", uploadErr
+	if err != nil {
+		log.Printf("Error initializing MinIO client: %v", err)
+		return "", err
 	}
 
-	return result.Location, nil
+	// Open file
+	fileContent, err := file.Open()
+	if err != nil {
+		log.Printf("Error opening file: %v", err)
+		return "", err
+	}
+	defer fileContent.Close()
+
+	// Upload file
+	objectName := file.Filename
+	contentType := "application/octet-stream"
+	_, err = minioClient.PutObject(context.Background(), bucketName, objectName, fileContent, file.Size, minio.PutObjectOptions{ContentType: contentType})
+	if err != nil {
+		log.Printf("Error uploading file: %v", err)
+		return "", err
+	}
+
+	// Generate file URL
+	fileURL := fmt.Sprintf("%s/%s/%s", h.cfg.MINIO_ENDPOINT_PUBLIC, bucketName, objectName)
+
+	return fileURL, nil
 }
+
+// func (h *helper) AddImageToS3(file *multipart.FileHeader) (string, error) {
+
+// 	// cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("ap-south-1"))
+// 	// if err != nil {
+// 	// 	fmt.Println("configuration error:", err)
+// 	// 	return "", err
+// 	// }
+
+// 	// client := s3.NewFromConfig(cfg)
+// 	client := s3.NewFromConfig(
+// 		aws.Config{Region: "us-east-1",
+// 			Credentials: credentials.NewStaticCredentialsProvider(h.cfg.AWS_ACCESS_KEY_ID, h.cfg.AWS_SECRET_ACCESS_KEY, ""),
+// 		},
+// 		func(o *s3.Options) {
+// 			// o.BaseEndpoint = aws.String(h.cfg.AWS_HOST)
+// 			o.BaseEndpoint = aws.String("http://ahava.com.vn")
+// 		})
+
+// 	uploader := manager.NewUploader(client)
+
+// 	f, openErr := file.Open()
+// 	if openErr != nil {
+// 		fmt.Println("opening error:", openErr)
+// 		return "", openErr
+// 	}
+// 	defer f.Close()
+
+// 	result, uploadErr := uploader.Upload(context.TODO(), &s3.PutObjectInput{
+// 		Bucket: aws.String("ahava"),
+// 		Key:    aws.String(file.Filename),
+// 		Body:   f,
+// 		ACL:    "public-read",
+// 	})
+
+// 	if uploadErr != nil {
+// 		fmt.Println("uploading error:", uploadErr)
+// 		return "", uploadErr
+// 	}
+
+// 	return result.Location, nil
+// }
 
 func (h *helper) TwilioSetup(username string, password string) {
 	client = twilio.NewRestClientWithParams(twilio.ClientParams{

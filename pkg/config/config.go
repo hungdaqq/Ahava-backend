@@ -8,23 +8,33 @@ import (
 )
 
 type Config struct {
-	BASE_URL              string `mapstructure:"BASE_URL"`
-	DBHost                string `mapstructure:"DB_HOST"`
-	DBName                string `mapstructure:"DB_NAME"`
-	DBUser                string `mapstructure:"DB_USER"`
-	DBPort                string `mapstructure:"DB_PORT"`
-	DBPassword            string `mapstructure:"DB_PASSWORD"`
-	AUTHTOKEN             string `mapstructure:"DB_AUTHTOKEN"`
-	ACCOUNTSID            string `mapstructure:"DB_ACCOUNTSID"`
-	SERVICESID            string `mapstructure:"DB_SERVICESID"`
-	AWS_HOST              string `mapstructure:"AWS_HOST"`
-	AWS_REGION            string `mapstructure:"AWS_REGION"`
-	AWS_ACCESS_KEY_ID     string `mapstructure:"AWS_ACCESS_KEY_ID"`
-	AWS_SECRET_ACCESS_KEY string `mapstructure:"AWS_SECRET_ACCESS_KEY"`
+	DBHost     string `mapstructure:"DB_HOST"`
+	DBName     string `mapstructure:"DB_NAME"`
+	DBUser     string `mapstructure:"DB_USER"`
+	DBPort     string `mapstructure:"DB_PORT"`
+	DBPassword string `mapstructure:"DB_PASSWORD"`
+	// AUTHTOKEN               string `mapstructure:"DB_AUTHTOKEN"`
+	// ACCOUNTSID              string `mapstructure:"DB_ACCOUNTSID"`
+	// SERVICESID              string `mapstructure:"DB_SERVICESID"`
+	MINIO_ENDPOINT          string `mapstructure:"MINIO_ENDPOINT"`
+	MINIO_ENDPOINT_PUBLIC   string `mapstructure:"MINIO_ENDPOINT_PUBLIC"`
+	MINIO_ACCESS_KEY_ID     string `mapstructure:"MINIO_ACCESS_KEY_ID"`
+	MINIO_SECRET_ACCESS_KEY string `mapstructure:"MINIO_SECRET_ACCESS_KEY"`
 }
 
 var envs = []string{
-	"BASE_URL", "DB_HOST", "DB_NAME", "DB_USER", "DB_PORT", "DB_PASSWORD", "DB_AUTHTOKEN", "DB_ACCOUNTSID", "DB_SERVICESID", "AWS_HOST", "AWS_REGION", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY",
+	"DB_HOST",
+	"DB_NAME",
+	"DB_USER",
+	"DB_PORT",
+	"DB_PASSWORD",
+	// "DB_AUTHTOKEN",
+	// "DB_ACCOUNTSID",
+	// "DB_SERVICESID",
+	"MINIO_ENDPOINT",
+	"MINIO_ENDPOINT_PUBLIC",
+	"MINIO_ACCESS_KEY_ID",
+	"MINIO_SECRET_ACCESS_KEY",
 }
 
 func LoadConfig() (Config, error) {
