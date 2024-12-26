@@ -12,7 +12,7 @@ func UserRoutes(
 	userHandler *handler.UserHandler,
 	// otpHandler *handler.OtpHandler,
 	productHandler *handler.ProductHandler,
-	// orderHandler *handler.OrderHandler,
+	orderHandler *handler.OrderHandler,
 	cartHandler *handler.CartHandler,
 	// paymentHandler *handler.PaymentHandler,
 	wishlisthandler *handler.WishlistHandler,
@@ -102,11 +102,15 @@ func UserRoutes(
 			wishlist.DELETE(":product_id", wishlisthandler.RemoveFromWishlist)
 		}
 
-		// checkout := engine.Group("/check-out")
-		// {
-		// checkout.POST("", cartHandler.CheckOut)
-		// checkout.POST("/order", orderHandler.OrderItemsFromCart)
-		// }
+		checkout := engine.Group("/order")
+		{
+			checkout.POST("", orderHandler.PlaceOrder)
+		}
+
+		payment := engine.Group("/payment")
+		{
+			payment.POST("/sepay", paymentHandler.CreateQR)
+		}
 
 		// engine.GET("/coupon", couponHandler.GetAllCoupons)
 

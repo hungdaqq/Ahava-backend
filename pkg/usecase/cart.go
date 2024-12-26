@@ -55,16 +55,6 @@ func (i *cartUseCase) AddToCart(user_id, product_id int, quantity uint) (models.
 
 func (i *cartUseCase) CheckOut(user_id int, cart_ids []int) (models.CheckOut, error) {
 
-	addresses, err := i.userRepository.GetAddresses(user_id)
-	if err != nil {
-		return models.CheckOut{}, err
-	}
-
-	// payment, err := i.repo.GetPaymentOptions()
-	// if err != nil {
-	// 	return models.CheckOut{}, err
-	// }
-
 	cart_items, err := i.repo.GetCart(user_id, cart_ids)
 	if err != nil {
 		return models.CheckOut{}, err
@@ -73,17 +63,14 @@ func (i *cartUseCase) CheckOut(user_id int, cart_ids []int) (models.CheckOut, er
 	var discountedPrice, totalPrice float64
 	for _, v := range cart_items {
 		totalPrice += v.ItemPrice
-		discountedPrice += v.DiscountedPrice
+		discountedPrice += v.ItemDiscountedPrice
 	}
 
 	var checkout models.CheckOut
 
-	// checkout.CartID = products.ID
-	checkout.Addresses = addresses
 	checkout.CartItems = cart_items
-	// checkout.PaymentMethods = payment
 	checkout.TotalPrice = totalPrice
-	checkout.DiscountedPrice = discountedPrice
+	checkout.TotalDiscountedPrice = discountedPrice
 
 	return checkout, nil
 }

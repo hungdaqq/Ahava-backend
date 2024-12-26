@@ -53,13 +53,13 @@ type Offer struct {
 }
 
 type PaymentMethod struct {
-	ID           uint   `gorm:"primarykey"`
-	Payment_Name string `json:"payment_name"`
-	IsDeleted    bool   `json:"is_deleted" gorm:"default:false"`
+	ID          uint   `json:"id" gorm:"primarykey"`
+	PaymentName string `json:"payment_name"`
+	Enable      bool   `json:"enable" gorm:"default:true"`
 }
 
 type Order struct {
-	gorm.Model
+	ID              int           `json:"id" gorm:"primarykey"`
 	UserID          uint          `json:"user_id" gorm:"not null"`
 	Users           Users         `json:"-" gorm:"foreignkey:UserID"`
 	AddressID       uint          `json:"address_id" gorm:"not null"`
@@ -68,18 +68,21 @@ type Order struct {
 	PaymentMethod   PaymentMethod `json:"-" gorm:"foreignkey:PaymentMethodID"`
 	CouponUsed      string        `json:"coupon_used" gorm:"default:null"`
 	FinalPrice      float64       `json:"price"`
-	OrderStatus     string        `json:"order_status" gorm:"order_status:4;default:'PENDING';check:order_status IN ('PENDING', 'SHIPPED','DELIVERED','CANCELED','RETURNED')"`
+	OrderStatus     string        `json:"order_status" gorm:"order_status:4;default:'PREPARE';check:order_status IN ('PREPARE', 'SHIP','DELIVER','CANCEL','RETURN')"`
 	PaymentStatus   string        `json:"payment_status" gorm:"payment_status:2;default:'NOT PAID';check:payment_status IN ('PAID', 'NOT PAID')"`
+	CreateAt        time.Time     `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
+	UpdateAt        time.Time     `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
 type OrderItem struct {
-	ID         uint     `json:"id" gorm:"primaryKey;autoIncrement"`
-	OrderID    uint     `json:"order_id"`
-	Order      Order    `json:"-" gorm:"foreignkey:OrderID;constraint:OnDelete:CASCADE"`
-	ProductID  uint     `json:"product_id"`
-	Products   Products `json:"-" gorm:"foreignkey:ProductID"`
-	Quantity   int      `json:"quantity"`
-	TotalPrice float64  `json:"total_price"`
+	ID              uint     `json:"id" gorm:"primaryKey;autoIncrement"`
+	OrderID         uint     `json:"order_id"`
+	Order           Order    `json:"-" gorm:"foreignkey:OrderID;constraint:OnDelete:CASCADE"`
+	ProductID       uint     `json:"product_id"`
+	Products        Products `json:"-" gorm:"foreignkey:ProductID"`
+	Quantity        int      `json:"quantity"`
+	ItemPrice       float64  `json:"item_price"`
+	DiscountedPrice float64  `json:"discounted_price"`
 }
 
 type AdminOrdersResponse struct {
@@ -115,6 +118,7 @@ type Products struct {
 	Price       float64  `json:"price"`
 	Description string   `json:"description"`
 	HowToUse    string   `json:"how_to_use"`
+	Enable      bool     `json:"enable" gorm:"default:true"`
 }
 
 type Category struct {
@@ -176,4 +180,22 @@ type SearchHistory struct {
 	Users     Users     `json:"-" gorm:"foreignkey:UserID"`
 	SearchKey string    `json:"search_key" gorm:"not null"`
 	CreateAt  time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
+}
+
+type Transaction struct {
+	ID              int       `json:"id" gorm:"unique;not null"`
+	UserID          int       `json:"user_id"`
+	Users           Users     `json:"-" gorm:"foreignkey:UserID"`
+	OrderID         int       `json:"order_id"`
+	Order           Order     `json:"-" gorm:"foreignkey:OrderID"`
+	Gateway         string    `json:"gateway"`
+	TransactionDate time.Time `json:"transactionDate"`
+	AccountNumber   string    `json:"accountNumber"`
+	Code            string    `json:"code"`
+	Content         string    `json:"content"`
+	TransferType    string    `json:"transferType"`
+	TransferAmount  float64   `json:"transferAmount"`
+	Accumulated     float64   `json:"accumulated"`
+	ReferenceCode   string    `json:"referenceCode"`
+	Description     string    `json:"description"`
 }

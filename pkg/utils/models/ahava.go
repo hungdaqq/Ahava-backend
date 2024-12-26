@@ -122,15 +122,13 @@ type EditProfile struct {
 }
 
 type CartItem struct {
-	CartID      int    `json:"cart_id"`
-	ProductID   int    `json:"product_id"`
-	ProductName string `json:"product_name"`
-	Image       string `json:"image"`
-	// Category_id     int     `json:"category_id"`
-	Quantity int `json:"quantity"`
-	// StockAvailable  int     `json:"stock"`
-	ItemPrice       float64 `json:"item_price"`
-	DiscountedPrice float64 `json:"discounted_price"`
+	CartID              int     `json:"cart_id"`
+	ProductID           int     `json:"product_id"`
+	ProductName         string  `json:"product_name"`
+	Image               string  `json:"image"`
+	Quantity            int     `json:"quantity"`
+	ItemPrice           float64 `json:"item_price"`
+	ItemDiscountedPrice float64 `json:"item_discounted_price"`
 }
 
 type UpdateCartItem struct {
@@ -159,11 +157,9 @@ type CartCheckout struct {
 }
 
 type CheckOut struct {
-	Addresses       []Address       `json:"addresses"`
-	CartItems       []CartItem      `json:"cart_items"`
-	PaymentMethods  []PaymentMethod `json:"payment_methods"`
-	TotalPrice      float64         `json:"total_price"`
-	DiscountedPrice float64         `json:"discounted_price"`
+	CartItems            []CartItem `json:"cart_items"`
+	TotalPrice           float64    `json:"total_price"`
+	TotalDiscountedPrice float64    `json:"total_discounted_price"`
 }
 
 type Address struct {
@@ -185,4 +181,57 @@ type Wishlist struct {
 	ID        int `json:"id"`
 	UserID    int `json:"user_id"`
 	ProductID int `json:"product_id"`
+}
+
+type Order struct {
+	ID              int       `json:"id"`
+	UserID          int       `json:"user_id"`
+	AddressID       int       `json:"address_id"`
+	PaymentMethodID int       `json:"payment_method_id"`
+	FinalPrice      float64   `json:"final_price"`
+	CouponUsed      string    `json:"coupon_used"`
+	OrderStatus     string    `json:"order_status"`
+	CreateAt        time.Time `json:"create_at"`
+	UpdateAt        time.Time `json:"update_at"`
+}
+
+type PlaceOrder struct {
+	UserID          int      `json:"user_id"`
+	AddressID       int      `json:"address_id"`
+	PaymentMethodID int      `json:"paymentmethod_id"`
+	CartCheckOut    CheckOut `json:"cart_checkout"`
+	CouponUsed      string   `json:"coupon_used"`
+	FinalPrice      float64  `json:"final_price"`
+}
+
+type OrderItem struct {
+	OrderID         int `json:"order_id"`
+	ProductID       int `json:"product_id"`
+	Quantity        int `json:"quantity"`
+	ItemPrice       int `json:"item_price"`
+	DiscountedPrice int `json:"item_discounted_price"`
+}
+
+type CreateQR struct {
+	AccountNumber string  `json:"account_number"`
+	BankName      string  `json:"bank_name"`
+	Amount        float64 `json:"amount"`
+	Description   string  `json:"description"`
+	Link          string  `json:"link"`
+}
+
+type Transaction struct {
+	ID              int       `json:"id"`
+	UserID          int       `json:"user_id"`
+	OrderID         int       `json:"order_id"`
+	Gateway         string    `json:"gateway"`
+	TransactionDate time.Time `json:"transactionDate"`
+	AccountNumber   string    `json:"accountNumber"`
+	Code            string    `json:"code"`
+	Content         string    `json:"content"`
+	TransferType    string    `json:"transferType"`
+	TransferAmount  float64   `json:"transferAmount"`
+	Accumulated     float64   `json:"accumulated"`
+	ReferenceCode   string    `json:"referenceCode"`
+	Description     string    `json:"description"`
 }

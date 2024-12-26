@@ -5,7 +5,6 @@ go 1.22.0
 toolchain go1.23.3
 
 require (
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.48
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.23.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -26,8 +25,6 @@ require (
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.32.7 // indirect
-	github.com/aws/smithy-go v1.22.1 // indirect
 	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect

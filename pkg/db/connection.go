@@ -36,15 +36,16 @@ func ConnectDatabase(cfg config.Config) (*gorm.DB, error) {
 	if err := db.AutoMigrate(domain.Address{}); err != nil {
 		return db, err
 	}
-	// if err := db.AutoMigrate(domain.Order{}); err != nil {
-	// 	return db, err
-	// }
-	// if err := db.AutoMigrate(domain.OrderItem{}); err != nil {
-	// 	return db, err
-	// }
-	// if err := db.AutoMigrate(domain.PaymentMethod{}); err != nil {
-	// 	return db, err
-	// }
+	if err := db.AutoMigrate(domain.Order{}); err != nil {
+		return db, err
+	}
+	if err := db.AutoMigrate(domain.PaymentMethod{}); err != nil {
+		return db, err
+	}
+	if err := db.AutoMigrate(domain.OrderItem{}); err != nil {
+		return db, err
+	}
+
 	// if err := db.AutoMigrate(domain.Coupons{}); err != nil {
 	// 	return db, err
 	// }
