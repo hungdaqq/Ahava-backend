@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"ahava/pkg/domain"
 	"ahava/pkg/utils/models"
 	"errors"
 
@@ -38,18 +39,25 @@ func (p *categoryRepository) AddCategory(category models.Category) (models.Categ
 
 func (p *categoryRepository) UpdateCategory(categoryID uint, category, description string) (models.Category, error) {
 
-	var updateCategory models.Category
+	var updateCategory domain.Category
 
-	result := p.DB.Raw("UPDATE categories SET category_name = $1, description = $2 WHERE id = $3 RETURNING *",
-		category, description, categoryID).Scan(&updateCategory)
+	result := p.DB.Model(&updateCategory).Where("id = ?", categoryID).Updates(domain.Category{
+		CategoryName: category,
+		Description:  description,
+	})
+
 	if result.Error != nil {
 		return models.Category{}, result.Error
 	}
-	if result.RowsAffected < 1 {
+
+	if result.RowsAffected == 0 {
 		return models.Category{}, errors.New("no records with that ID exist")
 	}
 
-	return updateCategory, nil
+	return models.Category{
+		ID:           updateCategory.ID,
+		CategoryName: updateCategory.CategoryName,
+		Description:  updateCategory.Description}, nil
 }
 
 func (c *categoryRepository) DeleteCategory(categoryID uint) error {

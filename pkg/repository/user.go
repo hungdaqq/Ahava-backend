@@ -107,16 +107,38 @@ func (i *userDatabase) AddAddress(user_id uint, address models.Address) (models.
 
 func (i *userDatabase) UpdateAddress(address_id uint, address models.Address) (models.Address, error) {
 
-	var addAddress models.Address
+	var updateAddress domain.Address
 
-	err := i.DB.Raw(`UPDATE addresses SET name=$1,street=$2,ward=$3,district=$4,city=$5,phone=$6,type=$7,"default"=$8 
-					WHERE id=$9 RETURNING *`,
-		address.Name, address.Street, address.Ward, address.District, address.City, address.Phone, address.Type, address.Default, address_id).Scan(&addAddress).Error
-	if err != nil {
-		return models.Address{}, errors.New("could not add address")
+	result := i.DB.Model(&updateAddress).Where("id = ?", address_id).Updates(models.Address{
+		Name:     address.Name,
+		Street:   address.Street,
+		Ward:     address.Ward,
+		District: address.District,
+		City:     address.City,
+		Phone:    address.Phone,
+		Type:     address.Type,
+		Default:  address.Default,
+	})
+
+	if result.Error != nil {
+		return models.Address{}, result.Error
 	}
 
-	return addAddress, nil
+	if result.RowsAffected == 0 {
+		return models.Address{}, errors.New("no address_id with that ID exist")
+	}
+
+	return models.Address{
+		ID:      updateAddress.ID,
+		UserID:  updateAddress.UserID,
+		Name:    updateAddress.Name,
+		Street:  updateAddress.Street,
+		Ward:    updateAddress.Ward,
+		City:    updateAddress.City,
+		Phone:   updateAddress.Phone,
+		Type:    updateAddress.Type,
+		Default: updateAddress.Default,
+	}, nil
 }
 
 func (i *userDatabase) DeleteAddress(address_id uint) error {
@@ -171,13 +193,17 @@ func (ad *userDatabase) GetUserDetails(user_id uint) (models.UserDetailsResponse
 
 func (i *userDatabase) ChangePassword(id uint, password string) error {
 
-	err := i.DB.Exec("UPDATE users SET password=$1 WHERE id=$2", password, id).Error
-	if err != nil {
-		return err
+	result := i.DB.Model(&domain.Users{}).Where("id = ?", id).Update("password", password)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.New("user not found")
 	}
 
 	return nil
-
 }
 
 func (i *userDatabase) GetPassword(id uint) (string, error) {

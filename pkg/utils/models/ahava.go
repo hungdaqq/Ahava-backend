@@ -158,7 +158,7 @@ type CheckOut struct {
 }
 
 type Address struct {
-	Id       uint      `json:"id"`
+	ID       uint      `json:"id"`
 	UserID   uint      `json:"user_id"`
 	Name     string    `json:"name"`
 	Street   string    `json:"street"`

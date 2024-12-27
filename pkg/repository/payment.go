@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"ahava/pkg/domain"
 	"ahava/pkg/utils/models"
+	"errors"
 
 	"gorm.io/gorm"
 )
@@ -31,12 +33,26 @@ func (p *paymentRepository) CreateSePayQR(qr models.CreateQR, user_id uint) erro
 
 func (p *paymentRepository) SePayWebhook(transaction models.Transaction) error {
 
-	err := p.DB.Exec(`UPDATE transactions SET gateway=$1,transaction_date=$2,account_number=$3,content=$4,transfer_type=$5,
-					transfer_amount=$6,accumulated=$7,reference_code=$8,description=$9 WHERE code=$10`,
-		transaction.Gateway, transaction.TransactionDate, transaction.AccountNumber, transaction.Content, transaction.TransferType,
-		transaction.TransferAmount, transaction.Accumulated, transaction.ReferenceCode, transaction.Description, transaction.Code).Error
-	if err != nil {
-		return err
+	result := p.DB.Model(&domain.Transaction{}).Where("code = ?", transaction.Code).Updates(domain.Transaction{
+		Gateway:         transaction.Gateway,
+		TransactionDate: transaction.TransactionDate,
+		AccountNumber:   transaction.AccountNumber,
+		Content:         transaction.Content,
+		TransferType:    transaction.TransferType,
+		TransferAmount:  transaction.TransferAmount,
+		Accumulated:     transaction.Accumulated,
+		ReferenceCode:   transaction.ReferenceCode,
+		Description:     transaction.Description,
+	})
+
+	// Check for errors in the update process
+	if result.Error != nil {
+		return result.Error
+	}
+
+	// Check if any rows were affected (to handle case where no transaction with the given code exists)
+	if result.RowsAffected == 0 {
+		return errors.New("transaction not found")
 	}
 
 	return nil

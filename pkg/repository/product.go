@@ -189,10 +189,11 @@ func (i *productRepository) GetSearchHistory(user_id uint) ([]models.SearchHisto
 }
 
 func (i *productRepository) UpdateProductImage(product_id uint, url string) (models.Products, error) {
+	
 	var updateProduct domain.Products
 
 	// Use GORM's Update method to update the product image
-	result := i.DB.Model(updateProduct).Where("id = ?", product_id).Update("image", url)
+	result := i.DB.Model(&updateProduct).Where("id = ?", product_id).Update("image", url)
 
 	// Check for errors in the update process
 	if result.Error != nil {
@@ -221,9 +222,8 @@ func (i *productRepository) UpdateProduct(product_id uint, model models.Products
 
 	var updateProduct domain.Products
 
-	result := i.DB.Model(&models.Products{}).
-		Where("id = ?", product_id).
-		Updates(domain.Products{
+	result := i.DB.Model(&updateProduct).Where("id = ?", product_id).Updates(
+		domain.Products{
 			ProductName: model.ProductName,
 			CategoryID:  model.CategoryID,
 			Price:       model.Price,
