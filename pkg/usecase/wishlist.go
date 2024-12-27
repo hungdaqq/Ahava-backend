@@ -7,9 +7,9 @@ import (
 )
 
 type WishlistUseCase interface {
-	AddToWishlist(user_id, product_id int) (models.Wishlist, error)
-	RemoveFromWishlist(user_id, product_id int) error
-	GetWishList(user_id int) ([]models.Products, error)
+	AddToWishlist(user_id, product_id uint) (models.Wishlist, error)
+	RemoveFromWishlist(user_id, product_id uint) error
+	GetWishList(user_id uint) ([]models.Products, error)
 }
 
 type wishlistUseCase struct {
@@ -27,7 +27,7 @@ func NewWishlistUseCase(
 	}
 }
 
-func (w *wishlistUseCase) AddToWishlist(user_id, product_id int) (models.Wishlist, error) {
+func (w *wishlistUseCase) AddToWishlist(user_id, product_id uint) (models.Wishlist, error) {
 
 	exists, err := w.repository.CheckIfTheItemIsPresentAtWishlist(user_id, product_id)
 	if err != nil {
@@ -46,7 +46,7 @@ func (w *wishlistUseCase) AddToWishlist(user_id, product_id int) (models.Wishlis
 	return result, nil
 }
 
-func (w *wishlistUseCase) RemoveFromWishlist(user_id, product_id int) error {
+func (w *wishlistUseCase) RemoveFromWishlist(user_id, product_id uint) error {
 
 	if err := w.repository.RemoveFromWishlist(user_id, product_id); err != nil {
 		return errors.New("could not remove from wishlist")
@@ -55,7 +55,7 @@ func (w *wishlistUseCase) RemoveFromWishlist(user_id, product_id int) error {
 	return nil
 }
 
-func (w *wishlistUseCase) GetWishList(id int) ([]models.Products, error) {
+func (w *wishlistUseCase) GetWishList(id uint) ([]models.Products, error) {
 
 	productDetails, err := w.repository.GetWishList(id)
 	if err != nil {

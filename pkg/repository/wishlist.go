@@ -7,12 +7,12 @@ import (
 )
 
 type WishlistRepository interface {
-	AddToWishlist(user_id, product_id int) (models.Wishlist, error)
-	RemoveFromWishlist(user_id, product_id int) error
-	GetWishList(user_id int) ([]models.Products, error)
+	AddToWishlist(user_id, product_id uint) (models.Wishlist, error)
+	RemoveFromWishlist(user_id, product_id uint) error
+	GetWishList(user_id uint) ([]models.Products, error)
 
-	CheckIfTheItemIsPresentAtWishlist(user_id, product_id int) (bool, error)
-	// CheckIfTheItemIsPresentAtCart(user_id, product_id int) (bool, error)
+	CheckIfTheItemIsPresentAtWishlist(user_id, product_id uint) (bool, error)
+	// CheckIfTheItemIsPresentAtCart(user_id, product_id uint) (bool, error)
 }
 
 type wishlistRepository struct {
@@ -25,7 +25,7 @@ func NewWishlistRepository(db *gorm.DB) *wishlistRepository {
 	}
 }
 
-func (w *wishlistRepository) AddToWishlist(user_id, product_id int) (models.Wishlist, error) {
+func (w *wishlistRepository) AddToWishlist(user_id, product_id uint) (models.Wishlist, error) {
 
 	var addWishlist models.Wishlist
 
@@ -38,7 +38,7 @@ func (w *wishlistRepository) AddToWishlist(user_id, product_id int) (models.Wish
 	return addWishlist, nil
 }
 
-func (w *wishlistRepository) RemoveFromWishlist(user_id, product_id int) error {
+func (w *wishlistRepository) RemoveFromWishlist(user_id, product_id uint) error {
 
 	err := w.DB.Exec("DELETE FROM wishlists WHERE product_id=$1 AND user_id=$2",
 		user_id, product_id).Error
@@ -49,7 +49,7 @@ func (w *wishlistRepository) RemoveFromWishlist(user_id, product_id int) error {
 	return nil
 }
 
-func (w *wishlistRepository) GetWishList(id int) ([]models.Products, error) {
+func (w *wishlistRepository) GetWishList(id uint) ([]models.Products, error) {
 	var productDetails []models.Products
 
 	query := `
@@ -73,7 +73,7 @@ func (w *wishlistRepository) GetWishList(id int) ([]models.Products, error) {
 	return productDetails, nil
 }
 
-// func (w *wishlistRepository) CheckIfTheItemIsPresentAtCart(user_id, product_id int) (bool, error) {
+// func (w *wishlistRepository) CheckIfTheItemIsPresentAtCart(user_id, product_id uint) (bool, error) {
 
 // 	var result int64
 
@@ -91,7 +91,7 @@ func (w *wishlistRepository) GetWishList(id int) ([]models.Products, error) {
 
 // }
 
-func (w *wishlistRepository) CheckIfTheItemIsPresentAtWishlist(user_id, product_id int) (bool, error) {
+func (w *wishlistRepository) CheckIfTheItemIsPresentAtWishlist(user_id, product_id uint) (bool, error) {
 
 	var result int64
 

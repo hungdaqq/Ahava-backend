@@ -22,7 +22,7 @@ func NewOrderHandler(usecase services.OrderUseCase) *OrderHandler {
 
 func (h *OrderHandler) PlaceOrder(c *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := c.MustGet("id").(uint)
 
 	var orderDetails models.PlaceOrder
 	if err := c.BindJSON(&orderDetails); err != nil {

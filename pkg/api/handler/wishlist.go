@@ -21,7 +21,7 @@ func NewWishlistHandler(use services.WishlistUseCase) *WishlistHandler {
 
 func (w *WishlistHandler) AddToWishlist(c *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := c.MustGet("id").(uint)
 
 	product_id, err := strconv.Atoi(c.Query("product_id"))
 	if err != nil {
@@ -29,7 +29,7 @@ func (w *WishlistHandler) AddToWishlist(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-	result, err := w.usecase.AddToWishlist(user_id, product_id)
+	result, err := w.usecase.AddToWishlist(user_id, uint(product_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add to Wishlist", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -43,7 +43,7 @@ func (w *WishlistHandler) AddToWishlist(c *gin.Context) {
 
 func (w *WishlistHandler) RemoveFromWishlist(c *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := c.MustGet("id").(uint)
 
 	product_id, err := strconv.Atoi(c.Query("product_id"))
 	if err != nil {
@@ -51,7 +51,7 @@ func (w *WishlistHandler) RemoveFromWishlist(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-	if err := w.usecase.RemoveFromWishlist(user_id, product_id); err != nil {
+	if err := w.usecase.RemoveFromWishlist(user_id, uint(product_id)); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not remove from wishlist", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
@@ -63,7 +63,7 @@ func (w *WishlistHandler) RemoveFromWishlist(c *gin.Context) {
 
 func (w *WishlistHandler) GetWishList(c *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := c.MustGet("id").(uint)
 
 	products, err := w.usecase.GetWishList(user_id)
 	if err != nil {

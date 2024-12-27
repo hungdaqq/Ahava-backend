@@ -16,7 +16,7 @@ func UserRoutes(
 	cartHandler *handler.CartHandler,
 	paymentHandler *handler.PaymentHandler,
 	wishlisthandler *handler.WishlistHandler,
-	// categoryHandler *handler.CategoryHandler,
+	categoryHandler *handler.CategoryHandler,
 	// couponHandler *handler.CouponHandler
 ) {
 
@@ -34,6 +34,12 @@ func UserRoutes(
 	// 	payment.GET("/update_status", paymentHandler.VerifyPayment)
 	// }
 
+	payment := engine.Group("/payment")
+	{
+		payment.POST("/qr", paymentHandler.CreateQR)
+		payment.GET("/webhook", paymentHandler.Webhook)
+	}
+
 	engine.Use(middleware.UserAuthMiddleware)
 	{
 
@@ -41,11 +47,8 @@ func UserRoutes(
 
 		home := engine.Group("/home")
 		{
-			// home.POST("/add-to-cart", cartHandler.AddToCart)
-			// home.POST("/wishlist/add", wishlisthandler.AddToWishlist)
 			home.POST("/search", productHandler.SearchProducts)
 			home.GET("/search", productHandler.GetSearchHistory)
-
 		}
 
 		product := engine.Group("/product")
@@ -53,12 +56,10 @@ func UserRoutes(
 			product.GET("/detail", productHandler.ShowProductDetails)
 			product.GET("", productHandler.ListCategoryProducts)
 		}
-		// categorymanagement := engine.Group("/category")
-		// {
-		// 	categorymanagement.GET("", categoryHandler.GetCategory)
-		// 	categorymanagement.GET("/products", categoryHandler.GetProductDetailsInACategory)
-
-		// }
+		categorymanagement := engine.Group("/category")
+		{
+			categorymanagement.GET("", categoryHandler.GetCategory)
+		}
 
 		profile := engine.Group("/profile")
 		{
@@ -108,12 +109,6 @@ func UserRoutes(
 		checkout := engine.Group("/order")
 		{
 			checkout.POST("", orderHandler.PlaceOrder)
-		}
-
-		payment := engine.Group("/payment")
-		{
-			payment.POST("/qr", paymentHandler.CreateQR)
-			payment.GET("/webhook", paymentHandler.Webhook)
 		}
 
 		// engine.GET("/coupon", couponHandler.GetAllCoupons)

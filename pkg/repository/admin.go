@@ -12,13 +12,13 @@ import (
 
 type AdminRepository interface {
 	LoginHandler(adminDetails models.AdminLogin) (domain.Admin, error)
-	GetUserByID(user_id int) (domain.Users, error)
+	GetUserByID(user_id uint) (domain.Users, error)
 	UpdateBlockUserByID(user domain.Users) error
 	GetUsers(page int) ([]models.UserDetailsAtAdmin, error)
 	NewPaymentMethod(string) error
 	ListPaymentMethods() ([]domain.PaymentMethod, error)
 	CheckIfPaymentMethodAlreadyExists(payment string) (bool, error)
-	DeletePaymentMethod(id int) error
+	DeletePaymentMethod(id uint) error
 }
 
 type adminRepository struct {
@@ -41,7 +41,7 @@ func (ad *adminRepository) LoginHandler(adminDetails models.AdminLogin) (domain.
 	return adminCompareDetails, nil
 }
 
-func (ad *adminRepository) GetUserByID(user_id int) (domain.Users, error) {
+func (ad *adminRepository) GetUserByID(user_id uint) (domain.Users, error) {
 	var count int
 	if err := ad.DB.Raw("select count(*) from users where id = ?", user_id).Scan(&count).Error; err != nil {
 		return domain.Users{}, err
@@ -118,7 +118,7 @@ func (a *adminRepository) CheckIfPaymentMethodAlreadyExists(payment string) (boo
 	return count > 0, nil
 }
 
-func (a *adminRepository) DeletePaymentMethod(id int) error {
+func (a *adminRepository) DeletePaymentMethod(id uint) error {
 	err := a.DB.Exec("UPDATE payment_methods SET is_deleted = true WHERE id = $1 ", id).Error
 	if err != nil {
 		return err

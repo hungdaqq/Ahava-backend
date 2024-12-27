@@ -65,7 +65,7 @@ func (Cat *CategoryHandler) UpdateCategory(c *gin.Context) {
 		return
 	}
 
-	a, err := Cat.CategoryUseCase.UpdateCategory(categoryID, p.CategoryName, p.Description)
+	a, err := Cat.CategoryUseCase.UpdateCategory(uint(categoryID), p.CategoryName, p.Description)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not update the Category", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -86,7 +86,7 @@ func (Cat *CategoryHandler) DeleteCategory(c *gin.Context) {
 		return
 	}
 
-	err = Cat.CategoryUseCase.DeleteCategory(categoryID)
+	err = Cat.CategoryUseCase.DeleteCategory(uint(categoryID))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)

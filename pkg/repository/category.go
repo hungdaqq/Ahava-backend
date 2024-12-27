@@ -9,8 +9,8 @@ import (
 
 type CategoryRepository interface {
 	AddCategory(category models.Category) (models.Category, error)
-	UpdateCategory(categoryID int, category, description string) (models.Category, error)
-	DeleteCategory(categoryID int) error
+	UpdateCategory(categoryID uint, category, description string) (models.Category, error)
+	DeleteCategory(categoryID uint) error
 	GetCategories() ([]models.Category, error)
 	GetBannersForUsers() ([]models.Banner, error)
 	GetImagesOfProductsFromACategory(CategoryID int) ([]string, error)
@@ -36,7 +36,7 @@ func (p *categoryRepository) AddCategory(category models.Category) (models.Categ
 	return addCategory, nil
 }
 
-func (p *categoryRepository) UpdateCategory(categoryID int, category, description string) (models.Category, error) {
+func (p *categoryRepository) UpdateCategory(categoryID uint, category, description string) (models.Category, error) {
 
 	var updateCategory models.Category
 
@@ -52,7 +52,7 @@ func (p *categoryRepository) UpdateCategory(categoryID int, category, descriptio
 	return updateCategory, nil
 }
 
-func (c *categoryRepository) DeleteCategory(categoryID int) error {
+func (c *categoryRepository) DeleteCategory(categoryID uint) error {
 
 	result := c.DB.Exec("DELETE FROM categories WHERE id = ?", categoryID)
 	if result.Error != nil {

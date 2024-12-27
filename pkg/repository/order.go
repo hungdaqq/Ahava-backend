@@ -8,7 +8,7 @@ import (
 
 type OrderRepository interface {
 	PlaceOrder(order models.PlaceOrder) (models.Order, error)
-	PlaceOrderItem(item models.CartItem, order_id int) error
+	PlaceOrderItem(item models.CartItem, order_id uint) error
 }
 
 type orderRepository struct {
@@ -32,7 +32,7 @@ func (or *orderRepository) PlaceOrder(order models.PlaceOrder) (models.Order, er
 	return orderDetails, nil
 }
 
-func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) error {
+func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id uint) error {
 
 	err := or.DB.Exec(`INSERT INTO order_items (order_id, product_id, quantity, item_price, discounted_price) VALUES (?,?,?,?,?)`,
 		order_id, item.ProductID, item.Quantity, item.ItemPrice, item.ItemDiscountedPrice).Error
@@ -54,7 +54,7 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 
 // }
 
-// func (ad *orderRepository) GetCart(id int) ([]models.GetCart, error) {
+// func (ad *orderRepository) GetCart(id uint) ([]models.GetCart, error) {
 
 // 	var cart []models.GetCart
 
@@ -65,21 +65,21 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 
 // }
 
-// func (i *orderRepository) OrderItems(userid, addressid, paymentid int, total float64, coupon string) (int, error) {
+// func (i *orderRepository) OrderItems(userID, addressid, paymentid uint, total float64, coupon string) (int, error) {
 
-// 	var id int
+// 	var id uint
 // 	query := `
 //     INSERT INTO orders (user_id,address_id, payment_method_id, final_price,coupon_used)
 //     VALUES (?, ?, ?, ?, ?)
 //     RETURNING id
 //     `
-// 	i.DB.Raw(query, userid, addressid, paymentid, total, coupon).Scan(&id)
+// 	i.DB.Raw(query, userID, addressid, paymentid, total, coupon).Scan(&id)
 
 // 	return id, nil
 
 // }
 
-// func (i *orderRepository) AddOrderProducts(order_id int, cart []models.GetCart) error {
+// func (i *orderRepository) AddOrderProducts(order_id uint, cart []models.GetCart) error {
 
 // 	query := `
 //     INSERT INTO order_items (order_id,product_id,quantity,total_price)
@@ -101,7 +101,7 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 
 // }
 
-// func (i *orderRepository) CancelOrder(id int) error {
+// func (i *orderRepository) CancelOrder(id uint) error {
 
 // 	if err := i.DB.Exec("update orders set order_status='CANCELED' where id=$1", id).Error; err != nil {
 // 		return err
@@ -111,7 +111,7 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 
 // }
 
-// func (i *orderRepository) EditOrderStatus(status string, id int) error {
+// func (i *orderRepository) EditOrderStatus(status string, id uint) error {
 
 // 	if err := i.DB.Exec("update orders set order_status=$1 where id=$2", status, id).Error; err != nil {
 // 		return err
@@ -132,7 +132,7 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 
 // }
 
-// func (o *orderRepository) CheckOrder(orderID string, userID int) error {
+// func (o *orderRepository) CheckOrder(orderID string, userID uint) error {
 
 // 	var count int
 // 	err := o.DB.Raw("select count(*) from orders where order_id = ?", orderID).Scan(&count).Error
@@ -167,7 +167,7 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 
 // }
 
-// func (i *orderRepository) ReturnOrder(id int) error {
+// func (i *orderRepository) ReturnOrder(id uint) error {
 
 // 	if err := i.DB.Exec("update orders set order_status='RETURNED' where id=$1", id).Error; err != nil {
 // 		return err
@@ -177,7 +177,7 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 
 // }
 
-// func (o *orderRepository) CheckOrderStatusByID(id int) (string, error) {
+// func (o *orderRepository) CheckOrderStatusByID(id uint) (string, error) {
 
 // 	var status string
 // 	err := o.DB.Raw("select order_status from orders where id = ?", id).Scan(&status).Error
@@ -188,7 +188,7 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 // 	return status, nil
 // }
 
-// func (o *orderRepository) FindAmountFromOrderID(id int) (float64, error) {
+// func (o *orderRepository) FindAmountFromOrderID(id uint) (float64, error) {
 
 // 	var amount float64
 // 	err := o.DB.Raw("select final_price from orders where id = ?", id).Scan(&amount).Error
@@ -199,7 +199,7 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 // 	return amount, nil
 // }
 
-// func (i *orderRepository) CreditToUserWallet(amount float64, walletId int) error {
+// func (i *orderRepository) CreditToUserWallet(amount float64, walletid uint) error {
 
 // 	if err := i.DB.Exec("update wallets set amount=$1 where id=$2", amount, walletId).Error; err != nil {
 // 		return err
@@ -209,9 +209,9 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 
 // }
 
-// func (o *orderRepository) FindUserIdFromOrderID(id int) (int, error) {
+// func (o *orderRepository) FindUserIdFromOrderID(id uint) (int, error) {
 
-// 	var userID int
+// 	var userID uint
 // 	err := o.DB.Raw("select user_id from orders where id = ?", id).Scan(&userID).Error
 // 	if err != nil {
 // 		return 0, err
@@ -220,7 +220,7 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 // 	return userID, nil
 // }
 
-// func (o *orderRepository) FindWalletIdFromUserID(userId int) (int, error) {
+// func (o *orderRepository) FindWalletIdFromUserID(userID uint) (int, error) {
 
 // 	var count int
 // 	err := o.DB.Raw("select count(*) from wallets where user_id = ?", userId).Scan(&count).Error
@@ -228,7 +228,7 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 // 		return 0, err
 // 	}
 
-// 	var walletID int
+// 	var walletid uint
 // 	if count > 0 {
 // 		err := o.DB.Raw("select id from wallets where user_id = ?", userId).Scan(&walletID).Error
 // 		if err != nil {
@@ -240,9 +240,9 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 
 // }
 
-// func (o *orderRepository) CreateNewWallet(userID int) (int, error) {
+// func (o *orderRepository) CreateNewWallet(userID uint) (int, error) {
 
-// 	var walletID int
+// 	var walletid uint
 // 	err := o.DB.Exec("Insert into wallets(user_id,amount) values($1,$2)", userID, 0).Error
 // 	if err != nil {
 // 		return 0, err
@@ -255,7 +255,7 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 // 	return walletID, nil
 // }
 
-// func (o *orderRepository) MakePaymentStatusAsPaid(id int) error {
+// func (o *orderRepository) MakePaymentStatusAsPaid(id uint) error {
 
 // 	err := o.DB.Exec("UPDATE orders SET payment_status = 'PAID' WHERE id = $1", id).Error
 // 	if err != nil {
@@ -265,7 +265,7 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 // 	return nil
 // }
 
-// func (o *orderRepository) GetProductImagesInAOrder(id int) ([]string, error) {
+// func (o *orderRepository) GetProductImagesInAOrder(id uint) ([]string, error) {
 
 // 	var images []string
 // 	err := o.DB.Raw(`SELECT products.image
@@ -280,7 +280,7 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 // 	return images, nil
 // }
 
-// func (o *orderRepository) GetIndividualOrderDetails(id int) (models.IndividualOrderDetails, error) {
+// func (o *orderRepository) GetIndividualOrderDetails(id uint) (models.IndividualOrderDetails, error) {
 
 // 	var details models.IndividualOrderDetails
 // 	err := o.DB.Raw(`SELECT orders.id AS order_id,
@@ -302,7 +302,7 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 // 	return details, nil
 // }
 
-// func (o *orderRepository) GetProductDetailsInOrder(id int) ([]models.ProductDetails, error) {
+// func (o *orderRepository) GetProductDetailsInOrder(id uint) ([]models.ProductDetails, error) {
 
 // 	var products []models.ProductDetails
 // 	err := o.DB.Raw(`SELECT  products.product_name,
@@ -320,7 +320,7 @@ func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id int) er
 // 	return products, nil
 // }
 
-// func (o *orderRepository) FindPaymentMethodOfOrder(id int) (string, error) {
+// func (o *orderRepository) FindPaymentMethodOfOrder(id uint) (string, error) {
 
 // 	var payment string
 

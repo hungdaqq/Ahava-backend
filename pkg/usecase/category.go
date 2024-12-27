@@ -8,8 +8,8 @@ import (
 
 type CategoryUseCase interface {
 	AddCategory(category models.Category) (models.Category, error)
-	UpdateCategory(categoryID int, category, description string) (models.Category, error)
-	DeleteCategory(categoryID int) error
+	UpdateCategory(categoryID uint, category, description string) (models.Category, error)
+	DeleteCategory(categoryID uint) error
 	GetCategories() ([]models.Category, error)
 	GetBannersForUsers() ([]models.Banner, error)
 }
@@ -55,7 +55,7 @@ func (Cat *categoryUseCase) GetCategories() ([]models.Category, error) {
 
 }
 
-func (Cat *categoryUseCase) UpdateCategory(categoryID int, category, description string) (models.Category, error) {
+func (Cat *categoryUseCase) UpdateCategory(categoryID uint, category, description string) (models.Category, error) {
 
 	newcat, err := Cat.repository.UpdateCategory(categoryID, category, description)
 	if err != nil {
@@ -65,7 +65,7 @@ func (Cat *categoryUseCase) UpdateCategory(categoryID int, category, description
 	return newcat, err
 }
 
-func (Cat *categoryUseCase) DeleteCategory(categoryID int) error {
+func (Cat *categoryUseCase) DeleteCategory(categoryID uint) error {
 
 	err := Cat.repository.DeleteCategory(categoryID)
 	if err != nil {

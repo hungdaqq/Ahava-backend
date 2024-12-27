@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 
+	"ahava/pkg/domain"
 	"ahava/pkg/utils/models"
 
 	"gorm.io/gorm"
@@ -13,26 +14,23 @@ type UserRepository interface {
 	CheckUserAvailability(email, phone string) bool
 	FindUserByEmail(user models.UserLogin) (models.UserSignInResponse, error)
 	UserBlockStatus(email string) (bool, error)
-	AddAddress(user_id int, address models.Address) (models.Address, error)
-	GetAddresses(user_id int) ([]models.Address, error)
-	UpdateAddress(address_id int, address models.Address) (models.Address, error)
-	DeleteAddress(address_id int) error
+	AddAddress(user_id uint, address models.Address) (models.Address, error)
+	GetAddresses(user_id uint) ([]models.Address, error)
+	UpdateAddress(address_id uint, address models.Address) (models.Address, error)
+	DeleteAddress(address_id uint) error
 
-	GetUserDetails(user_id int) (models.UserDetailsResponse, error)
-	ChangePassword(user_id int, password string) error
-	GetPassword(user_id int) (string, error)
-	FindIdFromPhone(phone string) (int, error)
-	EditProfile(user_id int, name, email, phone string) (models.UserDetailsResponse, error)
+	GetUserDetails(user_id uint) (models.UserDetailsResponse, error)
+	ChangePassword(user_id uint, password string) error
+	GetPassword(user_id uint) (string, error)
+	// FindIdFromPhone(phone string) (int, error)
+	EditProfile(user_id uint, name, email, phone string) (models.UserDetailsResponse, error)
 
-	// CheckIfFirstAddress(user_id int) bool
+	// CheckIfFirstAddress(user_id uint) bool
 
-	CreditReferencePointsToWallet(user_id int) error
-	FindUserFromReference(ref string) (int, error)
+	// CreditReferencePointsToWallet(user_id uint) error
+	// FindUserFromReference(ref string) (int, error)
 
-	GetReferralCodeFromID(id int) (string, error)
-
-	FindProductImage(id int) (string, error)
-	FindStock(id int) (int, error)
+	// GetReferralCodeFromID(id uint) (string, error)
 }
 
 type userDatabase struct {
@@ -91,10 +89,12 @@ func (c *userDatabase) FindUserByEmail(user models.UserLogin) (models.UserSignIn
 
 }
 
-func (i *userDatabase) AddAddress(user_id int, address models.Address) (models.Address, error) {
+func (i *userDatabase) AddAddress(user_id uint, address models.Address) (models.Address, error) {
 
 	var addAddress models.Address
-
+	if address.Type == "" {
+		address.Type = "HOME"
+	}
 	err := i.DB.Raw(`INSERT INTO addresses (user_id, name, street, ward, district, city, phone, type, "default") 
 					VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
 		user_id, address.Name, address.Street, address.Ward, address.District, address.City, address.Phone, address.Type, address.Default).Scan(&addAddress).Error
@@ -105,7 +105,7 @@ func (i *userDatabase) AddAddress(user_id int, address models.Address) (models.A
 	return addAddress, nil
 }
 
-func (i *userDatabase) UpdateAddress(address_id int, address models.Address) (models.Address, error) {
+func (i *userDatabase) UpdateAddress(address_id uint, address models.Address) (models.Address, error) {
 
 	var addAddress models.Address
 
@@ -119,7 +119,7 @@ func (i *userDatabase) UpdateAddress(address_id int, address models.Address) (mo
 	return addAddress, nil
 }
 
-func (i *userDatabase) DeleteAddress(address_id int) error {
+func (i *userDatabase) DeleteAddress(address_id uint) error {
 
 	var addAddress models.Address
 
@@ -132,7 +132,7 @@ func (i *userDatabase) DeleteAddress(address_id int) error {
 	return nil
 }
 
-// func (c *userDatabase) CheckIfFirstAddress(user_id int) bool {
+// func (c *userDatabase) CheckIfFirstAddress(user_id uint) bool {
 
 // 	var count int
 // 	// query := fmt.Sprintf("select count(*) from addresses where user_id='%s'", id)
@@ -144,7 +144,7 @@ func (i *userDatabase) DeleteAddress(address_id int) error {
 
 // }
 
-func (ad *userDatabase) GetAddresses(user_id int) ([]models.Address, error) {
+func (ad *userDatabase) GetAddresses(user_id uint) ([]models.Address, error) {
 
 	var addresses []models.Address
 
@@ -157,10 +157,10 @@ func (ad *userDatabase) GetAddresses(user_id int) ([]models.Address, error) {
 
 }
 
-func (ad *userDatabase) GetUserDetails(user_id int) (models.UserDetailsResponse, error) {
+func (ad *userDatabase) GetUserDetails(user_id uint) (models.UserDetailsResponse, error) {
 
 	var details models.UserDetailsResponse
-	if err := ad.DB.Raw("SELECT id,name,email,phone,birth_date,create_at FROM users where id=?",
+	if err := ad.DB.Raw("SELECT * FROM users where id=?",
 		user_id).Scan(&details).Error; err != nil {
 		return models.UserDetailsResponse{}, errors.New("could not get user details")
 	}
@@ -169,7 +169,7 @@ func (ad *userDatabase) GetUserDetails(user_id int) (models.UserDetailsResponse,
 
 }
 
-func (i *userDatabase) ChangePassword(id int, password string) error {
+func (i *userDatabase) ChangePassword(id uint, password string) error {
 
 	err := i.DB.Exec("UPDATE users SET password=$1 WHERE id=$2", password, id).Error
 	if err != nil {
@@ -180,7 +180,7 @@ func (i *userDatabase) ChangePassword(id int, password string) error {
 
 }
 
-func (i *userDatabase) GetPassword(id int) (string, error) {
+func (i *userDatabase) GetPassword(id uint) (string, error) {
 
 	var userPassword string
 	err := i.DB.Raw("select password from users where id = ?", id).Scan(&userPassword).Error
@@ -191,34 +191,54 @@ func (i *userDatabase) GetPassword(id int) (string, error) {
 
 }
 
-func (ad *userDatabase) FindIdFromPhone(phone string) (int, error) {
+// func (ad *userDatabase) FindIdFromPhone(phone string) (uint, error) {
 
-	var id int
+// 	var id uint
 
-	if err := ad.DB.Raw("select id from users where phone=?", phone).Scan(&id).Error; err != nil {
-		return id, err
+// 	if err := ad.DB.Raw("select id from users where phone=?", phone).Scan(&id).Error; err != nil {
+// 		return id, err
+// 	}
+
+// 	return id, nil
+
+// }
+
+func (i *userDatabase) EditProfile(userID uint, name, email, phone string) (models.UserDetailsResponse, error) {
+
+	var user domain.Users
+
+	if err := i.DB.First(&user, userID).Error; err != nil {
+		return models.UserDetailsResponse{}, err // Return error if the user is not found
 	}
 
-	return id, nil
+	result := i.DB.Model(&user).Updates(domain.Users{
+		Name:  name,
+		Email: email,
+		Phone: phone,
+	})
 
-}
-
-func (i *userDatabase) EditProfile(user_id int, name, email, phone string) (models.UserDetailsResponse, error) {
-
-	var user models.UserDetailsResponse
-
-	err := i.DB.Raw(`UPDATE users SET name=$1, phone=$2 WHERE id=$3 RETURNING *`,
-		name, phone, user_id).Scan(&user).Error
-	if err != nil {
-		return models.UserDetailsResponse{}, err
+	if result.Error != nil {
+		return models.UserDetailsResponse{}, result.Error
 	}
 
-	return user, nil
+	if result.RowsAffected == 0 {
+		return models.UserDetailsResponse{}, errors.New("user not found")
+	}
+
+	return models.UserDetailsResponse{
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		Phone:     user.Phone,
+		BirthDate: user.BirthDate,
+		CreateAt:  user.CreateAt,
+		UpdateAt:  user.UpdateAt,
+	}, nil
 }
 
-func (ad *userDatabase) GetCartID(id int) (int, error) {
+func (ad *userDatabase) GetCartID(id uint) (uint, error) {
 
-	var cart_id int
+	var cart_id uint
 
 	if err := ad.DB.Raw("select id from carts where user_id=?", id).Scan(&cart_id).Error; err != nil {
 		return 0, err
@@ -228,17 +248,17 @@ func (ad *userDatabase) GetCartID(id int) (int, error) {
 
 }
 
-func (ad *userDatabase) FindUserFromReference(ref string) (int, error) {
-	var user int
+// func (ad *userDatabase) FindUserFromReference(ref string) (uint, error) {
+// 	var user int
 
-	if err := ad.DB.Raw("SELECT id FROM users WHERE referral_code = ?", ref).Find(&user).Error; err != nil {
-		return 0, err
-	}
+// 	if err := ad.DB.Raw("SELECT id FROM users WHERE referral_code = ?", ref).Find(&user).Error; err != nil {
+// 		return 0, err
+// 	}
 
-	return user, nil
-}
+// 	return user, nil
+// }
 
-func (i *userDatabase) CreditReferencePointsToWallet(user_id int) error {
+func (i *userDatabase) CreditReferencePointsToWallet(user_id uint) error {
 	err := i.DB.Exec("Update wallets set amount=amount+20 where user_id=$1", user_id).Error
 	if err != nil {
 		return err
@@ -247,7 +267,7 @@ func (i *userDatabase) CreditReferencePointsToWallet(user_id int) error {
 	return nil
 }
 
-func (i *userDatabase) GetReferralCodeFromID(id int) (string, error) {
+func (i *userDatabase) GetReferralCodeFromID(id uint) (string, error) {
 	var referral string
 	err := i.DB.Raw("SELECT referral_code FROM users WHERE id=?", id).Scan(&referral).Error
 	if err != nil {
@@ -257,7 +277,7 @@ func (i *userDatabase) GetReferralCodeFromID(id int) (string, error) {
 	return referral, nil
 }
 
-func (i *userDatabase) FindProductImage(id int) (string, error) {
+func (i *userDatabase) FindProductImage(id uint) (string, error) {
 	var image string
 	err := i.DB.Raw("SELECT image FROM products WHERE id = ?", id).Scan(&image).Error
 	if err != nil {
@@ -267,7 +287,7 @@ func (i *userDatabase) FindProductImage(id int) (string, error) {
 	return image, nil
 }
 
-func (i *userDatabase) FindStock(id int) (int, error) {
+func (i *userDatabase) FindStock(id uint) (int, error) {
 	var stock int
 	err := i.DB.Raw("SELECT stock FROM products WHERE id = ?", id).Scan(&stock).Error
 	if err != nil {

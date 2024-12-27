@@ -17,11 +17,11 @@ func NewPaymentRepository(db *gorm.DB) *paymentRepository {
 }
 
 type PaymentRepository interface {
-	CreateSePayQR(qr models.CreateQR, user_id int) error
+	CreateSePayQR(qr models.CreateQR, user_id uint) error
 	SePayWebhook(transaction models.Transaction) error
 }
 
-func (p *paymentRepository) CreateSePayQR(qr models.CreateQR, user_id int) error {
+func (p *paymentRepository) CreateSePayQR(qr models.CreateQR, user_id uint) error {
 	if err := p.DB.Exec(`INSERT INTO transactions (user_id,order_id,code) VALUES (?,?,?)`, user_id, qr.OrderID, qr.Description).Error; err != nil {
 		return err
 	}

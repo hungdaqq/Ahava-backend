@@ -32,7 +32,7 @@ type OrderPaymentDetails struct {
 }
 
 type EditOrderStatus struct {
-	OrderID int    `json:"order_id"`
+	Orderid uint   `json:"order_id"`
 	Status  string `json:"order_status"`
 }
 

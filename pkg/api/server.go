@@ -50,7 +50,7 @@ func NewServerHTTP(
 		cartHandler,
 		paymentHandler,
 		wishlistHandler,
-		// categoryHandler,
+		categoryHandler,
 		// couponHandler,
 	)
 	routes.AdminRoutes(

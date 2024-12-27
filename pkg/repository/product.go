@@ -10,21 +10,21 @@ import (
 type ProductRepository interface {
 	AddProduct(product models.Products) (models.Products, error)
 
-	UpdateProduct(int, models.Products) (models.Products, error)
-	UpdateProductImage(int, string) (models.Products, error)
+	UpdateProduct(uint, models.Products) (models.Products, error)
+	UpdateProductImage(uint, string) (models.Products, error)
 
 	DeleteProduct(product_id string) error
 
-	ShowProductDetails(product_id int) (models.Products, error)
+	ShowProductDetails(product_id uint) (models.Products, error)
 	ListProducts(limit, offset int) (models.ListProducts, error)
-	ListCategoryProducts(category_id int) (models.Products, error)
+	ListCategoryProducts(category_id uint) (models.Products, error)
 
-	// ListProductsByCategory(id int) ([]models.Products, error)
-	CheckStock(product_id int) (int, error)
-	// CheckPrice(product_id int) (float64, error)
+	// ListProductsByCategory(id uint) ([]models.Products, error)
+	// CheckStock(product_id uint) (uint, error)
+	// CheckPrice(product_id uint) (float64, error)
 	SearchProducts(key string) ([]models.Products, error)
-	SaveSearchHistory(user_id int, key string) error
-	GetSearchHistory(user_id int) ([]models.SearchHistory, error)
+	SaveSearchHistory(user_id uint, key string) error
+	GetSearchHistory(user_id uint) ([]models.SearchHistory, error)
 }
 
 type productRepository struct {
@@ -56,7 +56,7 @@ func (i *productRepository) AddProduct(product models.Products) (models.Products
 
 }
 
-func (i *productRepository) CheckProduct(pid int) (bool, error) {
+func (i *productRepository) CheckProduct(pid uint) (bool, error) {
 	var k int
 	err := i.DB.Raw("SELECT COUNT(*) FROM products WHERE id=?",
 		pid).Scan(&k).Error
@@ -83,7 +83,7 @@ func (i *productRepository) DeleteProduct(productID string) error {
 }
 
 // detailed product details
-func (i *productRepository) ShowProductDetails(product_id int) (models.Products, error) {
+func (i *productRepository) ShowProductDetails(product_id uint) (models.Products, error) {
 
 	var product models.Products
 
@@ -120,7 +120,7 @@ func (i *productRepository) ListProducts(limit, offset int) (models.ListProducts
 	return listProducts, nil
 }
 
-func (i *productRepository) ListCategoryProducts(category_id int) (models.Products, error) {
+func (i *productRepository) ListCategoryProducts(category_id uint) (models.Products, error) {
 
 	var products models.Products
 	err := i.DB.Raw("SELECT * FROM products WHERE category_id=$1", category_id).
@@ -132,15 +132,15 @@ func (i *productRepository) ListCategoryProducts(category_id int) (models.Produc
 	return products, nil
 }
 
-func (i *productRepository) CheckStock(product_id int) (int, error) {
-	var stock int
-	if err := i.DB.Raw("SELECT stock FROM products WHERE id=$1", product_id).Scan(&stock).Error; err != nil {
-		return 0, err
-	}
-	return stock, nil
-}
+// func (i *productRepository) CheckStock(product_id uint) (int, error) {
+// 	var stock int
+// 	if err := i.DB.Raw("SELECT stock FROM products WHERE id=$1", product_id).Scan(&stock).Error; err != nil {
+// 		return 0, err
+// 	}
+// 	return stock, nil
+// }
 
-func (i *productRepository) CheckPrice(pid int) (float64, error) {
+func (i *productRepository) CheckPrice(pid uint) (float64, error) {
 	var k float64
 	err := i.DB.Raw("SELECT price FROM products WHERE id=?", pid).Scan(&k).Error
 	if err != nil {
@@ -163,7 +163,7 @@ func (i *productRepository) SearchProducts(key string) ([]models.Products, error
 	return productDetails, nil
 }
 
-func (i *productRepository) SaveSearchHistory(user_id int, key string) error {
+func (i *productRepository) SaveSearchHistory(user_id uint, key string) error {
 
 	err := i.DB.Exec(`INSERT INTO search_histories (user_id,search_key) VALUES (?,?)`,
 		user_id, key).Error
@@ -174,7 +174,7 @@ func (i *productRepository) SaveSearchHistory(user_id int, key string) error {
 	return nil
 }
 
-func (i *productRepository) GetSearchHistory(user_id int) ([]models.SearchHistory, error) {
+func (i *productRepository) GetSearchHistory(user_id uint) ([]models.SearchHistory, error) {
 
 	var searchHistory []models.SearchHistory
 
@@ -187,7 +187,7 @@ func (i *productRepository) GetSearchHistory(user_id int) ([]models.SearchHistor
 	return searchHistory, nil
 }
 
-func (i *productRepository) UpdateProductImage(product_id int, url string) (models.Products, error) {
+func (i *productRepository) UpdateProductImage(product_id uint, url string) (models.Products, error) {
 
 	var updateProduct models.Products
 
@@ -203,7 +203,7 @@ func (i *productRepository) UpdateProductImage(product_id int, url string) (mode
 	return updateProduct, nil
 }
 
-func (i *productRepository) UpdateProduct(product_id int, model models.Products) (models.Products, error) {
+func (i *productRepository) UpdateProduct(product_id uint, model models.Products) (models.Products, error) {
 
 	var updateProduct models.Products
 

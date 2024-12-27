@@ -47,7 +47,7 @@ func (i *ProductHandler) AddProduct(c *gin.Context) {
 		return
 	}
 
-	product.CategoryID = categoryID
+	product.CategoryID = uint(categoryID)
 	product.ProductName = productName
 	product.Size = size
 	product.Price = price
@@ -96,7 +96,7 @@ func (i *ProductHandler) ShowProductDetails(c *gin.Context) {
 		return
 	}
 
-	product, err := i.ProductUseCase.ShowProductDetails(product_id)
+	product, err := i.ProductUseCase.ShowProductDetails(uint(product_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve product", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -117,7 +117,7 @@ func (i *ProductHandler) ListCategoryProducts(c *gin.Context) {
 		return
 	}
 
-	products, err := i.ProductUseCase.ListCategoryProducts(category_id)
+	products, err := i.ProductUseCase.ListCategoryProducts(uint(category_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -149,7 +149,7 @@ func (i *ProductHandler) ListCategoryProducts(c *gin.Context) {
 
 func (i *ProductHandler) SearchProducts(c *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := c.MustGet("id").(uint)
 	var searchkey models.Search
 	if err := c.BindJSON(&searchkey); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
@@ -170,7 +170,7 @@ func (i *ProductHandler) SearchProducts(c *gin.Context) {
 
 func (i *ProductHandler) GetSearchHistory(c *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := c.MustGet("id").(uint)
 	results, err := i.ProductUseCase.GetSearchHistory(user_id)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve the records", nil, err.Error())
@@ -184,7 +184,7 @@ func (i *ProductHandler) GetSearchHistory(c *gin.Context) {
 
 func (i *ProductHandler) UpdateProductImage(c *gin.Context) {
 
-	id, err := strconv.Atoi(c.Param("product_id"))
+	product_id, err := strconv.Atoi(c.Param("product_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -198,7 +198,7 @@ func (i *ProductHandler) UpdateProductImage(c *gin.Context) {
 		return
 	}
 
-	results, err := i.ProductUseCase.UpdateProductImage(id, file)
+	results, err := i.ProductUseCase.UpdateProductImage(uint(product_id), file)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not change the image", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -212,7 +212,7 @@ func (i *ProductHandler) UpdateProductImage(c *gin.Context) {
 
 func (i *ProductHandler) UpdateProduct(c *gin.Context) {
 
-	id, err := strconv.Atoi(c.Param("product_id"))
+	product_id, err := strconv.Atoi(c.Param("product_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -233,7 +233,7 @@ func (i *ProductHandler) UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	results, err := i.ProductUseCase.UpdateProduct(id, model)
+	results, err := i.ProductUseCase.UpdateProduct(uint(product_id), model)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not update product", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)

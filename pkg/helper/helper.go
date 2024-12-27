@@ -52,7 +52,7 @@ func NewHelper(config cfg.Config) *helper {
 var client *twilio.RestClient
 
 type AuthCustomClaims struct {
-	Id    int    `json:"id"`
+	ID    uint   `json:"id"`
 	Email string `json:"email"`
 	Role  string `json:"role"`
 	jwt.StandardClaims
@@ -60,7 +60,7 @@ type AuthCustomClaims struct {
 
 func (helper *helper) GenerateTokenAdmin(admin models.AdminDetailsResponse) (string, string, error) {
 	accessTokenClaims := &AuthCustomClaims{
-		Id:    admin.ID,
+		ID:    admin.ID,
 		Email: admin.Email,
 		Role:  "admin",
 		StandardClaims: jwt.StandardClaims{
@@ -70,7 +70,7 @@ func (helper *helper) GenerateTokenAdmin(admin models.AdminDetailsResponse) (str
 	}
 
 	refreshTokenClaims := &AuthCustomClaims{
-		Id:    admin.ID,
+		ID:    admin.ID,
 		Email: admin.Email,
 		Role:  "admin",
 		StandardClaims: jwt.StandardClaims{
@@ -215,7 +215,7 @@ func (h *helper) TwilioVerifyOTP(serviceID string, code string, phone string) er
 
 func (h *helper) GenerateTokenClients(user models.UserDetailsResponse) (string, error) {
 	claims := &AuthCustomClaims{
-		Id:    user.Id,
+		ID:    user.ID,
 		Email: user.Email,
 		Role:  "client",
 		StandardClaims: jwt.StandardClaims{

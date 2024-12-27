@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"errors"
-	"fmt"
 
 	"ahava/pkg/config"
 	helper "ahava/pkg/helper"
@@ -13,20 +12,20 @@ import (
 type UserUseCase interface {
 	UserSignUp(user models.UserDetails, ref string) (models.TokenUsers, error)
 	LoginHandler(user models.UserLogin) (models.TokenUsers, error)
-	AddAddress(user_id int, address models.Address) (models.Address, error)
-	GetAddresses(user_id int) ([]models.Address, error)
-	UpdateAddress(address_id int, address models.Address) (models.Address, error)
-	DeleteAddress(address_id int) error
+	AddAddress(user_id uint, address models.Address) (models.Address, error)
+	GetAddresses(user_id uint) ([]models.Address, error)
+	UpdateAddress(address_id uint, address models.Address) (models.Address, error)
+	DeleteAddress(address_id uint) error
 
-	GetUserDetails(user_id int) (models.UserDetailsResponse, error)
+	GetUserDetails(user_id uint) (models.UserDetailsResponse, error)
 
-	ChangePassword(user_id int, old string, password string, repassword string) error
+	ChangePassword(user_id uint, old string, password string, repassword string) error
 	// ForgotPasswordSend(phone string) error
 	// ForgotPasswordVerifyAndChange(model models.ForgotVerify) error
 
-	EditProfile(user_id int, name, email, phone string) (models.UserDetailsResponse, error)
+	EditProfile(user_id uint, name, email, phone string) (models.UserDetailsResponse, error)
 
-	GetMyReferenceLink(id int) (string, error)
+	// GetMyReferenceLink(id uint) (string, error)
 }
 
 type userUseCase struct {
@@ -95,7 +94,8 @@ func (u *userUseCase) UserSignUp(user models.UserDetails, ref string) (models.To
 	user.Address.Name = user.Name
 	user.Address.Phone = user.Phone
 	user.Address.Default = true
-	_, err = u.userRepo.AddAddress(userData.Id, user.Address)
+
+	_, err = u.userRepo.AddAddress(userData.ID, user.Address)
 	if err != nil {
 		return models.TokenUsers{}, errors.New("could not add the address")
 	}
@@ -152,7 +152,7 @@ func (u *userUseCase) LoginHandler(user models.UserLogin) (models.TokenUsers, er
 
 	var userDetails models.UserDetailsResponse
 
-	userDetails.Id = int(user_details.Id)
+	userDetails.ID = user_details.ID
 	userDetails.Name = user_details.Name
 	userDetails.Email = user_details.Email
 	userDetails.Phone = user_details.Phone
@@ -169,7 +169,7 @@ func (u *userUseCase) LoginHandler(user models.UserLogin) (models.TokenUsers, er
 
 }
 
-func (i *userUseCase) AddAddress(user_id int, address models.Address) (models.Address, error) {
+func (i *userUseCase) AddAddress(user_id uint, address models.Address) (models.Address, error) {
 
 	addAddress, err := i.userRepo.AddAddress(user_id, address)
 	if err != nil {
@@ -180,7 +180,7 @@ func (i *userUseCase) AddAddress(user_id int, address models.Address) (models.Ad
 
 }
 
-func (i *userUseCase) UpdateAddress(address_id int, address models.Address) (models.Address, error) {
+func (i *userUseCase) UpdateAddress(address_id uint, address models.Address) (models.Address, error) {
 
 	updateAddress, err := i.userRepo.UpdateAddress(address_id, address)
 	if err != nil {
@@ -191,7 +191,7 @@ func (i *userUseCase) UpdateAddress(address_id int, address models.Address) (mod
 
 }
 
-func (i *userUseCase) DeleteAddress(address_id int) error {
+func (i *userUseCase) DeleteAddress(address_id uint) error {
 
 	err := i.userRepo.DeleteAddress(address_id)
 	if err != nil {
@@ -202,7 +202,7 @@ func (i *userUseCase) DeleteAddress(address_id int) error {
 
 }
 
-func (i *userUseCase) GetAddresses(user_id int) ([]models.Address, error) {
+func (i *userUseCase) GetAddresses(user_id uint) ([]models.Address, error) {
 
 	addresses, err := i.userRepo.GetAddresses(user_id)
 	if err != nil {
@@ -213,7 +213,7 @@ func (i *userUseCase) GetAddresses(user_id int) ([]models.Address, error) {
 
 }
 
-func (u *userUseCase) GetUserDetails(id int) (models.UserDetailsResponse, error) {
+func (u *userUseCase) GetUserDetails(id uint) (models.UserDetailsResponse, error) {
 
 	details, err := u.userRepo.GetUserDetails(id)
 	if err != nil {
@@ -224,7 +224,7 @@ func (u *userUseCase) GetUserDetails(id int) (models.UserDetailsResponse, error)
 
 }
 
-func (u *userUseCase) ChangePassword(id int, old string, password string, repassword string) error {
+func (u *userUseCase) ChangePassword(id uint, old string, password string, repassword string) error {
 
 	userPassword, err := u.userRepo.GetPassword(id)
 	if err != nil {
@@ -291,7 +291,7 @@ func (u *userUseCase) ChangePassword(id int, old string, password string, repass
 // 	return nil
 // }
 
-func (u *userUseCase) EditProfile(user_id int, name, email, phone string) (models.UserDetailsResponse, error) {
+func (u *userUseCase) EditProfile(user_id uint, name, email, phone string) (models.UserDetailsResponse, error) {
 
 	result, err := u.userRepo.EditProfile(user_id, name, email, phone)
 	if err != nil {
@@ -302,17 +302,17 @@ func (u *userUseCase) EditProfile(user_id int, name, email, phone string) (model
 
 }
 
-func (u *userUseCase) GetMyReferenceLink(id int) (string, error) {
+// func (u *userUseCase) GetMyReferenceLink(id uint) (string, error) {
 
-	baseURL := "ahava.com/users/signup"
+// 	baseURL := "ahava.com/users/signup"
 
-	referralCode, err := u.userRepo.GetReferralCodeFromID(id)
-	if err != nil {
-		return "", errors.New("error getting ref code")
-	}
+// 	referralCode, err := u.userRepo.GetReferralCodeFromID(id)
+// 	if err != nil {
+// 		return "", errors.New("error getting ref code")
+// 	}
 
-	referralLink := fmt.Sprintf("%s?ref=%s", baseURL, referralCode)
+// 	referralLink := fmt.Sprintf("%s?ref=%s", baseURL, referralCode)
 
-	//returning the link
-	return referralLink, nil
-}
+// 	//returning the link
+// 	return referralLink, nil
+// }

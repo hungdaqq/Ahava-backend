@@ -88,7 +88,7 @@ func (u *UserHandler) LoginHandler(c *gin.Context) {
 
 func (i *UserHandler) AddAddress(c *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := c.MustGet("id").(uint)
 	var address models.Address
 	if err := c.BindJSON(&address); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
@@ -124,7 +124,7 @@ func (i *UserHandler) UpdateAddress(c *gin.Context) {
 		return
 	}
 
-	result, err := i.userUseCase.UpdateAddress(address_id, model)
+	result, err := i.userUseCase.UpdateAddress(uint(address_id), model)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not update the address", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -144,7 +144,7 @@ func (i *UserHandler) DeleteAddress(c *gin.Context) {
 		return
 	}
 
-	err = i.userUseCase.DeleteAddress(address_id)
+	err = i.userUseCase.DeleteAddress(uint(address_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not delete the address", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -157,7 +157,7 @@ func (i *UserHandler) DeleteAddress(c *gin.Context) {
 
 func (i *UserHandler) GetAddresses(c *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := c.MustGet("id").(uint)
 	addresses, err := i.userUseCase.GetAddresses(user_id)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
@@ -170,7 +170,7 @@ func (i *UserHandler) GetAddresses(c *gin.Context) {
 
 func (i *UserHandler) GetUserDetails(c *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := c.MustGet("id").(uint)
 	details, err := i.userUseCase.GetUserDetails(user_id)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
@@ -183,7 +183,7 @@ func (i *UserHandler) GetUserDetails(c *gin.Context) {
 
 func (i *UserHandler) ChangePassword(c *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := c.MustGet("id").(uint)
 	var ChangePassword models.ChangePassword
 	if err := c.BindJSON(&ChangePassword); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
@@ -245,7 +245,7 @@ func (i *UserHandler) ChangePassword(c *gin.Context) {
 
 func (i *UserHandler) EditProfile(c *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := c.MustGet("id").(uint)
 	var model models.EditProfile
 	if err := c.BindJSON(&model); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
@@ -265,20 +265,20 @@ func (i *UserHandler) EditProfile(c *gin.Context) {
 
 }
 
-func (i *UserHandler) GetMyReferenceLink(c *gin.Context) {
-	id, err := strconv.Atoi(c.Query("id"))
-	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "check parameters properly", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
+// func (i *UserHandler) GetMyReferenceLink(c *gin.Context) {
+// 	id, err := strconv.Atoi(c.Query("id"))
+// 	if err != nil {
+// 		errorRes := response.ClientResponse(http.StatusBadRequest, "check parameters properly", nil, err.Error())
+// 		c.JSON(http.StatusBadRequest, errorRes)
+// 		return
+// 	}
 
-	link, err := i.userUseCase.GetMyReferenceLink(id)
-	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve referral link", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
-	successRes := response.ClientResponse(http.StatusOK, "Successfully got all products in cart", link, nil)
-	c.JSON(http.StatusOK, successRes)
-}
+// 	link, err := i.userUseCase.GetMyReferenceLink(id)
+// 	if err != nil {
+// 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve referral link", nil, err.Error())
+// 		c.JSON(http.StatusBadRequest, errorRes)
+// 		return
+// 	}
+// 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all products in cart", link, nil)
+// 	c.JSON(http.StatusOK, successRes)
+// }

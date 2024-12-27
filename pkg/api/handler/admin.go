@@ -59,7 +59,7 @@ func (ad *AdminHandler) BlockUser(c *gin.Context) {
 		return
 	}
 
-	err = ad.adminUseCase.BlockUser(user_id)
+	err = ad.adminUseCase.BlockUser(uint(user_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "user could not be blocked", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -80,7 +80,7 @@ func (ad *AdminHandler) UnBlockUser(c *gin.Context) {
 		return
 	}
 
-	err = ad.adminUseCase.UnBlockUser(user_id)
+	err = ad.adminUseCase.UnBlockUser(uint(user_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "user could not be unblocked", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -167,7 +167,7 @@ func (a *AdminHandler) DeletePaymentMethod(c *gin.Context) {
 		return
 	}
 
-	err = a.adminUseCase.DeletePaymentMethod(id)
+	err = a.adminUseCase.DeletePaymentMethod(uint(id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusInternalServerError, "error in deleting data", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)

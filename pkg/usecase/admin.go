@@ -14,12 +14,12 @@ import (
 
 type AdminUseCase interface {
 	LoginHandler(adminDetails models.AdminLogin) (domain.TokenAdmin, error)
-	BlockUser(user_id int) error
-	UnBlockUser(user_id int) error
+	BlockUser(user_id uint) error
+	UnBlockUser(user_id uint) error
 	GetUsers(page int) ([]models.UserDetailsAtAdmin, error)
 	NewPaymentMethod(string) error
 	ListPaymentMethods() ([]domain.PaymentMethod, error)
-	DeletePaymentMethod(id int) error
+	DeletePaymentMethod(id uint) error
 }
 
 type adminUseCase struct {
@@ -70,7 +70,7 @@ func (ad *adminUseCase) LoginHandler(adminDetails models.AdminLogin) (domain.Tok
 
 }
 
-func (ad *adminUseCase) BlockUser(user_id int) error {
+func (ad *adminUseCase) BlockUser(user_id uint) error {
 
 	user, err := ad.adminRepository.GetUserByID(user_id)
 	if err != nil {
@@ -93,7 +93,7 @@ func (ad *adminUseCase) BlockUser(user_id int) error {
 }
 
 // unblock user
-func (ad *adminUseCase) UnBlockUser(user_id int) error {
+func (ad *adminUseCase) UnBlockUser(user_id uint) error {
 
 	user, err := ad.adminRepository.GetUserByID(user_id)
 	if err != nil {
@@ -156,7 +156,7 @@ func (ad *adminUseCase) ListPaymentMethods() ([]domain.PaymentMethod, error) {
 
 }
 
-func (ad *adminUseCase) DeletePaymentMethod(id int) error {
+func (ad *adminUseCase) DeletePaymentMethod(id uint) error {
 
 	err := ad.adminRepository.DeletePaymentMethod(id)
 	if err != nil {

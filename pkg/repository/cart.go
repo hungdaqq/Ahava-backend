@@ -9,21 +9,21 @@ import (
 )
 
 type CartRepository interface {
-	GetCart(user_id int, cart_ids []int) ([]models.CartItem, error)
-	AddToCart(user_id, product_id int, quantity uint) (models.CartDetails, error)
-	CheckIfItemIsAlreadyAdded(user_id, product_id int) (int, error)
-	UpdateQuantityAdd(cart_id int, quantity uint) (models.CartDetails, error)
-	UpdateQuantityLess(cart_id int, quantity uint) (models.CartDetails, error)
-	UpdateQuantity(cart_id int, quantity uint) (models.CartDetails, error)
+	GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error)
+	AddToCart(user_id, product_id uint, quantity uint) (models.CartDetails, error)
+	CheckIfItemIsAlreadyAdded(user_id, product_id uint) (uint, error)
+	UpdateQuantityAdd(cart_id uint, quantity uint) (models.CartDetails, error)
+	UpdateQuantityLess(cart_id uint, quantity uint) (models.CartDetails, error)
+	UpdateQuantity(cart_id uint, quantity uint) (models.CartDetails, error)
 
-	RemoveFromCart(cart_id int) error
+	RemoveFromCart(cart_id uint) error
 
-	// GetAddresses(id int) ([]models.Address, error)
+	// GetAddresses(id uint) ([]models.Address, error)
 	// GetPaymentOptions() ([]models.PaymentMethod, error)
-	// GetCartId(user_id int) (int, error)
-	// CreateNewCart(user_id int) (int, error)
+	// GetCartId(user_id uint) (int, error)
+	// CreateNewCart(user_id uint) (int, error)
 
-	// AddLineItems(cart_id, product_id int) error
+	// AddLineItems(cart_id, product_id uint) error
 }
 
 type cartRepository struct {
@@ -36,7 +36,7 @@ func NewCartRepository(db *gorm.DB) *cartRepository {
 	}
 }
 
-// func (ad *cartRepository) GetAddresses(id int) ([]models.Address, error) {
+// func (ad *cartRepository) GetAddresses(id uint) ([]models.Address, error) {
 
 // 	var addresses []models.Address
 
@@ -48,7 +48,7 @@ func NewCartRepository(db *gorm.DB) *cartRepository {
 
 // }
 
-func (ad *cartRepository) GetCart(user_id int, cart_ids []int) ([]models.CartItem, error) {
+func (ad *cartRepository) GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error) {
 	var cart []models.CartItem
 
 	query := `
@@ -74,9 +74,9 @@ func (ad *cartRepository) GetCart(user_id int, cart_ids []int) ([]models.CartIte
 	return cart, nil
 }
 
-// func (ad *cartRepository) GetCartId(user_id int) (int, error) {
+// func (ad *cartRepository) GetCartId(user_id uint) (int, error) {
 
-// 	var id int
+// 	var id uint
 
 // 	if err := ad.DB.Raw("SELECT id FROM carts WHERE user_id=?", user_id).Scan(&id).Error; err != nil {
 // 		return 0, err
@@ -86,8 +86,8 @@ func (ad *cartRepository) GetCart(user_id int, cart_ids []int) ([]models.CartIte
 
 // }
 
-// func (i *cartRepository) CreateNewCart(user_id int) (int, error) {
-// 	var id int
+// func (i *cartRepository) CreateNewCart(user_id uint) (int, error) {
+// 	var id uint
 // 	err := i.DB.Exec(`
 // 		INSERT INTO carts (user_id)
 // 		VALUES ($1)`, user_id).Error
@@ -102,7 +102,7 @@ func (ad *cartRepository) GetCart(user_id int, cart_ids []int) ([]models.CartIte
 // 	return id, nil
 // }
 
-// func (i *cartRepository) AddLineItems(cart_id, product_id int) error {
+// func (i *cartRepository) AddLineItems(cart_id, product_id uint) error {
 
 // 	err := i.DB.Exec(`
 // 		INSERT INTO line_items (cart_id,product_id)
@@ -114,9 +114,9 @@ func (ad *cartRepository) GetCart(user_id int, cart_ids []int) ([]models.CartIte
 // 	return nil
 // }
 
-func (ad *cartRepository) CheckIfItemIsAlreadyAdded(user_id, product_id int) (int, error) {
+func (ad *cartRepository) CheckIfItemIsAlreadyAdded(user_id, product_id uint) (uint, error) {
 
-	var count int
+	var count uint
 
 	if err := ad.DB.Raw("SELECT id FROM cart_items WHERE user_id = $1 AND product_id=$2",
 		user_id, product_id).Scan(&count).Error; err != nil {
@@ -126,7 +126,7 @@ func (ad *cartRepository) CheckIfItemIsAlreadyAdded(user_id, product_id int) (in
 	return count, nil
 }
 
-func (ad *cartRepository) RemoveFromCart(cart_id int) error {
+func (ad *cartRepository) RemoveFromCart(cart_id uint) error {
 
 	err := ad.DB.Exec(`DELETE FROM cart_items WHERE id=$1`,
 		cart_id).Error
@@ -138,7 +138,7 @@ func (ad *cartRepository) RemoveFromCart(cart_id int) error {
 
 }
 
-func (ad *cartRepository) UpdateQuantityAdd(cart_id int, quantity uint) (models.CartDetails, error) {
+func (ad *cartRepository) UpdateQuantityAdd(cart_id uint, quantity uint) (models.CartDetails, error) {
 
 	var cartDetails models.CartDetails
 	err := ad.DB.Raw(`UPDATE cart_items SET quantity = quantity+$1 WHERE id=$2 RETURNING id, user_id, product_id, quantity`,
@@ -150,7 +150,7 @@ func (ad *cartRepository) UpdateQuantityAdd(cart_id int, quantity uint) (models.
 	return cartDetails, nil
 }
 
-func (ad *cartRepository) UpdateQuantityLess(cart_id int, quantity uint) (models.CartDetails, error) {
+func (ad *cartRepository) UpdateQuantityLess(cart_id uint, quantity uint) (models.CartDetails, error) {
 
 	var cartDetails models.CartDetails
 
@@ -163,7 +163,7 @@ func (ad *cartRepository) UpdateQuantityLess(cart_id int, quantity uint) (models
 	return cartDetails, nil
 }
 
-func (ad *cartRepository) UpdateQuantity(cart_id int, quantity uint) (models.CartDetails, error) {
+func (ad *cartRepository) UpdateQuantity(cart_id uint, quantity uint) (models.CartDetails, error) {
 
 	var cartDetails models.CartDetails
 
@@ -176,7 +176,7 @@ func (ad *cartRepository) UpdateQuantity(cart_id int, quantity uint) (models.Car
 	return cartDetails, nil
 }
 
-func (ad *cartRepository) AddToCart(user_id, product_id int, quantity uint) (models.CartDetails, error) {
+func (ad *cartRepository) AddToCart(user_id, product_id uint, quantity uint) (models.CartDetails, error) {
 
 	var cartDetails models.CartDetails
 

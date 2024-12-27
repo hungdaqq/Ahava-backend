@@ -9,16 +9,16 @@ import (
 
 type ProductUseCase interface {
 	AddProduct(product models.Products, image *multipart.FileHeader) (models.Products, error)
-	UpdateProduct(int, models.Products) (models.Products, error)
-	UpdateProductImage(product_id int, file *multipart.FileHeader) (models.Products, error)
+	UpdateProduct(uint, models.Products) (models.Products, error)
+	UpdateProductImage(product_id uint, file *multipart.FileHeader) (models.Products, error)
 	DeleteProduct(product_id string) error
 
-	ShowProductDetails(product_id int) (models.Products, error)
-	ListCategoryProducts(category_id int) (models.Products, error)
+	ShowProductDetails(product_id uint) (models.Products, error)
+	ListCategoryProducts(category_id uint) (models.Products, error)
 	ListProductsForAdmin(limit, offest int) (models.ListProducts, error)
 
-	SearchProducts(user_id int, key string) ([]models.Products, error)
-	GetSearchHistory(user_id int) ([]models.SearchHistory, error)
+	SearchProducts(user_id uint, key string) ([]models.Products, error)
+	GetSearchHistory(user_id uint) ([]models.SearchHistory, error)
 }
 
 type productUseCase struct {
@@ -59,7 +59,7 @@ func (i *productUseCase) AddProduct(product models.Products, image *multipart.Fi
 
 }
 
-func (i *productUseCase) UpdateProductImage(id int, file *multipart.FileHeader) (models.Products, error) {
+func (i *productUseCase) UpdateProductImage(id uint, file *multipart.FileHeader) (models.Products, error) {
 
 	url, err := i.helper.AddImageToS3(file, "ahava")
 	if err != nil {
@@ -76,7 +76,7 @@ func (i *productUseCase) UpdateProductImage(id int, file *multipart.FileHeader) 
 
 }
 
-func (i *productUseCase) UpdateProduct(id int, model models.Products) (models.Products, error) {
+func (i *productUseCase) UpdateProduct(id uint, model models.Products) (models.Products, error) {
 
 	//send the url and save it in database
 	result, err := i.repository.UpdateProduct(id, model)
@@ -98,7 +98,7 @@ func (i *productUseCase) DeleteProduct(productID string) error {
 
 }
 
-func (i *productUseCase) ShowProductDetails(id int) (models.Products, error) {
+func (i *productUseCase) ShowProductDetails(id uint) (models.Products, error) {
 
 	product, err := i.repository.ShowProductDetails(id)
 	if err != nil {
@@ -122,7 +122,7 @@ func (i *productUseCase) ShowProductDetails(id int) (models.Products, error) {
 
 }
 
-func (i *productUseCase) ListCategoryProducts(category_id int) (models.Products, error) {
+func (i *productUseCase) ListCategoryProducts(category_id uint) (models.Products, error) {
 
 	products, err := i.repository.ListCategoryProducts(category_id)
 	if err != nil {
@@ -132,7 +132,7 @@ func (i *productUseCase) ListCategoryProducts(category_id int) (models.Products,
 	return products, nil
 }
 
-// func (i *productUseCase) ListProductsForUser(page, userID int) ([]models.Products, error) {
+// func (i *productUseCase) ListProductsForUser(page, userID uint) ([]models.Products, error) {
 
 // 	productDetails, err := i.repository.ListProducts(page)
 // 	if err != nil {
@@ -197,7 +197,7 @@ func (i *productUseCase) ListProductsForAdmin(limit, offset int) (models.ListPro
 
 }
 
-func (i *productUseCase) SearchProducts(user_id int, key string) ([]models.Products, error) {
+func (i *productUseCase) SearchProducts(user_id uint, key string) ([]models.Products, error) {
 
 	productDetails, err := i.repository.SearchProducts(key)
 	if err != nil {
@@ -228,7 +228,7 @@ func (i *productUseCase) SearchProducts(user_id int, key string) ([]models.Produ
 
 }
 
-func (i *productUseCase) GetSearchHistory(user_id int) ([]models.SearchHistory, error) {
+func (i *productUseCase) GetSearchHistory(user_id uint) ([]models.SearchHistory, error) {
 
 	searchHistory, err := i.repository.GetSearchHistory(user_id)
 	if err != nil {

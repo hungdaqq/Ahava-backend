@@ -22,7 +22,7 @@ func NewPaymentHandler(usecase services.PaymentUseCase) *PaymentHandler {
 
 func (h *PaymentHandler) CreateQR(c *gin.Context) {
 
-	user_id := c.MustGet("user_id").(int)
+	user_id := c.MustGet("id").(uint)
 
 	var model models.CreateQR
 	err := c.BindJSON(&model)
