@@ -17,7 +17,7 @@ type ProductRepository interface {
 
 	ShowProductDetails(product_id int) (models.Products, error)
 	ListProducts(limit, offset int) (models.ListProducts, error)
-	ListCategoryProducts() ([]models.CategoryProducts, error)
+	ListCategoryProducts(category_id int) (models.Products, error)
 
 	// ListProductsByCategory(id int) ([]models.Products, error)
 	CheckStock(product_id int) (int, error)
@@ -120,37 +120,16 @@ func (i *productRepository) ListProducts(limit, offset int) (models.ListProducts
 	return listProducts, nil
 }
 
-type ProductWithCategory struct {
-	models.Products
-	CategoryName string `json:"category_name"`
-}
+func (i *productRepository) ListCategoryProducts(category_id int) (models.Products, error) {
 
-func (i *productRepository) ListCategoryProducts() ([]models.CategoryProducts, error) {
-
-	var productWithCategories []ProductWithCategory
-	err := i.DB.Raw("SELECT products.*, categories.category_name FROM products JOIN categories ON categories.id = products.category_id").
-		Scan(&productWithCategories).Error
+	var products models.Products
+	err := i.DB.Raw("SELECT * FROM products WHERE category_id=$1", category_id).
+		Scan(&products).Error
 	if err != nil {
-		return nil, err
+		return models.Products{}, err
 	}
 
-	categoryMap := make(map[int]*models.CategoryProducts)
-	for _, product := range productWithCategories {
-		if _, exists := categoryMap[product.CategoryID]; !exists {
-			categoryMap[product.CategoryID] = &models.CategoryProducts{
-				CategoryID:   product.CategoryID,
-				CategoryName: product.CategoryName,
-				Products:     []models.Products{},
-			}
-		}
-		categoryMap[product.CategoryID].Products = append(categoryMap[product.CategoryID].Products, product.Products)
-	}
-
-	var categoryProducts []models.CategoryProducts
-	for _, category := range categoryMap {
-		categoryProducts = append(categoryProducts, *category)
-	}
-	return categoryProducts, nil
+	return products, nil
 }
 
 func (i *productRepository) CheckStock(product_id int) (int, error) {

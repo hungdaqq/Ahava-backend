@@ -189,13 +189,13 @@ type Transaction struct {
 	OrderID         int       `json:"order_id"`
 	Order           Order     `json:"-" gorm:"foreignkey:OrderID"`
 	Gateway         string    `json:"gateway"`
-	TransactionDate time.Time `json:"transactionDate"`
-	AccountNumber   string    `json:"accountNumber"`
+	TransactionDate time.Time `json:"transaction_date"`
+	AccountNumber   string    `json:"account_number"`
 	Code            string    `json:"code"`
 	Content         string    `json:"content"`
-	TransferType    string    `json:"transferType"`
-	TransferAmount  float64   `json:"transferAmount"`
+	TransferType    string    `json:"transfer_type"`
+	TransferAmount  float64   `json:"transfer_amount"`
 	Accumulated     float64   `json:"accumulated"`
-	ReferenceCode   string    `json:"referenceCode"`
+	ReferenceCode   string    `json:"reference_code"`
 	Description     string    `json:"description"`
 }

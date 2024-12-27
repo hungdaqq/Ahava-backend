@@ -45,7 +45,9 @@ func ConnectDatabase(cfg config.Config) (*gorm.DB, error) {
 	if err := db.AutoMigrate(domain.OrderItem{}); err != nil {
 		return db, err
 	}
-
+	if err := db.AutoMigrate(domain.Transaction{}); err != nil {
+		return db, err
+	}
 	// if err := db.AutoMigrate(domain.Coupons{}); err != nil {
 	// 	return db, err
 	// }

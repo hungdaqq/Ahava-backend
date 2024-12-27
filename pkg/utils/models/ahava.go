@@ -52,12 +52,6 @@ type Products struct {
 	HowToUse    string  `json:"how_to_use"`
 }
 
-type CategoryProducts struct {
-	CategoryID   int        `json:"category_id"`
-	CategoryName string     `json:"category_name"`
-	Products     []Products `json:"products"`
-}
-
 type ChangePassword struct {
 	Oldpassword string `json:"old_password"`
 	Password    string `json:"password"`
@@ -213,6 +207,7 @@ type OrderItem struct {
 }
 
 type CreateQR struct {
+	OrderID       int     `json:"order_id"`
 	AccountNumber string  `json:"account_number"`
 	BankName      string  `json:"bank_name"`
 	Amount        float64 `json:"amount"`

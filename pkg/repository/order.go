@@ -6,6 +6,11 @@ import (
 	"gorm.io/gorm"
 )
 
+type OrderRepository interface {
+	PlaceOrder(order models.PlaceOrder) (models.Order, error)
+	PlaceOrderItem(item models.CartItem, order_id int) error
+}
+
 type orderRepository struct {
 	DB *gorm.DB
 }
@@ -14,11 +19,6 @@ func NewOrderRepository(db *gorm.DB) *orderRepository {
 	return &orderRepository{
 		DB: db,
 	}
-}
-
-type OrderRepository interface {
-	PlaceOrder(order models.PlaceOrder) (models.Order, error)
-	PlaceOrderItem(item models.CartItem, order_id int) error
 }
 
 func (or *orderRepository) PlaceOrder(order models.PlaceOrder) (models.Order, error) {

@@ -89,14 +89,14 @@ func (i *ProductHandler) DeleteProduct(c *gin.Context) {
 
 func (i *ProductHandler) ShowProductDetails(c *gin.Context) {
 
-	id, err := strconv.Atoi(c.Query("product_id"))
+	product_id, err := strconv.Atoi(c.Query("product_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	product, err := i.ProductUseCase.ShowProductDetails(id)
+	product, err := i.ProductUseCase.ShowProductDetails(product_id)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve product", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -108,8 +108,16 @@ func (i *ProductHandler) ShowProductDetails(c *gin.Context) {
 
 }
 
-func (i *ProductHandler) ListProductsForUser(c *gin.Context) {
-	products, err := i.ProductUseCase.ListProductsForUser()
+func (i *ProductHandler) ListCategoryProducts(c *gin.Context) {
+
+	category_id, err := strconv.Atoi(c.Query("category_id"))
+	if err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+
+	products, err := i.ProductUseCase.ListCategoryProducts(category_id)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)

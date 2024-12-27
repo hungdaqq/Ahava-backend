@@ -99,9 +99,9 @@ func InitializeAPI(cfg config.Config) (*http.ServerHTTP, error) {
 	cartHandler := handler.NewCartHandler(cartUseCase)
 
 
-	// paymentRepository := repository.NewPaymentRepository(gormDB)
-	// paymentUseCase := usecase.NewPaymentUseCase(paymentRepository)
-	// paymentHandler := handler.NewPaymentHandler(paymentUseCase)
+	paymentRepository := repository.NewPaymentRepository(gormDB)
+	paymentUseCase := usecase.NewPaymentUseCase(paymentRepository)
+	paymentHandler := handler.NewPaymentHandler(paymentUseCase)
 
 	
 	serverHTTP := http.NewServerHTTP(
@@ -113,7 +113,7 @@ func InitializeAPI(cfg config.Config) (*http.ServerHTTP, error) {
 		orderHandler,
 		cartHandler,
 		// couponHandler,
-		// paymentHandler,
+		paymentHandler,
 		// offerHandler,
 		wishlistHandler,
 	)

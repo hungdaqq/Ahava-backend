@@ -14,7 +14,7 @@ func UserRoutes(
 	productHandler *handler.ProductHandler,
 	orderHandler *handler.OrderHandler,
 	cartHandler *handler.CartHandler,
-	// paymentHandler *handler.PaymentHandler,
+	paymentHandler *handler.PaymentHandler,
 	wishlisthandler *handler.WishlistHandler,
 	// categoryHandler *handler.CategoryHandler,
 	// couponHandler *handler.CouponHandler
@@ -41,8 +41,6 @@ func UserRoutes(
 
 		home := engine.Group("/home")
 		{
-			home.GET("/products", productHandler.ListProductsForUser)
-			home.GET("/products/details", productHandler.ShowProductDetails)
 			// home.POST("/add-to-cart", cartHandler.AddToCart)
 			// home.POST("/wishlist/add", wishlisthandler.AddToWishlist)
 			home.POST("/search", productHandler.SearchProducts)
@@ -50,6 +48,11 @@ func UserRoutes(
 
 		}
 
+		product := engine.Group("/product")
+		{
+			product.GET("/detail", productHandler.ShowProductDetails)
+			product.GET("", productHandler.ListCategoryProducts)
+		}
 		// categorymanagement := engine.Group("/category")
 		// {
 		// 	categorymanagement.GET("", categoryHandler.GetCategory)
@@ -109,7 +112,8 @@ func UserRoutes(
 
 		payment := engine.Group("/payment")
 		{
-			payment.POST("/sepay", paymentHandler.CreateQR)
+			payment.POST("/qr", paymentHandler.CreateQR)
+			payment.GET("/webhook", paymentHandler.Webhook)
 		}
 
 		// engine.GET("/coupon", couponHandler.GetAllCoupons)

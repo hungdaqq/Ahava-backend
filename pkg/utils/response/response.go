@@ -17,3 +17,13 @@ func ClientResponse(statusCode int, message string, data interface{}, err interf
 	}
 
 }
+
+type WebhookResponse struct {
+	Success bool `json:"success"`
+}
+
+func ClientWebhookResponse(status bool) WebhookResponse {
+	return WebhookResponse{
+		Success: status,
+	}
+}

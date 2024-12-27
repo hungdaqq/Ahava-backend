@@ -14,7 +14,7 @@ type ProductUseCase interface {
 	DeleteProduct(product_id string) error
 
 	ShowProductDetails(product_id int) (models.Products, error)
-	ListProductsForUser() ([]models.CategoryProducts, error)
+	ListCategoryProducts(category_id int) (models.Products, error)
 	ListProductsForAdmin(limit, offest int) (models.ListProducts, error)
 
 	SearchProducts(user_id int, key string) ([]models.Products, error)
@@ -122,14 +122,14 @@ func (i *productUseCase) ShowProductDetails(id int) (models.Products, error) {
 
 }
 
-func (i *productUseCase) ListProductsForUser() ([]models.CategoryProducts, error) {
+func (i *productUseCase) ListCategoryProducts(category_id int) (models.Products, error) {
 
-	categoryProducts, err := i.repository.ListCategoryProducts()
+	products, err := i.repository.ListCategoryProducts(category_id)
 	if err != nil {
-		return []models.CategoryProducts{}, err
+		return models.Products{}, err
 	}
 
-	return categoryProducts, nil
+	return products, nil
 }
 
 // func (i *productUseCase) ListProductsForUser(page, userID int) ([]models.Products, error) {

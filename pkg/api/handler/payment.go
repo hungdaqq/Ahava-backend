@@ -22,6 +22,8 @@ func NewPaymentHandler(usecase services.PaymentUseCase) *PaymentHandler {
 
 func (h *PaymentHandler) CreateQR(c *gin.Context) {
 
+	user_id := c.MustGet("user_id").(int)
+
 	var model models.CreateQR
 	err := c.BindJSON(&model)
 	if err != nil {
@@ -30,7 +32,7 @@ func (h *PaymentHandler) CreateQR(c *gin.Context) {
 		return
 	}
 
-	result, err := h.orderUseCase.CreateQR(model.Amount)
+	result, err := h.orderUseCase.CreateSePayQR(model.Amount, user_id)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not create QR", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -39,4 +41,25 @@ func (h *PaymentHandler) CreateQR(c *gin.Context) {
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully placed the order", result, nil)
 	c.JSON(http.StatusOK, successRes)
+}
+
+func (h *PaymentHandler) Webhook(c *gin.Context) {
+
+	var model models.Transaction
+	err := c.BindJSON(&model)
+	if err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+
+	err = h.orderUseCase.SePayWebhook(model)
+	if err != nil {
+		errorRes := response.ClientWebhookResponse(false)
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+
+	successRes := response.ClientWebhookResponse(true)
+	c.JSON(http.StatusCreated, successRes)
 }

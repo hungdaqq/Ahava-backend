@@ -18,10 +18,11 @@ func NewPaymentUseCase(repo repository.PaymentRepository) *paymentUsecase {
 }
 
 type PaymentUseCase interface {
-	CreateQR(ammount float64) (models.CreateQR, error)
+	CreateSePayQR(ammount float64, user_id int) (models.CreateQR, error)
+	SePayWebhook(transaction models.Transaction) error
 }
 
-func (p *paymentUsecase) CreateQR(ammount float64) (models.CreateQR, error) {
+func (p *paymentUsecase) CreateSePayQR(ammount float64, user_id int) (models.CreateQR, error) {
 	// Generate description string
 	description := fmt.Sprintf("AHV%07d", rand.Intn(10000000))
 
@@ -37,5 +38,20 @@ func (p *paymentUsecase) CreateQR(ammount float64) (models.CreateQR, error) {
 		Link:          result,
 	}
 
+	err := p.repository.CreateSePayQR(qr, user_id)
+	if err != nil {
+		return models.CreateQR{}, err
+	}
+
 	return qr, nil
+}
+
+func (p *paymentUsecase) SePayWebhook(transaction models.Transaction) error {
+
+	err := p.repository.SePayWebhook(transaction)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

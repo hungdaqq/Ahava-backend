@@ -25,14 +25,14 @@ func NewServerHTTP(
 	orderHandler *handler.OrderHandler,
 	cartHandler *handler.CartHandler,
 	// couponHandler *handler.CouponHandler,
-	// paymentHandler *handler.PaymentHandler,
+	paymentHandler *handler.PaymentHandler,
 	// offerhandler *handler.OfferHandler,
 	wishlistHandler *handler.WishlistHandler,
 ) *ServerHTTP {
 
 	engine := gin.New()
 
-	engine.LoadHTMLGlob("templates/*.html")
+	// engine.LoadHTMLGlob("templates/*.html")
 
 	// Use logger from Gin
 	engine.Use(gin.Logger())
@@ -48,7 +48,7 @@ func NewServerHTTP(
 		productHandler,
 		orderHandler,
 		cartHandler,
-		// paymentHandler,
+		paymentHandler,
 		wishlistHandler,
 		// categoryHandler,
 		// couponHandler,
