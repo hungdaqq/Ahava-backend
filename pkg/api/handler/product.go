@@ -51,7 +51,7 @@ func (i *ProductHandler) AddProduct(c *gin.Context) {
 	product.ProductName = productName
 	product.Size = size
 	product.Price = price
-	product.Stock = stock
+	product.Stock = uint(stock)
 
 	file, err := c.FormFile("image")
 	if err != nil {
@@ -149,7 +149,7 @@ func (i *ProductHandler) ListCategoryProducts(c *gin.Context) {
 
 func (i *ProductHandler) SearchProducts(c *gin.Context) {
 
-	user_id := c.MustGet("id").(uint)
+	user_id := c.MustGet("id").(int)
 	var searchkey models.Search
 	if err := c.BindJSON(&searchkey); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
@@ -157,7 +157,7 @@ func (i *ProductHandler) SearchProducts(c *gin.Context) {
 		return
 	}
 
-	results, err := i.ProductUseCase.SearchProducts(user_id, searchkey.Key)
+	results, err := i.ProductUseCase.SearchProducts(uint(user_id), searchkey.Key)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve the records", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -170,8 +170,8 @@ func (i *ProductHandler) SearchProducts(c *gin.Context) {
 
 func (i *ProductHandler) GetSearchHistory(c *gin.Context) {
 
-	user_id := c.MustGet("id").(uint)
-	results, err := i.ProductUseCase.GetSearchHistory(user_id)
+	user_id := c.MustGet("id").(int)
+	results, err := i.ProductUseCase.GetSearchHistory(uint(user_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve the records", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)

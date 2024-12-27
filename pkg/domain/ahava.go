@@ -32,9 +32,9 @@ type CartItems struct {
 	Users     Users     `json:"-" gorm:"foreignkey:UserID"`
 	ProductID uint      `json:"product_id" gorm:"not null"`
 	Products  Products  `json:"-" gorm:"foreignkey:ProductID;constraint:OnDelete:CASCADE"`
-	Quantity  int       `json:"quantity" gorm:"default:1"`
+	Quantity  uint      `json:"quantity" gorm:"default:1"`
 	CreatedAt time.Time `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime "`
+	UpdateAt  time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
 type Coupons struct {
@@ -128,7 +128,7 @@ type Category struct {
 	CategoryName string    `json:"category_name" gorm:"unique;not null" `
 	Description  string    `json:"description"`
 	CreateAt     time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdateAt     time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;on update:CURRENT_TIMESTAMP"`
+	UpdateAt     time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
 type Users struct {
@@ -159,7 +159,7 @@ type Address struct {
 	Default  bool      `json:"default" gorm:"default:false"`
 	Type     string    `json:"type" gorm:"default:'HOME';check:type IN ('HOME', 'WORK')"`
 	CreateAt time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdateAt time.Time `json:"update_at" gorm:"DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"`
+	UpdateAt time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
 type Wallet struct {
@@ -203,5 +203,5 @@ type Transaction struct {
 	ReferenceCode   string    `json:"reference_code"`
 	Description     string    `json:"description"`
 	CreateAt        time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdateAt        time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;on update:CURRENT_TIMESTAMP"`
+	UpdateAt        time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }

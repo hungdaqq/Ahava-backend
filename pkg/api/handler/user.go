@@ -88,7 +88,7 @@ func (u *UserHandler) LoginHandler(c *gin.Context) {
 
 func (i *UserHandler) AddAddress(c *gin.Context) {
 
-	user_id := c.MustGet("id").(uint)
+	user_id := c.MustGet("id").(int)
 	var address models.Address
 	if err := c.BindJSON(&address); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
@@ -96,7 +96,7 @@ func (i *UserHandler) AddAddress(c *gin.Context) {
 		return
 	}
 
-	result, err := i.userUseCase.AddAddress(user_id, address)
+	result, err := i.userUseCase.AddAddress(uint(user_id), address)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add the address", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -157,8 +157,8 @@ func (i *UserHandler) DeleteAddress(c *gin.Context) {
 
 func (i *UserHandler) GetAddresses(c *gin.Context) {
 
-	user_id := c.MustGet("id").(uint)
-	addresses, err := i.userUseCase.GetAddresses(user_id)
+	user_id := c.MustGet("id").(int)
+	addresses, err := i.userUseCase.GetAddresses(uint(user_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -170,8 +170,8 @@ func (i *UserHandler) GetAddresses(c *gin.Context) {
 
 func (i *UserHandler) GetUserDetails(c *gin.Context) {
 
-	user_id := c.MustGet("id").(uint)
-	details, err := i.userUseCase.GetUserDetails(user_id)
+	user_id := c.MustGet("id").(int)
+	details, err := i.userUseCase.GetUserDetails(uint(user_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -183,7 +183,7 @@ func (i *UserHandler) GetUserDetails(c *gin.Context) {
 
 func (i *UserHandler) ChangePassword(c *gin.Context) {
 
-	user_id := c.MustGet("id").(uint)
+	user_id := c.MustGet("id").(int)
 	var ChangePassword models.ChangePassword
 	if err := c.BindJSON(&ChangePassword); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
@@ -191,7 +191,7 @@ func (i *UserHandler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	if err := i.userUseCase.ChangePassword(user_id, ChangePassword.Oldpassword, ChangePassword.Password, ChangePassword.Repassword); err != nil {
+	if err := i.userUseCase.ChangePassword(uint(user_id), ChangePassword.Oldpassword, ChangePassword.Password, ChangePassword.Repassword); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not change the password", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
@@ -245,7 +245,7 @@ func (i *UserHandler) ChangePassword(c *gin.Context) {
 
 func (i *UserHandler) EditProfile(c *gin.Context) {
 
-	user_id := c.MustGet("id").(uint)
+	user_id := c.MustGet("id").(int)
 	var model models.EditProfile
 	if err := c.BindJSON(&model); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
@@ -253,7 +253,7 @@ func (i *UserHandler) EditProfile(c *gin.Context) {
 		return
 	}
 
-	result, err := i.userUseCase.EditProfile(user_id, model.Name, model.Email, model.Phone)
+	result, err := i.userUseCase.EditProfile(uint(user_id), model.Name, model.Email, model.Phone)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not edit profile", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)

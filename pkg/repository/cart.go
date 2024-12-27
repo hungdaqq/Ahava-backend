@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"ahava/pkg/domain"
 	"ahava/pkg/utils/models"
+	"errors"
 
 	"github.com/lib/pq"
 
@@ -140,40 +142,68 @@ func (ad *cartRepository) RemoveFromCart(cart_id uint) error {
 
 func (ad *cartRepository) UpdateQuantityAdd(cart_id uint, quantity uint) (models.CartDetails, error) {
 
-	var cartDetails models.CartDetails
-	err := ad.DB.Raw(`UPDATE cart_items SET quantity = quantity+$1 WHERE id=$2 RETURNING id, user_id, product_id, quantity`,
-		quantity, cart_id).Scan(&cartDetails).Error
-	if err != nil {
-		return models.CartDetails{}, err
+	var cartItem domain.CartItems
+
+	result := ad.DB.Model(&cartItem).Where("id = ?", cart_id).Update("quantity", gorm.Expr("quantity + ?", quantity))
+
+	if result.Error != nil {
+		return models.CartDetails{}, result.Error
 	}
 
-	return cartDetails, nil
+	if result.RowsAffected == 0 {
+		return models.CartDetails{}, errors.New("cart item not found")
+	}
+
+	return models.CartDetails{
+		ID:        cartItem.ID,
+		UserID:    cartItem.UserID,
+		ProductID: cartItem.ProductID,
+		Quantity:  cartItem.Quantity,
+	}, nil
 }
 
 func (ad *cartRepository) UpdateQuantityLess(cart_id uint, quantity uint) (models.CartDetails, error) {
 
-	var cartDetails models.CartDetails
+	var cartItem domain.CartItems
 
-	err := ad.DB.Raw(`UPDATE cart_items SET quantity = quantity-$1 WHERE id=$2 RETURNING id, user_id, product_id, quantity`,
-		quantity, cart_id).Scan(&cartDetails).Error
-	if err != nil {
-		return models.CartDetails{}, err
+	result := ad.DB.Model(&cartItem).Where("id = ?", cart_id).Update("quantity", gorm.Expr("quantity - ?", quantity))
+
+	if result.Error != nil {
+		return models.CartDetails{}, result.Error
 	}
 
-	return cartDetails, nil
+	if result.RowsAffected == 0 {
+		return models.CartDetails{}, errors.New("cart item not found")
+	}
+
+	return models.CartDetails{
+		ID:        cartItem.ID,
+		UserID:    cartItem.UserID,
+		ProductID: cartItem.ProductID,
+		Quantity:  cartItem.Quantity,
+	}, nil
 }
 
 func (ad *cartRepository) UpdateQuantity(cart_id uint, quantity uint) (models.CartDetails, error) {
 
-	var cartDetails models.CartDetails
+	var cartItem domain.CartItems
 
-	err := ad.DB.Raw(`UPDATE cart_items SET quantity=$1 WHERE id=$2 RETURNING id, user_id, product_id, quantity`,
-		quantity, cart_id).Scan(&cartDetails).Error
-	if err != nil {
-		return models.CartDetails{}, err
+	result := ad.DB.Model(&cartItem).Where("id = ?", cart_id).Update("quantity", quantity)
+
+	if result.Error != nil {
+		return models.CartDetails{}, result.Error
 	}
 
-	return cartDetails, nil
+	if result.RowsAffected == 0 {
+		return models.CartDetails{}, errors.New("cart item not found")
+	}
+
+	return models.CartDetails{
+		ID:        cartItem.ID,
+		UserID:    cartItem.UserID,
+		ProductID: cartItem.ProductID,
+		Quantity:  cartItem.Quantity,
+	}, nil
 }
 
 func (ad *cartRepository) AddToCart(user_id, product_id uint, quantity uint) (models.CartDetails, error) {

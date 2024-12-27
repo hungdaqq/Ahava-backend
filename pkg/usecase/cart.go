@@ -112,6 +112,13 @@ func (i *cartUseCase) UpdateQuantityLess(cart_id uint, quantity uint) (models.Ca
 		return models.CartDetails{}, err
 	}
 
+	if result.Quantity <= 0 {
+		err := i.repo.RemoveFromCart(cart_id)
+		if err != nil {
+			return models.CartDetails{}, err
+		}
+	}
+
 	return result, nil
 }
 
@@ -120,6 +127,13 @@ func (i *cartUseCase) UpdateQuantity(cart_id uint, quantity uint) (models.CartDe
 	result, err := i.repo.UpdateQuantity(cart_id, quantity)
 	if err != nil {
 		return models.CartDetails{}, err
+	}
+
+	if result.Quantity <= 0 {
+		err := i.repo.RemoveFromCart(cart_id)
+		if err != nil {
+			return models.CartDetails{}, err
+		}
 	}
 
 	return result, nil

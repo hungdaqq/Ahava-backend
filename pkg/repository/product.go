@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"ahava/pkg/domain"
 	"ahava/pkg/utils/models"
 	"errors"
 
@@ -188,33 +189,67 @@ func (i *productRepository) GetSearchHistory(user_id uint) ([]models.SearchHisto
 }
 
 func (i *productRepository) UpdateProductImage(product_id uint, url string) (models.Products, error) {
+	var updateProduct domain.Products
 
-	var updateProduct models.Products
+	// Use GORM's Update method to update the product image
+	result := i.DB.Model(updateProduct).Where("id = ?", product_id).Update("image", url)
 
-	result := i.DB.Raw("UPDATE products SET image = $1 WHERE id = $2 RETURNING *",
-		url, product_id).Scan(&updateProduct)
+	// Check for errors in the update process
 	if result.Error != nil {
 		return models.Products{}, result.Error
 	}
-	if result.RowsAffected < 1 {
-		return models.Products{}, errors.New("no records with that ID exist")
+
+	// Check if any row was affected (to handle case where no rows matched)
+	if result.RowsAffected == 0 {
+		return models.Products{}, errors.New("product not found")
 	}
 
-	return updateProduct, nil
+	return models.Products{
+		ID:          updateProduct.ID,
+		CategoryID:  updateProduct.CategoryID,
+		ProductName: updateProduct.ProductName,
+		Price:       updateProduct.Price,
+		Size:        updateProduct.Size,
+		Stock:       updateProduct.Stock,
+		Image:       updateProduct.Image,
+		Description: updateProduct.Description,
+		HowToUse:    updateProduct.HowToUse,
+	}, nil
 }
 
 func (i *productRepository) UpdateProduct(product_id uint, model models.Products) (models.Products, error) {
 
-	var updateProduct models.Products
+	var updateProduct domain.Products
 
-	result := i.DB.Raw("UPDATE products SET product_name=$1,category_id=$2,price=$3,size=$4,stock=$5,description=$6,how_to_use=$7 WHERE id = $8 RETURNING *",
-		model.ProductName, model.CategoryID, model.Price, model.Size, model.Stock, model.Description, model.HowToUse, product_id).Scan(&updateProduct)
+	result := i.DB.Model(&models.Products{}).
+		Where("id = ?", product_id).
+		Updates(domain.Products{
+			ProductName: model.ProductName,
+			CategoryID:  model.CategoryID,
+			Price:       model.Price,
+			Size:        model.Size,
+			Stock:       model.Stock,
+			Description: model.Description,
+			HowToUse:    model.HowToUse,
+		})
+
 	if result.Error != nil {
 		return models.Products{}, result.Error
 	}
-	if result.RowsAffected < 1 {
-		return models.Products{}, errors.New("no records with that ID exist")
+
+	if result.RowsAffected == 0 {
+		return models.Products{}, errors.New("product not found")
 	}
 
-	return updateProduct, nil
+	return models.Products{
+		ID:          updateProduct.ID,
+		CategoryID:  updateProduct.CategoryID,
+		ProductName: updateProduct.ProductName,
+		Price:       updateProduct.Price,
+		Size:        updateProduct.Size,
+		Stock:       updateProduct.Stock,
+		Image:       updateProduct.Image,
+		Description: updateProduct.Description,
+		HowToUse:    updateProduct.HowToUse,
+	}, nil
 }

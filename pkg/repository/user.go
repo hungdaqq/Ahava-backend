@@ -207,10 +207,6 @@ func (i *userDatabase) EditProfile(userID uint, name, email, phone string) (mode
 
 	var user domain.Users
 
-	if err := i.DB.First(&user, userID).Error; err != nil {
-		return models.UserDetailsResponse{}, err // Return error if the user is not found
-	}
-
 	result := i.DB.Model(&user).Updates(domain.Users{
 		Name:  name,
 		Email: email,

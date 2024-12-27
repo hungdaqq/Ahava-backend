@@ -45,7 +45,7 @@ type Products struct {
 	CategoryID  uint    `json:"category_id"`
 	ProductName string  `json:"product_name"`
 	Size        string  `json:"size"`
-	Stock       int     `json:"stock"`
+	Stock       uint    `json:"stock"`
 	Image       string  `json:"image"`
 	Price       float64 `json:"price"`
 	Description string  `json:"description"`

@@ -22,7 +22,7 @@ func NewPaymentHandler(usecase services.PaymentUseCase) *PaymentHandler {
 
 func (h *PaymentHandler) CreateQR(c *gin.Context) {
 
-	user_id := c.MustGet("id").(uint)
+	user_id := c.MustGet("id").(int)
 
 	var model models.CreateQR
 	err := c.BindJSON(&model)
@@ -32,7 +32,7 @@ func (h *PaymentHandler) CreateQR(c *gin.Context) {
 		return
 	}
 
-	result, err := h.orderUseCase.CreateSePayQR(model.Amount, user_id)
+	result, err := h.orderUseCase.CreateSePayQR(model.Amount, uint(user_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not create QR", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)

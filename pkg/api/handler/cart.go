@@ -22,7 +22,7 @@ func NewCartHandler(usecase services.CartUseCase) *CartHandler {
 
 func (i *CartHandler) AddToCart(c *gin.Context) {
 
-	user_id := c.MustGet("id").(uint)
+	user_id := c.MustGet("id").(int)
 	var model models.UpdateCartItem
 	if err := c.BindJSON(&model); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
@@ -42,7 +42,7 @@ func (i *CartHandler) AddToCart(c *gin.Context) {
 
 func (i *CartHandler) GetCart(c *gin.Context) {
 
-	user_id := c.MustGet("id").(uint)
+	user_id := c.MustGet("id").(int)
 
 	products, err := i.usecase.GetCart(uint(user_id), []uint{})
 	if err != nil {
@@ -117,7 +117,7 @@ func (i *CartHandler) UpdateQuantityLess(c *gin.Context) {
 
 	result, err := i.usecase.UpdateQuantityLess(uint(cart_id), model.Quantity)
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "could not  subtract quantity", nil, err.Error())
+		errorRes := response.ClientResponse(http.StatusBadRequest, "could not subtract quantity", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
@@ -154,7 +154,7 @@ func (i *CartHandler) UpdateQuantity(c *gin.Context) {
 }
 
 func (i *CartHandler) CheckOut(c *gin.Context) {
-	user_id := c.MustGet("id").(uint)
+	user_id := c.MustGet("id").(int)
 
 	var model models.CartCheckout
 	if err := c.BindJSON(&model); err != nil {
