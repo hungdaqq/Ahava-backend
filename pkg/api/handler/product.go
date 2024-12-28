@@ -31,15 +31,13 @@ func (i *ProductHandler) AddProduct(c *gin.Context) {
 		return
 	}
 
-	productName := c.Request.FormValue("product_name")
-	size := c.Request.FormValue("size")
 	p, err := strconv.Atoi(c.Request.FormValue("price"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "form file error", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-	price := float64(p)
+	price := uint64(p)
 	stock, err := strconv.Atoi(c.Request.FormValue("stock"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "form file error", nil, err.Error())
@@ -48,10 +46,12 @@ func (i *ProductHandler) AddProduct(c *gin.Context) {
 	}
 
 	product.CategoryID = uint(categoryID)
-	product.ProductName = productName
-	product.Size = size
+	product.ProductName = c.Request.FormValue("product_name")
+	product.Size = c.Request.FormValue("size")
 	product.Price = price
 	product.Stock = uint(stock)
+	product.Description = c.Request.FormValue("description")
+	product.HowToUse = c.Request.FormValue("how_to_use")
 
 	file, err := c.FormFile("image")
 	if err != nil {

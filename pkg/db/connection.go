@@ -54,15 +54,15 @@ func ConnectDatabase(cfg config.Config) (*gorm.DB, error) {
 	// if err := db.AutoMigrate(domain.Wallet{}); err != nil {
 	// 	return db, err
 	// }
-	// if err := db.AutoMigrate(domain.Offer{}); err != nil {
-	// 	return db, err
-	// }
+	if err := db.AutoMigrate(domain.Offer{}); err != nil {
+		return db, err
+	}
 	// if err := db.AutoMigrate(domain.LineItems{}); err != nil {
 	// 	return db, err
 	// }
-	// if err := db.AutoMigrate(domain.Wishlist{}); err != nil {
-	// 	return db, err
-	// }
+	if err := db.AutoMigrate(domain.Wishlist{}); err != nil {
+		return db, err
+	}
 	CheckAndCreateAdmin(db)
 
 	return db, dbErr

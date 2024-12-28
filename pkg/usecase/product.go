@@ -22,22 +22,22 @@ type ProductUseCase interface {
 }
 
 type productUseCase struct {
-	repository repository.ProductRepository
-	// offerRepository    repository.OfferRepository
-	helper helper.Helper
+	repository      repository.ProductRepository
+	offerRepository repository.OfferRepository
+	helper          helper.Helper
 	// wishlistRepository repository.WishlistRepository
 }
 
 func NewProductUseCase(
 	repo repository.ProductRepository,
-	// offer repository.OfferRepository,
+	offer repository.OfferRepository,
 	h helper.Helper,
 	// w repository.WishlistRepository,
 ) *productUseCase {
 	return &productUseCase{
-		repository: repo,
-		// offerRepository:    offer,
-		helper: h,
+		repository:      repo,
+		offerRepository: offer,
+		helper:          h,
 		// wishlistRepository: w,
 	}
 }
@@ -105,18 +105,15 @@ func (i *productUseCase) ShowProductDetails(id uint) (models.Products, error) {
 		return models.Products{}, err
 	}
 
-	// DiscountPercentage, err := i.offerRepository.FindDiscountPercentage(product.CategoryID)
-	// if err != nil {
-	// 	return models.Products{}, err
-	// }
+	offerPercentage, err := i.offerRepository.FindOfferRate(product.CategoryID)
+	if err != nil {
+		return models.Products{}, err
+	}
 
-	// //make discounted price by calculation
-	// var discount float64
-	// if DiscountPercentage > 0 {
-	// 	discount = (product.Price * float64(DiscountPercentage)) / 100
-	// }
-
-	// product.DiscountedPrice = product.Price - discount
+	if offerPercentage > 0 {
+		discount := (product.Price * uint64(offerPercentage)) / 100
+		product.DiscountedPrice = product.Price - discount
+	}
 
 	return product, nil
 

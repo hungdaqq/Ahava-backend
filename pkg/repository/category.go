@@ -39,12 +39,12 @@ func (p *categoryRepository) AddCategory(category models.Category) (models.Categ
 
 func (p *categoryRepository) UpdateCategory(categoryID uint, category, description string) (models.Category, error) {
 
-	var updateCategory domain.Category
+	var updateCategory models.Category
 
-	result := p.DB.Model(&updateCategory).Where("id = ?", categoryID).Updates(domain.Category{
+	result := p.DB.Model(&domain.Category{}).Where("id = ?", categoryID).Updates(domain.Category{
 		CategoryName: category,
 		Description:  description,
-	})
+	}).Scan(&updateCategory)
 
 	if result.Error != nil {
 		return models.Category{}, result.Error
@@ -54,10 +54,7 @@ func (p *categoryRepository) UpdateCategory(categoryID uint, category, descripti
 		return models.Category{}, errors.New("no records with that ID exist")
 	}
 
-	return models.Category{
-		ID:           updateCategory.ID,
-		CategoryName: updateCategory.CategoryName,
-		Description:  updateCategory.Description}, nil
+	return updateCategory, nil
 }
 
 func (c *categoryRepository) DeleteCategory(categoryID uint) error {

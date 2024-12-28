@@ -107,18 +107,19 @@ func (i *userDatabase) AddAddress(user_id uint, address models.Address) (models.
 
 func (i *userDatabase) UpdateAddress(address_id uint, address models.Address) (models.Address, error) {
 
-	var updateAddress domain.Address
+	var updateAddress models.Address
 
-	result := i.DB.Model(&updateAddress).Where("id = ?", address_id).Updates(models.Address{
-		Name:     address.Name,
-		Street:   address.Street,
-		Ward:     address.Ward,
-		District: address.District,
-		City:     address.City,
-		Phone:    address.Phone,
-		Type:     address.Type,
-		Default:  address.Default,
-	})
+	result := i.DB.Model(&domain.Address{}).Where("id = ?", address_id).Updates(
+		domain.Address{
+			Name:     address.Name,
+			Street:   address.Street,
+			Ward:     address.Ward,
+			District: address.District,
+			City:     address.City,
+			Phone:    address.Phone,
+			Type:     address.Type,
+			Default:  address.Default,
+		}).Scan(&updateAddress)
 
 	if result.Error != nil {
 		return models.Address{}, result.Error
@@ -128,17 +129,7 @@ func (i *userDatabase) UpdateAddress(address_id uint, address models.Address) (m
 		return models.Address{}, errors.New("no address_id with that ID exist")
 	}
 
-	return models.Address{
-		ID:      updateAddress.ID,
-		UserID:  updateAddress.UserID,
-		Name:    updateAddress.Name,
-		Street:  updateAddress.Street,
-		Ward:    updateAddress.Ward,
-		City:    updateAddress.City,
-		Phone:   updateAddress.Phone,
-		Type:    updateAddress.Type,
-		Default: updateAddress.Default,
-	}, nil
+	return updateAddress, nil
 }
 
 func (i *userDatabase) DeleteAddress(address_id uint) error {
@@ -231,13 +222,13 @@ func (i *userDatabase) GetPassword(id uint) (string, error) {
 
 func (i *userDatabase) EditProfile(userID uint, name, email, phone string) (models.UserDetailsResponse, error) {
 
-	var user domain.Users
+	var user models.UserDetailsResponse
 
-	result := i.DB.Model(&user).Updates(domain.Users{
+	result := i.DB.Model(&domain.Users{}).Where("id = ?", userID).Updates(domain.Users{
 		Name:  name,
 		Email: email,
 		Phone: phone,
-	})
+	}).Scan(&user)
 
 	if result.Error != nil {
 		return models.UserDetailsResponse{}, result.Error
@@ -247,15 +238,7 @@ func (i *userDatabase) EditProfile(userID uint, name, email, phone string) (mode
 		return models.UserDetailsResponse{}, errors.New("user not found")
 	}
 
-	return models.UserDetailsResponse{
-		ID:        user.ID,
-		Name:      user.Name,
-		Email:     user.Email,
-		Phone:     user.Phone,
-		BirthDate: user.BirthDate,
-		CreateAt:  user.CreateAt,
-		UpdateAt:  user.UpdateAt,
-	}, nil
+	return user, nil
 }
 
 func (ad *userDatabase) GetCartID(id uint) (uint, error) {

@@ -15,7 +15,7 @@ func AdminRoutes(
 	categoryHandler *handler.CategoryHandler,
 	// orderHandler *handler.OrderHandler,
 	// couponHandler *handler.CouponHandler,
-	// offerHandler *handler.OfferHandler,
+	offerHandler *handler.OfferHandler,
 ) {
 
 	engine.POST("/login", adminHandler.LoginHandler)
@@ -36,10 +36,10 @@ func AdminRoutes(
 			categorymanagement.DELETE("/:category_id", categoryHandler.DeleteCategory)
 		}
 
-		productmanagement := engine.Group("/products")
+		productmanagement := engine.Group("/product")
 		{
 			productmanagement.GET("", productHandler.ListProductsForAdmin)
-			productmanagement.GET("/details", productHandler.ShowProductDetails)
+			productmanagement.GET("/detail", productHandler.ShowProductDetails)
 			productmanagement.POST("", productHandler.AddProduct)
 			productmanagement.DELETE("/:product_id", productHandler.DeleteProduct)
 			productmanagement.PUT("/:product_id", productHandler.UpdateProduct)
@@ -70,12 +70,13 @@ func AdminRoutes(
 		// 	coupons.PUT("", couponHandler.ReActivateCoupon)
 		// }
 
-		// offers := engine.Group("/offers")
-		// {
-		// 	offers.GET("", offerHandler.GetOffers)
-		// 	offers.POST("", offerHandler.AddNewOffer)
-		// 	offers.DELETE("", offerHandler.MakeOfferExpire)
-		// }
+		offers := engine.Group("/offer")
+		{
+			offers.GET("", offerHandler.GetOffers)
+			offers.POST("", offerHandler.AddNewOffer)
+			offers.DELETE("/:offer_id", offerHandler.ExpireOffer)
+			offers.PUT("/:offer_id", offerHandler.UpdateOffer)
+		}
 	}
 
 }

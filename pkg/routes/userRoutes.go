@@ -95,7 +95,6 @@ func UserRoutes(
 			cart.PUT("/:cart_id/plus", cartHandler.UpdateQuantityAdd)
 			cart.PUT("/:cart_id/minus", cartHandler.UpdateQuantityLess)
 			cart.PUT("/:cart_id", cartHandler.UpdateQuantityLess)
-
 			cart.POST("/check-out", cartHandler.CheckOut)
 		}
 
@@ -103,7 +102,7 @@ func UserRoutes(
 		{
 			wishlist.POST("/:product_id", wishlisthandler.AddToWishlist)
 			wishlist.GET("", wishlisthandler.GetWishList)
-			wishlist.DELETE(":product_id", wishlisthandler.RemoveFromWishlist)
+			wishlist.DELETE("/:product_id", wishlisthandler.RemoveFromWishlist)
 		}
 
 		checkout := engine.Group("/order")
@@ -112,7 +111,5 @@ func UserRoutes(
 		}
 
 		// engine.GET("/coupon", couponHandler.GetAllCoupons)
-
 	}
-
 }

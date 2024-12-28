@@ -25,7 +25,7 @@ func (or *orderRepository) PlaceOrder(order models.PlaceOrder) (models.Order, er
 
 	var orderDetails models.Order
 	if err := or.DB.Exec(`INSERT INTO orders (user_id, address_id, payment_method_id, final_price, coupon_used) VALUES (?,?,?,?,?) RETURNING *`,
-		order.UserID, order.AddressID, order.PaymentMethodID, order.FinalPrice, order.CouponUsed).Scan(&orderDetails).Error; err != nil {
+		order.UserID, order.Address, order.PaymentMethod, order.FinalPrice, order.CouponUsed).Scan(&orderDetails).Error; err != nil {
 		return models.Order{}, err
 	}
 

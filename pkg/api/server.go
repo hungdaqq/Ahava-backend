@@ -26,7 +26,7 @@ func NewServerHTTP(
 	cartHandler *handler.CartHandler,
 	// couponHandler *handler.CouponHandler,
 	paymentHandler *handler.PaymentHandler,
-	// offerhandler *handler.OfferHandler,
+	offerhandler *handler.OfferHandler,
 	wishlistHandler *handler.WishlistHandler,
 ) *ServerHTTP {
 
@@ -61,7 +61,7 @@ func NewServerHTTP(
 		categoryHandler,
 		// orderHandler,
 		// couponHandler,
-		// offerhandler,
+		offerhandler,
 	)
 
 	return &ServerHTTP{engine: engine}

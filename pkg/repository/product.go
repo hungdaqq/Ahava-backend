@@ -22,7 +22,7 @@ type ProductRepository interface {
 
 	// ListProductsByCategory(id uint) ([]models.Products, error)
 	// CheckStock(product_id uint) (uint, error)
-	// CheckPrice(product_id uint) (float64, error)
+	// CheckPrice(product_id uint) (uint64, error)
 	SearchProducts(key string) ([]models.Products, error)
 	SaveSearchHistory(user_id uint, key string) error
 	GetSearchHistory(user_id uint) ([]models.SearchHistory, error)
@@ -141,8 +141,8 @@ func (i *productRepository) ListCategoryProducts(category_id uint) (models.Produ
 // 	return stock, nil
 // }
 
-func (i *productRepository) CheckPrice(pid uint) (float64, error) {
-	var k float64
+func (i *productRepository) CheckPrice(pid uint) (uint64, error) {
+	var k uint64
 	err := i.DB.Raw("SELECT price FROM products WHERE id=?", pid).Scan(&k).Error
 	if err != nil {
 		return 0, err
@@ -189,11 +189,11 @@ func (i *productRepository) GetSearchHistory(user_id uint) ([]models.SearchHisto
 }
 
 func (i *productRepository) UpdateProductImage(product_id uint, url string) (models.Products, error) {
-	
-	var updateProduct domain.Products
+
+	var updateProduct models.Products
 
 	// Use GORM's Update method to update the product image
-	result := i.DB.Model(&updateProduct).Where("id = ?", product_id).Update("image", url)
+	result := i.DB.Model(&domain.Products{}).Where("id = ?", product_id).Update("image", url).Scan(&updateProduct)
 
 	// Check for errors in the update process
 	if result.Error != nil {
@@ -205,24 +205,14 @@ func (i *productRepository) UpdateProductImage(product_id uint, url string) (mod
 		return models.Products{}, errors.New("product not found")
 	}
 
-	return models.Products{
-		ID:          updateProduct.ID,
-		CategoryID:  updateProduct.CategoryID,
-		ProductName: updateProduct.ProductName,
-		Price:       updateProduct.Price,
-		Size:        updateProduct.Size,
-		Stock:       updateProduct.Stock,
-		Image:       updateProduct.Image,
-		Description: updateProduct.Description,
-		HowToUse:    updateProduct.HowToUse,
-	}, nil
+	return updateProduct, nil
 }
 
 func (i *productRepository) UpdateProduct(product_id uint, model models.Products) (models.Products, error) {
 
-	var updateProduct domain.Products
+	var updateProduct models.Products
 
-	result := i.DB.Model(&updateProduct).Where("id = ?", product_id).Updates(
+	result := i.DB.Model(&domain.Products{}).Where("id = ?", product_id).Updates(
 		domain.Products{
 			ProductName: model.ProductName,
 			CategoryID:  model.CategoryID,
@@ -231,7 +221,7 @@ func (i *productRepository) UpdateProduct(product_id uint, model models.Products
 			Stock:       model.Stock,
 			Description: model.Description,
 			HowToUse:    model.HowToUse,
-		})
+		}).Scan(&updateProduct)
 
 	if result.Error != nil {
 		return models.Products{}, result.Error
@@ -241,15 +231,5 @@ func (i *productRepository) UpdateProduct(product_id uint, model models.Products
 		return models.Products{}, errors.New("product not found")
 	}
 
-	return models.Products{
-		ID:          updateProduct.ID,
-		CategoryID:  updateProduct.CategoryID,
-		ProductName: updateProduct.ProductName,
-		Price:       updateProduct.Price,
-		Size:        updateProduct.Size,
-		Stock:       updateProduct.Stock,
-		Image:       updateProduct.Image,
-		Description: updateProduct.Description,
-		HowToUse:    updateProduct.HowToUse,
-	}, nil
+	return updateProduct, nil
 }

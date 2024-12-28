@@ -17,17 +17,20 @@ type CartUseCase interface {
 }
 
 type cartUseCase struct {
-	repo           repository.CartRepository
-	userRepository repository.UserRepository
+	repo            repository.CartRepository
+	userRepository  repository.UserRepository
+	offerRepository repository.OfferRepository
 }
 
 func NewCartUseCase(
 	repo repository.CartRepository,
 	userRepository repository.UserRepository,
+	offerRepository repository.OfferRepository,
 ) *cartUseCase {
 	return &cartUseCase{
-		repo:           repo,
-		userRepository: userRepository,
+		repo:            repo,
+		userRepository:  userRepository,
+		offerRepository: offerRepository,
 	}
 }
 
@@ -55,20 +58,30 @@ func (i *cartUseCase) AddToCart(user_id, product_id uint, quantity uint) (models
 
 func (i *cartUseCase) CheckOut(user_id uint, cart_ids []uint) (models.CheckOut, error) {
 
-	cart_items, err := i.repo.GetCart(user_id, cart_ids)
+	cartItems, err := i.repo.GetCart(user_id, cart_ids)
+
+	var discountedPrice, totalPrice uint64
+
+	for idx := range cartItems {
+		offerPercentage, err := i.offerRepository.FindOfferRate(cartItems[idx].ProductID)
+		if err != nil {
+			return models.CheckOut{}, err
+		}
+		if offerPercentage > 0 {
+			cartItems[idx].ItemDiscountedPrice = cartItems[idx].ItemPrice - (cartItems[idx].ItemPrice*uint64(offerPercentage))/100
+		}
+		
+		totalPrice += cartItems[idx].ItemPrice
+		discountedPrice += cartItems[idx].ItemDiscountedPrice
+	}
+
 	if err != nil {
 		return models.CheckOut{}, err
 	}
 
-	var discountedPrice, totalPrice float64
-	for _, v := range cart_items {
-		totalPrice += v.ItemPrice
-		discountedPrice += v.ItemDiscountedPrice
-	}
-
 	var checkout models.CheckOut
 
-	checkout.CartItems = cart_items
+	checkout.CartItems = cartItems
 	checkout.TotalPrice = totalPrice
 	checkout.TotalDiscountedPrice = discountedPrice
 
@@ -77,12 +90,22 @@ func (i *cartUseCase) CheckOut(user_id uint, cart_ids []uint) (models.CheckOut, 
 
 func (i *cartUseCase) GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error) {
 
-	cart, err := i.repo.GetCart(user_id, cart_ids)
+	cartItems, err := i.repo.GetCart(user_id, cart_ids)
 	if err != nil {
 		return []models.CartItem{}, err
 	}
 
-	return cart, nil
+	for idx := range cartItems {
+		offerPercentage, err := i.offerRepository.FindOfferRate(cartItems[idx].ProductID)
+		if err != nil {
+			return []models.CartItem{}, err
+		}
+		if offerPercentage > 0 {
+			cartItems[idx].ItemDiscountedPrice = cartItems[idx].ItemPrice - (cartItems[idx].ItemPrice*uint64(offerPercentage))/100
+		}
+	}
+
+	return cartItems, nil
 }
 
 func (i *cartUseCase) RemoveFromCart(cart_id uint) error {

@@ -35,7 +35,10 @@ func (w *wishlistUseCase) AddToWishlist(user_id, product_id uint) (models.Wishli
 	}
 
 	if exists {
-		return models.Wishlist{}, errors.New("item already exists in wishlist")
+		err = w.repository.UpdateWishlist(user_id, product_id, false)
+		if err != nil {
+			return models.Wishlist{}, errors.New("could not add to wishlist")
+		}
 	}
 
 	result, err := w.repository.AddToWishlist(user_id, product_id)
@@ -48,7 +51,7 @@ func (w *wishlistUseCase) AddToWishlist(user_id, product_id uint) (models.Wishli
 
 func (w *wishlistUseCase) RemoveFromWishlist(user_id, product_id uint) error {
 
-	if err := w.repository.RemoveFromWishlist(user_id, product_id); err != nil {
+	if err := w.repository.UpdateWishlist(user_id, product_id, true); err != nil {
 		return errors.New("could not remove from wishlist")
 	}
 

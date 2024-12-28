@@ -1,16 +1,17 @@
 package repository
 
 import (
+	"ahava/pkg/domain"
 	"ahava/pkg/utils/models"
+	"errors"
 
 	"gorm.io/gorm"
 )
 
 type WishlistRepository interface {
 	AddToWishlist(user_id, product_id uint) (models.Wishlist, error)
-	RemoveFromWishlist(user_id, product_id uint) error
+	UpdateWishlist(user_id, product_id uint, is_deleted bool) error
 	GetWishList(user_id uint) ([]models.Products, error)
-
 	CheckIfTheItemIsPresentAtWishlist(user_id, product_id uint) (bool, error)
 	// CheckIfTheItemIsPresentAtCart(user_id, product_id uint) (bool, error)
 }
@@ -38,12 +39,18 @@ func (w *wishlistRepository) AddToWishlist(user_id, product_id uint) (models.Wis
 	return addWishlist, nil
 }
 
-func (w *wishlistRepository) RemoveFromWishlist(user_id, product_id uint) error {
+func (w *wishlistRepository) UpdateWishlist(user_id, product_id uint, is_deleted bool) error {
 
-	err := w.DB.Exec("DELETE FROM wishlists WHERE product_id=$1 AND user_id=$2",
-		user_id, product_id).Error
-	if err != nil {
-		return err
+	result := w.DB.Model(&domain.Wishlist{}).
+		Where("user_id = ? AND product_id = ?", user_id, product_id).
+		Update("is_deleted", is_deleted)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.New("no matching record found in wishlist")
 	}
 
 	return nil

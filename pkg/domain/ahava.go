@@ -29,7 +29,7 @@ type TokenAdmin struct {
 type CartItems struct {
 	ID        uint      `json:"id" gorm:"primarykey"`
 	UserID    uint      `json:"user_id" gorm:"not null"`
-	Users     Users     `json:"-" gorm:"foreignkey:UserID"`
+	Users     Users     `json:"-" gorm:"foreignkey:UserID;constraint:OnDelete:CASCADE"`
 	ProductID uint      `json:"product_id" gorm:"not null"`
 	Products  Products  `json:"-" gorm:"foreignkey:ProductID;constraint:OnDelete:CASCADE"`
 	Quantity  uint      `json:"quantity" gorm:"default:1"`
@@ -45,11 +45,13 @@ type Coupons struct {
 }
 
 type Offer struct {
-	ID           int      `json:"id" gorm:"unique;not null"`
-	CategoryID   int      `json:"category_id"`
-	Category     Category `json:"-" gorm:"foreignkey:CategoryID;constraint:OnDelete:CASCADE"`
-	DiscountRate int      `json:"discount_rate"`
-	Valid        bool     `gorm:"default:True"`
+	ID        uint      `json:"id" gorm:"unique;not null"`
+	ProductID uint      `json:"product_id"`
+	Product   Products  `json:"-" gorm:"foreignkey:ProductID;constraint:OnDelete:CASCADE"`
+	OfferRate uint      `json:"offer_rate"`
+	ExpireAt  time.Time `json:"expire_at"`
+	CreateAt  time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
+	UpdateAt  time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
 type PaymentMethod struct {
@@ -59,19 +61,17 @@ type PaymentMethod struct {
 }
 
 type Order struct {
-	ID              uint          `json:"id" gorm:"primarykey"`
-	UserID          uint          `json:"user_id" gorm:"not null"`
-	Users           Users         `json:"-" gorm:"foreignkey:UserID"`
-	AddressID       uint          `json:"address_id" gorm:"not null"`
-	Address         Address       `json:"-" gorm:"foreignkey:AddressID"`
-	PaymentMethodID uint          `json:"paymentmethod_id"`
-	PaymentMethod   PaymentMethod `json:"-" gorm:"foreignkey:PaymentMethodID"`
-	CouponUsed      string        `json:"coupon_used" gorm:"default:null"`
-	FinalPrice      float64       `json:"price"`
-	OrderStatus     string        `json:"order_status" gorm:"order_status:4;default:'PREPARE';check:order_status IN ('PREPARE', 'SHIP','DELIVER','CANCEL','RETURN')"`
-	PaymentStatus   string        `json:"payment_status" gorm:"payment_status:2;default:'NOT PAID';check:payment_status IN ('PAID', 'NOT PAID')"`
-	CreateAt        time.Time     `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdateAt        time.Time     `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
+	ID            uint      `json:"id" gorm:"primarykey"`
+	UserID        uint      `json:"user_id" gorm:"not null"`
+	Users         Users     `json:"-" gorm:"foreignkey:UserID"`
+	Address       string    `json:"address"`
+	PaymentMethod string    `json:"payment_method"`
+	CouponUsed    string    `json:"coupon_used" gorm:"default:null"`
+	FinalPrice    uint64    `json:"price"`
+	OrderStatus   string    `json:"order_status" gorm:"order_status:4;default:'PREPARE';check:order_status IN ('PREPARE','SHIP','DELIVER','CANCEL','RETURN')"`
+	PaymentStatus string    `json:"payment_status" gorm:"payment_status:2;default:'NOT PAID';check:payment_status IN ('PAID', 'NOT PAID')"`
+	CreateAt      time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
+	UpdateAt      time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
 type OrderItem struct {
@@ -81,8 +81,8 @@ type OrderItem struct {
 	ProductID       uint     `json:"product_id"`
 	Products        Products `json:"-" gorm:"foreignkey:ProductID"`
 	Quantity        uint     `json:"quantity"`
-	ItemPrice       float64  `json:"item_price"`
-	DiscountedPrice float64  `json:"discounted_price"`
+	ItemPrice       uint64   `json:"item_price"`
+	DiscountedPrice uint64   `json:"discounted_price"`
 }
 
 type AdminOrdersResponse struct {
@@ -94,11 +94,11 @@ type AdminOrdersResponse struct {
 }
 
 type OrderDetails struct {
-	ID            uint    `json:"id" gorm:"id"`
-	Username      string  `json:"name"`
-	Address       string  `json:"address"`
-	PaymentMethod string  `json:"payment_method" gorm:"payment_method"`
-	Total         float64 `json:"total"`
+	ID            uint   `json:"id" gorm:"id"`
+	Username      string `json:"name"`
+	Address       string `json:"address"`
+	PaymentMethod string `json:"payment_method" gorm:"payment_method"`
+	Total         uint64 `json:"total"`
 }
 
 type OrderDetailsWithImages struct {
@@ -115,7 +115,7 @@ type Products struct {
 	Image             string    `json:"image"`
 	Size              string    `json:"size"`
 	Stock             uint      `json:"stock"`
-	Price             float64   `json:"price"`
+	Price             uint64    `json:"price"`
 	Description       string    `json:"description"`
 	HowToUse          string    `json:"how_to_use"`
 	IsFeaturedProduct bool      `json:"is_featured_product" gorm:"default:false"`
@@ -149,7 +149,7 @@ type Users struct {
 type Address struct {
 	ID       uint      `json:"id" gorm:"unique;not null"`
 	UserID   uint      `json:"user_id"`
-	Users    Users     `json:"-" gorm:"foreignkey:UserID"`
+	Users    Users     `json:"-" gorm:"foreignkey:UserID;constraint:OnDelete:CASCADE"`
 	Name     string    `json:"name" validate:"required"`
 	Street   string    `json:"street" validate:"required"`
 	Ward     string    `json:"ward" validate:"required"`
@@ -163,25 +163,27 @@ type Address struct {
 }
 
 type Wallet struct {
-	ID     int     `json:"id"  gorm:"unique;not null"`
-	Userid uint    `json:"user_id"`
-	Users  Users   `json:"-" gorm:"foreignkey:UserID"`
-	Amount float64 `json:"amount" gorm:"default:0"`
+	ID     int    `json:"id"  gorm:"unique;not null"`
+	Userid uint   `json:"user_id"`
+	Users  Users  `json:"-" gorm:"foreignkey:UserID"`
+	Amount uint64 `json:"amount" gorm:"default:0"`
 }
 
 type Wishlist struct {
-	ID        uint     `json:"id" gorm:"primarykey"`
-	UserID    uint     `json:"user_id" gorm:"not null"`
-	Users     Users    `json:"-" gorm:"foreignkey:UserID"`
-	ProductID uint     `json:"product_id" gorm:"not null"`
-	Products  Products `json:"-" gorm:"foreignkey:ProductID"`
-	// IsDeleted bool     `json:"is_deleted" gorm:"default:false"`
+	ID        uint      `json:"id" gorm:"primarykey"`
+	UserID    uint      `json:"user_id" gorm:"not null"`
+	Users     Users     `json:"-" gorm:"foreignkey:UserID;constraint:OnDelete:CASCADE"`
+	ProductID uint      `json:"product_id" gorm:"not null"`
+	Products  Products  `json:"-" gorm:"foreignkey:ProductID;constraint:OnDelete:CASCADE"`
+	IsDeleted bool      `json:"is_deleted" gorm:"default:false"`
+	CreateAt  time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
+	UpdateAt  time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
 type SearchHistory struct {
 	ID        uint      `json:"id" gorm:"primarykey"`
 	UserID    uint      `json:"user_id" gorm:"not null"`
-	Users     Users     `json:"-" gorm:"foreignkey:UserID"`
+	Users     Users     `json:"-" gorm:"foreignkey:UserID;constraint:OnDelete:CASCADE"`
 	SearchKey string    `json:"search_key" gorm:"not null"`
 	CreateAt  time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 }
@@ -198,8 +200,8 @@ type Transaction struct {
 	Code            string    `json:"code"`
 	Content         string    `json:"content"`
 	TransferType    string    `json:"transfer_type"`
-	TransferAmount  float64   `json:"transfer_amount"`
-	Accumulated     float64   `json:"accumulated"`
+	TransferAmount  uint64    `json:"transfer_amount"`
+	Accumulated     uint64    `json:"accumulated"`
 	ReferenceCode   string    `json:"reference_code"`
 	Description     string    `json:"description"`
 	CreateAt        time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
