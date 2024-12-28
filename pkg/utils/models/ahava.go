@@ -178,24 +178,24 @@ type Wishlist struct {
 }
 
 type Order struct {
-	ID              uint      `json:"id"`
-	UserID          uint      `json:"user_id"`
-	AddressID       uint      `json:"address_id"`
-	PaymentMethodid uint      `json:"payment_method_id"`
-	FinalPrice      uint64    `json:"final_price"`
-	CouponUsed      string    `json:"coupon_used"`
-	OrderStatus     string    `json:"order_status"`
-	CreateAt        time.Time `json:"create_at"`
-	UpdateAt        time.Time `json:"update_at"`
+	ID            uint      `json:"id"`
+	UserID        uint      `json:"user_id"`
+	Address       string    `json:"address"`
+	PaymentMethod string    `json:"payment_method"`
+	FinalPrice    uint64    `json:"final_price"`
+	Coupon        string    `json:"coupon"`
+	OrderStatus   string    `json:"order_status"`
+	PaymentStatus string    `json:"payment_status"`
+	CreateAt      time.Time `json:"create_at"`
+	UpdateAt      time.Time `json:"update_at"`
 }
 
 type PlaceOrder struct {
-	UserID        uint     `json:"user_id"`
-	Address       string   `json:"address"`
-	PaymentMethod string   `json:"payment_method"`
-	CartCheckOut  CheckOut `json:"cart_checkout"`
-	CouponUsed    string   `json:"coupon_used"`
-	FinalPrice    uint64   `json:"final_price"`
+	UserID        uint   `json:"user_id"`
+	Address       string `json:"address"`
+	PaymentMethod string `json:"payment_method"`
+	CartIDs       []uint `json:"cart_ids"`
+	Coupon        string `json:"coupon"`
 }
 
 type OrderItem struct {
@@ -207,32 +207,31 @@ type OrderItem struct {
 }
 
 type CreateQR struct {
-	OrderID       uint   `json:"order_id"`
+	OrderID       uint   `json:"order_id" validate:"required"`
 	AccountNumber string `json:"account_number"`
 	BankName      string `json:"bank_name"`
-	Amount        uint64 `json:"amount"`
+	Amount        uint64 `json:"amount" validate:"required"`
 	Description   string `json:"description"`
 	Link          string `json:"link"`
 }
 
 type Transaction struct {
-	ID              uint      `json:"id"`
-	UserID          uint      `json:"user_id"`
-	OrderID         uint      `json:"order_id"`
-	Gateway         string    `json:"gateway"`
-	TransactionDate time.Time `json:"transactionDate"`
-	AccountNumber   string    `json:"accountNumber"`
-	Code            string    `json:"code"`
-	Content         string    `json:"content"`
-	TransferType    string    `json:"transferType"`
-	TransferAmount  uint64    `json:"transferAmount"`
-	Accumulated     uint64    `json:"accumulated"`
-	ReferenceCode   string    `json:"referenceCode"`
-	Description     string    `json:"description"`
+	ID              uint   `json:"id"`
+	UserID          uint   `json:"user_id"`
+	OrderID         uint   `json:"order_id"`
+	Gateway         string `json:"gateway"`
+	TransactionDate string `json:"transactionDate"`
+	AccountNumber   string `json:"accountNumber"`
+	Code            string `json:"code"`
+	Content         string `json:"content"`
+	TransferType    string `json:"transferType"`
+	TransferAmount  uint64 `json:"transferAmount"`
+	Accumulated     uint64 `json:"accumulated"`
+	ReferenceCode   string `json:"referenceCode"`
+	Description     string `json:"description"`
 }
 
 type Offer struct {
-	ID        uint      `json:"id"`
 	ProductID uint      `json:"product_id"`
 	OfferRate uint      `json:"offer_rate"`
 	ExpireAt  time.Time `json:"expire_at"`

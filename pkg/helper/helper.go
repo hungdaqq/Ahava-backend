@@ -210,7 +210,6 @@ func (h *helper) TwilioVerifyOTP(serviceID string, code string, phone string) er
 	}
 
 	return errors.New("failed to validate otp")
-
 }
 
 func (h *helper) GenerateTokenClients(user models.UserDetailsResponse) (string, error) {

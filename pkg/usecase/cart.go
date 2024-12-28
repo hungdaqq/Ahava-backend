@@ -69,8 +69,10 @@ func (i *cartUseCase) CheckOut(user_id uint, cart_ids []uint) (models.CheckOut, 
 		}
 		if offerPercentage > 0 {
 			cartItems[idx].ItemDiscountedPrice = cartItems[idx].ItemPrice - (cartItems[idx].ItemPrice*uint64(offerPercentage))/100
+		} else {
+			cartItems[idx].ItemDiscountedPrice = cartItems[idx].ItemPrice
 		}
-		
+
 		totalPrice += cartItems[idx].ItemPrice
 		discountedPrice += cartItems[idx].ItemDiscountedPrice
 	}
@@ -102,6 +104,8 @@ func (i *cartUseCase) GetCart(user_id uint, cart_ids []uint) ([]models.CartItem,
 		}
 		if offerPercentage > 0 {
 			cartItems[idx].ItemDiscountedPrice = cartItems[idx].ItemPrice - (cartItems[idx].ItemPrice*uint64(offerPercentage))/100
+		} else {
+			cartItems[idx].ItemDiscountedPrice = cartItems[idx].ItemPrice
 		}
 	}
 

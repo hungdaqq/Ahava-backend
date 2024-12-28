@@ -36,8 +36,7 @@ func UserRoutes(
 
 	payment := engine.Group("/payment")
 	{
-		payment.POST("/qr", paymentHandler.CreateQR)
-		payment.GET("/webhook", paymentHandler.Webhook)
+		payment.POST("/webhook", paymentHandler.Webhook)
 	}
 
 	engine.Use(middleware.UserAuthMiddleware)
@@ -53,8 +52,9 @@ func UserRoutes(
 
 		product := engine.Group("/product")
 		{
-			product.GET("/detail", productHandler.ShowProductDetails)
+			product.GET("/detail", productHandler.GetProductDetails)
 			product.GET("", productHandler.ListCategoryProducts)
+			product.GET("/featured", productHandler.ListFeaturedProducts)
 		}
 		categorymanagement := engine.Group("/category")
 		{
@@ -105,11 +105,17 @@ func UserRoutes(
 			wishlist.DELETE("/:product_id", wishlisthandler.RemoveFromWishlist)
 		}
 
-		checkout := engine.Group("/order")
+		order := engine.Group("/order")
 		{
-			checkout.POST("", orderHandler.PlaceOrder)
+			order.GET("/:order_id", orderHandler.GetOrderDetails)
+			order.GET("/paid-status/:order_id", orderHandler.GetOrderPaidStatus)
+			order.POST("", orderHandler.PlaceOrder)
 		}
 
+		payment := engine.Group("/payment")
+		{
+			payment.POST("/qr", paymentHandler.CreateQR)
+		}
 		// engine.GET("/coupon", couponHandler.GetAllCoupons)
 	}
 }

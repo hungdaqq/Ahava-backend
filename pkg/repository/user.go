@@ -134,10 +134,7 @@ func (i *userDatabase) UpdateAddress(address_id uint, address models.Address) (m
 
 func (i *userDatabase) DeleteAddress(address_id uint) error {
 
-	var addAddress models.Address
-
-	err := i.DB.Exec(`DELETE FROM addresses WHERE id=?`,
-		address_id).Scan(&addAddress).Error
+	err := i.DB.Exec(`DELETE FROM addresses WHERE id=?`, address_id).Error
 	if err != nil {
 		return errors.New("could not delete address")
 	}

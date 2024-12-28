@@ -36,14 +36,14 @@ func (off *OfferHandler) AddNewOffer(c *gin.Context) {
 		return
 	}
 
-	successRes := response.ClientResponse(http.StatusOK, "Successfully added Offer", result, nil)
+	successRes := response.ClientResponse(http.StatusCreated, "Successfully added Offer", result, nil)
 	c.JSON(http.StatusOK, successRes)
 
 }
 
 func (off *OfferHandler) UpdateOffer(c *gin.Context) {
 
-	offer_id, err := strconv.Atoi(c.Query("offer_id"))
+	product_id, err := strconv.Atoi(c.Param("product_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -57,7 +57,7 @@ func (off *OfferHandler) UpdateOffer(c *gin.Context) {
 		return
 	}
 
-	result, err := off.usecase.UpdateOffer(uint(offer_id), model)
+	result, err := off.usecase.UpdateOffer(uint(product_id), model)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not update the Offer", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -71,14 +71,14 @@ func (off *OfferHandler) UpdateOffer(c *gin.Context) {
 
 func (o *OfferHandler) ExpireOffer(c *gin.Context) {
 
-	offer_id, err := strconv.Atoi(c.Query("offer_id"))
+	product_id, err := strconv.Atoi(c.Param("product_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	result, err := o.usecase.ExpireOffer(uint(offer_id))
+	result, err := o.usecase.ExpireOffer(uint(product_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Offer cannot be made expired", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)

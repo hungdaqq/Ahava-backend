@@ -7,33 +7,85 @@ import (
 
 type OrderUseCase interface {
 	PlaceOrder(order models.PlaceOrder) (models.Order, error)
+	GetOrderPaidStatus(order_id uint) (string, error)
+	GetOrderDetails(order_id uint) (models.Order, error)
+	UpdateOrder(order_id uint, updateOrder models.Order) (models.Order, error)
 }
 
 type orderUseCase struct {
-	repository repository.OrderRepository
+	repository  repository.OrderRepository
+	cartUseCase CartUseCase
 }
 
 func NewOrderUseCase(
 	repo repository.OrderRepository,
-) OrderUseCase {
+	cartUseCase CartUseCase,
+) *orderUseCase {
 	return &orderUseCase{
-		repository: repo,
+		repository:  repo,
+		cartUseCase: cartUseCase,
 	}
 }
 
-func (or *orderUseCase) PlaceOrder(order models.PlaceOrder) (models.Order, error) {
+func (or *orderUseCase) PlaceOrder(placeOrder models.PlaceOrder) (models.Order, error) {
 
-	result, err := or.repository.PlaceOrder(order)
+	checkout, err := or.cartUseCase.CheckOut(placeOrder.UserID, placeOrder.CartIDs)
 	if err != nil {
 		return models.Order{}, err
 	}
 
-	for _, item := range order.CartCheckOut.CartItems {
-		err := or.repository.PlaceOrderItem(item, result.ID)
+	order, err := or.repository.PlaceOrder(placeOrder, checkout.TotalDiscountedPrice)
+	if err != nil {
+		return models.Order{}, err
+	}
+
+	for _, item := range checkout.CartItems {
+
+		err := or.repository.PlaceOrderItem(order.ID, item)
 		if err != nil {
 			return models.Order{}, err
 		}
 	}
 
+	return order, nil
+}
+
+func (or *orderUseCase) GetOrderPaidStatus(order_id uint) (string, error) {
+
+	status, err := or.repository.GetOrderPaidStatus(order_id)
+	if err != nil {
+		return "", err
+	}
+
+	return status, nil
+}
+
+func (or *orderUseCase) GetOrderDetails(order_id uint) (models.Order, error) {
+
+	result, err := or.repository.GetOrderDetails(order_id)
+	if err != nil {
+		return models.Order{}, err
+	}
+
 	return result, nil
 }
+
+func (or *orderUseCase) UpdateOrder(order_id uint, updateOrder models.Order) (models.Order, error) {
+
+	result, err := or.repository.UpdateOrder(order_id, updateOrder)
+	if err != nil {
+		return models.Order{}, err
+	}
+
+	return result, nil
+}
+
+// func (or *orderUseCase) UpdateOrderPaidStatus(order_id uint, status string) error {
+
+// 	err := or.repository.UpdateOrderPaidStatus(order_id, status)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }

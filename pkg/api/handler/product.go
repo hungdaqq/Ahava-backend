@@ -87,7 +87,7 @@ func (i *ProductHandler) DeleteProduct(c *gin.Context) {
 
 }
 
-func (i *ProductHandler) ShowProductDetails(c *gin.Context) {
+func (i *ProductHandler) GetProductDetails(c *gin.Context) {
 
 	product_id, err := strconv.Atoi(c.Query("product_id"))
 	if err != nil {
@@ -96,7 +96,7 @@ func (i *ProductHandler) ShowProductDetails(c *gin.Context) {
 		return
 	}
 
-	product, err := i.ProductUseCase.ShowProductDetails(uint(product_id))
+	product, err := i.ProductUseCase.GetProductDetails(uint(product_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve product", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -105,7 +105,6 @@ func (i *ProductHandler) ShowProductDetails(c *gin.Context) {
 
 	successRes := response.ClientResponse(http.StatusOK, "Product details retrieved successfully", product, nil)
 	c.JSON(http.StatusOK, successRes)
-
 }
 
 func (i *ProductHandler) ListCategoryProducts(c *gin.Context) {
@@ -124,6 +123,18 @@ func (i *ProductHandler) ListCategoryProducts(c *gin.Context) {
 		return
 	}
 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all home products", products, nil)
+	c.JSON(http.StatusOK, successRes)
+}
+
+func (i *ProductHandler) ListFeaturedProducts(c *gin.Context) {
+
+	products, err := i.ProductUseCase.ListFeaturedProducts()
+	if err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", products, nil)
 	c.JSON(http.StatusOK, successRes)
 }
 

@@ -39,7 +39,7 @@ func AdminRoutes(
 		productmanagement := engine.Group("/product")
 		{
 			productmanagement.GET("", productHandler.ListProductsForAdmin)
-			productmanagement.GET("/detail", productHandler.ShowProductDetails)
+			productmanagement.GET("/detail", productHandler.GetProductDetails)
 			productmanagement.POST("", productHandler.AddProduct)
 			productmanagement.DELETE("/:product_id", productHandler.DeleteProduct)
 			productmanagement.PUT("/:product_id", productHandler.UpdateProduct)
@@ -74,8 +74,8 @@ func AdminRoutes(
 		{
 			offers.GET("", offerHandler.GetOffers)
 			offers.POST("", offerHandler.AddNewOffer)
-			offers.DELETE("/:offer_id", offerHandler.ExpireOffer)
-			offers.PUT("/:offer_id", offerHandler.UpdateOffer)
+			offers.DELETE("/:product_id", offerHandler.ExpireOffer)
+			offers.PUT("/:product_id", offerHandler.UpdateOffer)
 		}
 	}
 

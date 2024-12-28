@@ -8,6 +8,7 @@ import (
 	response "ahava/pkg/utils/response"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type PaymentHandler struct {
@@ -32,7 +33,14 @@ func (h *PaymentHandler) CreateQR(c *gin.Context) {
 		return
 	}
 
-	result, err := h.orderUseCase.CreateSePayQR(model.Amount, uint(user_id))
+	err = validator.New().Struct(model)
+	if err != nil {
+		errRes := response.ClientResponse(http.StatusBadRequest, "Constraints not satisfied", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errRes)
+		return
+	}
+
+	result, err := h.orderUseCase.CreateSePayQR(uint(user_id), model.OrderID, model.Amount)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not create QR", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -53,7 +61,7 @@ func (h *PaymentHandler) Webhook(c *gin.Context) {
 		return
 	}
 
-	err = h.orderUseCase.SePayWebhook(model)
+	err = h.orderUseCase.Webhook(model)
 	if err != nil {
 		errorRes := response.ClientWebhookResponse(false)
 		c.JSON(http.StatusBadRequest, errorRes)

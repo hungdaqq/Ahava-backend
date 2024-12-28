@@ -63,7 +63,7 @@ func (c *categoryRepository) DeleteCategory(categoryID uint) error {
 	if result.Error != nil {
 		return result.Error
 	}
-	if result.RowsAffected < 1 {
+	if result.RowsAffected == 0 {
 		return errors.New("no records with that ID exist")
 	}
 

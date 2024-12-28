@@ -8,7 +8,7 @@ import (
 )
 
 type Admin struct {
-	ID       uint   `json:"id" gorm:"unique;not null"`
+	ID       uint   `json:"id" gorm:"primarykey"`
 	Name     string `json:"name" gorm:"validate:required"`
 	Email    string `json:"email" gorm:"validate:required"`
 	Password string `json:"password" gorm:"validate:required"`
@@ -45,10 +45,9 @@ type Coupons struct {
 }
 
 type Offer struct {
-	ID        uint      `json:"id" gorm:"unique;not null"`
-	ProductID uint      `json:"product_id"`
+	ProductID uint      `json:"product_id" gorm:"not null;unique"`
 	Product   Products  `json:"-" gorm:"foreignkey:ProductID;constraint:OnDelete:CASCADE"`
-	OfferRate uint      `json:"offer_rate"`
+	OfferRate uint      `json:"offer_rate" validate:"min=0,max=100"` // Validation: 0-100
 	ExpireAt  time.Time `json:"expire_at"`
 	CreateAt  time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateAt  time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
@@ -66,23 +65,23 @@ type Order struct {
 	Users         Users     `json:"-" gorm:"foreignkey:UserID"`
 	Address       string    `json:"address"`
 	PaymentMethod string    `json:"payment_method"`
-	CouponUsed    string    `json:"coupon_used" gorm:"default:null"`
+	Coupon        string    `json:"coupon" gorm:"default:null"`
 	FinalPrice    uint64    `json:"price"`
-	OrderStatus   string    `json:"order_status" gorm:"order_status:4;default:'PREPARE';check:order_status IN ('PREPARE','SHIP','DELIVER','CANCEL','RETURN')"`
-	PaymentStatus string    `json:"payment_status" gorm:"payment_status:2;default:'NOT PAID';check:payment_status IN ('PAID', 'NOT PAID')"`
+	OrderStatus   string    `json:"order_status" gorm:"order_status:10;default:'PREPARE';check:order_status IN ('PREPARE','SHIP','DELIVER','CANCEL','RETURN')"`
+	PaymentStatus string    `json:"payment_status" gorm:"payment_status:2;default:'NOT PAID';check:payment_status IN ('PAID', 'NOT PAID', 'INCOMPLETE')"`
 	CreateAt      time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateAt      time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
 type OrderItem struct {
-	ID              uint     `json:"id" gorm:"primaryKey;autoIncrement"`
-	OrderID         uint     `json:"order_id"`
-	Order           Order    `json:"-" gorm:"foreignkey:OrderID;constraint:OnDelete:CASCADE"`
-	ProductID       uint     `json:"product_id"`
-	Products        Products `json:"-" gorm:"foreignkey:ProductID"`
-	Quantity        uint     `json:"quantity"`
-	ItemPrice       uint64   `json:"item_price"`
-	DiscountedPrice uint64   `json:"discounted_price"`
+	ID                  uint     `json:"id" gorm:"primaryKey;autoIncrement"`
+	OrderID             uint     `json:"order_id" gorm:"not null"`
+	Order               Order    `json:"-" gorm:"foreignkey:OrderID;constraint:OnDelete:CASCADE"`
+	ProductID           uint     `json:"product_id" gorm:"not null"`
+	Products            Products `json:"-" gorm:"foreignkey:ProductID"`
+	Quantity            uint     `json:"quantity"`
+	ItemPrice           uint64   `json:"item_price"`
+	ItemDiscountedPrice uint64   `json:"item_discounted_price"`
 }
 
 type AdminOrdersResponse struct {
@@ -108,24 +107,24 @@ type OrderDetailsWithImages struct {
 }
 
 type Products struct {
-	ID                uint      `json:"id" gorm:"unique;not null"`
-	CategoryID        uint      `json:"category_id"`
-	Category          Category  `json:"-" gorm:"foreignkey:CategoryID;constraint:OnDelete:CASCADE"`
-	ProductName       string    `json:"product_name"`
-	Image             string    `json:"image"`
-	Size              string    `json:"size"`
-	Stock             uint      `json:"stock"`
-	Price             uint64    `json:"price"`
-	Description       string    `json:"description"`
-	HowToUse          string    `json:"how_to_use"`
-	IsFeaturedProduct bool      `json:"is_featured_product" gorm:"default:false"`
-	CreateAt          time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdateAt          time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
+	ID          uint      `json:"id" gorm:"primarykey"`
+	CategoryID  uint      `json:"category_id" gorm:"not null"`
+	Category    Category  `json:"-" gorm:"foreignkey:CategoryID;constraint:OnDelete:CASCADE"`
+	ProductName string    `json:"product_name"`
+	Image       string    `json:"image"`
+	Size        string    `json:"size"`
+	Stock       uint      `json:"stock"`
+	Price       uint64    `json:"price"`
+	Description string    `json:"description"`
+	HowToUse    string    `json:"how_to_use"`
+	IsFeatured  bool      `json:"is_featured" gorm:"default:false"`
+	CreateAt    time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
+	UpdateAt    time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
 type Category struct {
-	ID           uint      `json:"id" gorm:"unique;not null"`
-	CategoryName string    `json:"category_name" gorm:"unique;not null" `
+	ID           uint      `json:"id" gorm:"primarykey"`
+	CategoryName string    `json:"category_name"`
 	Description  string    `json:"description"`
 	CreateAt     time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateAt     time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
@@ -148,14 +147,14 @@ type Users struct {
 
 type Address struct {
 	ID       uint      `json:"id" gorm:"unique;not null"`
-	UserID   uint      `json:"user_id"`
+	UserID   uint      `json:"user_id" gorm:"not null"`
 	Users    Users     `json:"-" gorm:"foreignkey:UserID;constraint:OnDelete:CASCADE"`
 	Name     string    `json:"name" validate:"required"`
 	Street   string    `json:"street" validate:"required"`
 	Ward     string    `json:"ward" validate:"required"`
 	District string    `json:"district" validate:"required"`
 	City     string    `json:"city" validate:"required"`
-	Phone    string    `json:"phone" gorm:"phone"`
+	Phone    string    `json:"phone"`
 	Default  bool      `json:"default" gorm:"default:false"`
 	Type     string    `json:"type" gorm:"default:'HOME';check:type IN ('HOME', 'WORK')"`
 	CreateAt time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
@@ -163,7 +162,7 @@ type Address struct {
 }
 
 type Wallet struct {
-	ID     int    `json:"id"  gorm:"unique;not null"`
+	ID     int    `json:"id" gorm:"unique;not null"`
 	Userid uint   `json:"user_id"`
 	Users  Users  `json:"-" gorm:"foreignkey:UserID"`
 	Amount uint64 `json:"amount" gorm:"default:0"`
@@ -190,12 +189,12 @@ type SearchHistory struct {
 
 type Transaction struct {
 	ID              uint      `json:"id" gorm:"unique;not null"`
-	UserID          uint      `json:"user_id"`
+	UserID          uint      `json:"user_id" gorm:"not null"`
 	Users           Users     `json:"-" gorm:"foreignkey:UserID"`
-	OrderID         uint      `json:"order_id"`
+	OrderID         uint      `json:"order_id" gorm:"unique;not null"`
 	Order           Order     `json:"-" gorm:"foreignkey:OrderID"`
 	Gateway         string    `json:"gateway"`
-	TransactionDate time.Time `json:"transaction_date"`
+	TransactionDate string    `json:"transaction_date"`
 	AccountNumber   string    `json:"account_number"`
 	Code            string    `json:"code"`
 	Content         string    `json:"content"`

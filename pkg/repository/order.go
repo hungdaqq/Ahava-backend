@@ -1,14 +1,19 @@
 package repository
 
 import (
+	"ahava/pkg/domain"
 	"ahava/pkg/utils/models"
+	"errors"
 
 	"gorm.io/gorm"
 )
 
 type OrderRepository interface {
-	PlaceOrder(order models.PlaceOrder) (models.Order, error)
-	PlaceOrderItem(item models.CartItem, order_id uint) error
+	PlaceOrder(order models.PlaceOrder, final_price uint64) (models.Order, error)
+	PlaceOrderItem(order_id uint, item models.CartItem) error
+	GetOrderPaidStatus(order_id uint) (string, error)
+	GetOrderDetails(order_id uint) (models.Order, error)
+	UpdateOrder(order_id uint, order models.Order) (models.Order, error)
 }
 
 type orderRepository struct {
@@ -21,25 +26,71 @@ func NewOrderRepository(db *gorm.DB) *orderRepository {
 	}
 }
 
-func (or *orderRepository) PlaceOrder(order models.PlaceOrder) (models.Order, error) {
+func (or *orderRepository) PlaceOrder(order models.PlaceOrder, final_price uint64) (models.Order, error) {
 
 	var orderDetails models.Order
-	if err := or.DB.Exec(`INSERT INTO orders (user_id, address_id, payment_method_id, final_price, coupon_used) VALUES (?,?,?,?,?) RETURNING *`,
-		order.UserID, order.Address, order.PaymentMethod, order.FinalPrice, order.CouponUsed).Scan(&orderDetails).Error; err != nil {
+	if err := or.DB.Raw(`INSERT INTO orders (user_id, address, payment_method, final_price, coupon) VALUES (?,?,?,?,?) RETURNING *`,
+		order.UserID, order.Address, order.PaymentMethod, final_price, order.Coupon).Scan(&orderDetails).Error; err != nil {
 		return models.Order{}, err
 	}
 
 	return orderDetails, nil
 }
 
-func (or *orderRepository) PlaceOrderItem(item models.CartItem, order_id uint) error {
+func (or *orderRepository) PlaceOrderItem(order_id uint, item models.CartItem) error {
 
-	err := or.DB.Exec(`INSERT INTO order_items (order_id, product_id, quantity, item_price, discounted_price) VALUES (?,?,?,?,?)`,
+	err := or.DB.Exec(`INSERT INTO order_items (order_id, product_id, quantity, item_price, item_discounted_price) VALUES (?,?,?,?,?)`,
 		order_id, item.ProductID, item.Quantity, item.ItemPrice, item.ItemDiscountedPrice).Error
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (or *orderRepository) GetOrderDetails(order_id uint) (models.Order, error) {
+
+	var orderDetails models.Order
+
+	err := or.DB.Raw(`SELECT * FROM orders WHERE id=?`, order_id).Scan(&orderDetails).Error
+	if err != nil {
+		return models.Order{}, err
+	}
+
+	return orderDetails, nil
+}
+
+func (or *orderRepository) GetOrderPaidStatus(order_id uint) (string, error) {
+
+	var status string
+
+	err := or.DB.Raw(`SELECT payment_status FROM orders WHERE id=?`, order_id).Scan(&status).Error
+	if err != nil {
+		return "", err
+	}
+
+	return status, nil
+}
+
+func (or *orderRepository) UpdateOrder(order_id uint, updateOrder models.Order) (models.Order, error) {
+
+	var order models.Order
+
+	result := or.DB.Model(&domain.Order{}).Where("id = ?", order_id).Updates(
+		domain.Order{
+			PaymentMethod: updateOrder.PaymentMethod,
+			OrderStatus:   updateOrder.OrderStatus,
+			PaymentStatus: updateOrder.PaymentStatus,
+		}).Scan(&order)
+
+	if result.Error != nil {
+		return models.Order{}, result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return models.Order{}, errors.New("no rows updated, possibly invalid order ID")
+	}
+
+	return order, nil
 }
 
 // func (or *orderRepository) GetOrders(order models.) ([]domain.Order, error) {

@@ -13,9 +13,10 @@ type ProductUseCase interface {
 	UpdateProductImage(product_id uint, file *multipart.FileHeader) (models.Products, error)
 	DeleteProduct(product_id string) error
 
-	ShowProductDetails(product_id uint) (models.Products, error)
+	GetProductDetails(product_id uint) (models.Products, error)
 	ListCategoryProducts(category_id uint) (models.Products, error)
 	ListProductsForAdmin(limit, offest int) (models.ListProducts, error)
+	ListFeaturedProducts() ([]models.Products, error)
 
 	SearchProducts(user_id uint, key string) ([]models.Products, error)
 	GetSearchHistory(user_id uint) ([]models.SearchHistory, error)
@@ -98,9 +99,9 @@ func (i *productUseCase) DeleteProduct(productID string) error {
 
 }
 
-func (i *productUseCase) ShowProductDetails(id uint) (models.Products, error) {
+func (i *productUseCase) GetProductDetails(id uint) (models.Products, error) {
 
-	product, err := i.repository.ShowProductDetails(id)
+	product, err := i.repository.GetProductDetails(id)
 	if err != nil {
 		return models.Products{}, err
 	}
@@ -124,6 +125,16 @@ func (i *productUseCase) ListCategoryProducts(category_id uint) (models.Products
 	products, err := i.repository.ListCategoryProducts(category_id)
 	if err != nil {
 		return models.Products{}, err
+	}
+
+	return products, nil
+}
+
+func (i *productUseCase) ListFeaturedProducts() ([]models.Products, error) {
+
+	products, err := i.repository.ListFeaturedProducts()
+	if err != nil {
+		return []models.Products{}, err
 	}
 
 	return products, nil

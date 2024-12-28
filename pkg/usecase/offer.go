@@ -11,8 +11,8 @@ type offerUseCase struct {
 
 type OfferUseCase interface {
 	AddNewOffer(model models.Offer) (models.Offer, error)
-	ExpireOffer(offer_id uint) (models.Offer, error)
-	UpdateOffer(offer_id uint, model models.Offer) (models.Offer, error)
+	ExpireOffer(product_id uint) (models.Offer, error)
+	UpdateOffer(product_id uint, model models.Offer) (models.Offer, error)
 	GetOffers() ([]models.Offer, error)
 }
 
@@ -32,9 +32,9 @@ func (off *offerUseCase) AddNewOffer(model models.Offer) (models.Offer, error) {
 	return result, nil
 }
 
-func (off *offerUseCase) UpdateOffer(offer_id uint, model models.Offer) (models.Offer, error) {
+func (off *offerUseCase) UpdateOffer(product_id uint, model models.Offer) (models.Offer, error) {
 
-	result, err := off.repository.UpdateOffer(offer_id, model)
+	result, err := off.repository.UpdateOffer(product_id, model)
 	if err != nil {
 		return models.Offer{}, err
 	}
@@ -42,9 +42,9 @@ func (off *offerUseCase) UpdateOffer(offer_id uint, model models.Offer) (models.
 	return result, nil
 }
 
-func (off *offerUseCase) ExpireOffer(offer_id uint) (models.Offer, error) {
+func (off *offerUseCase) ExpireOffer(product_id uint) (models.Offer, error) {
 
-	result, err := off.repository.ExpireOffer(offer_id)
+	result, err := off.repository.ExpireOffer(product_id)
 	if err != nil {
 		return models.Offer{}, err
 	}

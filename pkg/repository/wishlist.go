@@ -30,7 +30,7 @@ func (w *wishlistRepository) AddToWishlist(user_id, product_id uint) (models.Wis
 
 	var addWishlist models.Wishlist
 
-	err := w.DB.Exec(`INSERT INTO wishlists (user_id,product_id) VALUES ($1,$2)`,
+	err := w.DB.Raw(`INSERT INTO wishlists (user_id,product_id) VALUES ($1,$2)`,
 		user_id, product_id).Scan(&addWishlist).Error
 	if err != nil {
 		return models.Wishlist{}, err

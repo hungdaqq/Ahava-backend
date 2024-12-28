@@ -19,11 +19,12 @@ func NewPaymentRepository(db *gorm.DB) *paymentRepository {
 }
 
 type PaymentRepository interface {
-	CreateSePayQR(qr models.CreateQR, user_id uint) error
-	SePayWebhook(transaction models.Transaction) error
+	CreateQR(qr models.CreateQR, user_id uint) error
+	SaveTransaction(transaction models.Transaction) (models.Transaction, error)
 }
 
-func (p *paymentRepository) CreateSePayQR(qr models.CreateQR, user_id uint) error {
+func (p *paymentRepository) CreateQR(qr models.CreateQR, user_id uint) error {
+
 	if err := p.DB.Exec(`INSERT INTO transactions (user_id,order_id,code) VALUES (?,?,?)`, user_id, qr.OrderID, qr.Description).Error; err != nil {
 		return err
 	}
@@ -31,29 +32,31 @@ func (p *paymentRepository) CreateSePayQR(qr models.CreateQR, user_id uint) erro
 	return nil
 }
 
-func (p *paymentRepository) SePayWebhook(transaction models.Transaction) error {
+func (p *paymentRepository) SaveTransaction(saveTransaction models.Transaction) (models.Transaction, error) {
 
-	result := p.DB.Model(&domain.Transaction{}).Where("code = ?", transaction.Code).Updates(domain.Transaction{
-		Gateway:         transaction.Gateway,
-		TransactionDate: transaction.TransactionDate,
-		AccountNumber:   transaction.AccountNumber,
-		Content:         transaction.Content,
-		TransferType:    transaction.TransferType,
-		TransferAmount:  transaction.TransferAmount,
-		Accumulated:     transaction.Accumulated,
-		ReferenceCode:   transaction.ReferenceCode,
-		Description:     transaction.Description,
-	})
+	var transaction models.Transaction
+
+	result := p.DB.Model(&domain.Transaction{}).Where("code = ?", saveTransaction.Code).Updates(domain.Transaction{
+		Gateway:         saveTransaction.Gateway,
+		TransactionDate: saveTransaction.TransactionDate,
+		AccountNumber:   saveTransaction.AccountNumber,
+		Content:         saveTransaction.Content,
+		TransferType:    saveTransaction.TransferType,
+		TransferAmount:  saveTransaction.TransferAmount,
+		Accumulated:     saveTransaction.Accumulated,
+		ReferenceCode:   saveTransaction.ReferenceCode,
+		Description:     saveTransaction.Description,
+	}).Scan(&transaction)
 
 	// Check for errors in the update process
 	if result.Error != nil {
-		return result.Error
+		return models.Transaction{}, result.Error
 	}
 
 	// Check if any rows were affected (to handle case where no transaction with the given code exists)
 	if result.RowsAffected == 0 {
-		return errors.New("transaction not found")
+		return models.Transaction{}, errors.New("transaction not found")
 	}
 
-	return nil
+	return transaction, nil
 }

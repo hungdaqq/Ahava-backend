@@ -16,10 +16,11 @@ type ProductRepository interface {
 
 	DeleteProduct(product_id string) error
 
-	ShowProductDetails(product_id uint) (models.Products, error)
+	GetProductDetails(product_id uint) (models.Products, error)
 	ListProducts(limit, offset int) (models.ListProducts, error)
 	ListCategoryProducts(category_id uint) (models.Products, error)
 
+	ListFeaturedProducts() ([]models.Products, error)
 	// ListProductsByCategory(id uint) ([]models.Products, error)
 	// CheckStock(product_id uint) (uint, error)
 	// CheckPrice(product_id uint) (uint64, error)
@@ -84,7 +85,7 @@ func (i *productRepository) DeleteProduct(productID string) error {
 }
 
 // detailed product details
-func (i *productRepository) ShowProductDetails(product_id uint) (models.Products, error) {
+func (i *productRepository) GetProductDetails(product_id uint) (models.Products, error) {
 
 	var product models.Products
 
@@ -128,6 +129,17 @@ func (i *productRepository) ListCategoryProducts(category_id uint) (models.Produ
 		Scan(&products).Error
 	if err != nil {
 		return models.Products{}, err
+	}
+
+	return products, nil
+}
+
+func (i *productRepository) ListFeaturedProducts() ([]models.Products, error) {
+
+	var products []models.Products
+	err := i.DB.Raw("SELECT * FROM products WHERE is_featured=true").Scan(&products).Error
+	if err != nil {
+		return []models.Products{}, err
 	}
 
 	return products, nil

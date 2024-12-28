@@ -81,13 +81,7 @@ func InitializeAPI(cfg config.Config) (*http.ServerHTTP, error) {
 	// couponUseCase := usecase.NewCouponUseCase(couponRepository)
 	// couponHandler := handler.NewCouponHandler(couponUseCase)
 
-	orderRepository := repository.NewOrderRepository(gormDB)
-	orderUseCase := usecase.NewOrderUseCase(
-		orderRepository,
-		// couponRepository,
-		// userUseCase,
-	)
-	orderHandler := handler.NewOrderHandler(orderUseCase)
+
 
 
 	cartRepository := repository.NewCartRepository(gormDB)
@@ -99,9 +93,16 @@ func InitializeAPI(cfg config.Config) (*http.ServerHTTP, error) {
 	)
 	cartHandler := handler.NewCartHandler(cartUseCase)
 
+	orderRepository := repository.NewOrderRepository(gormDB)
+	orderUseCase := usecase.NewOrderUseCase(
+		orderRepository,
+		// couponRepository,
+		cartUseCase,
+	)
+	orderHandler := handler.NewOrderHandler(orderUseCase)
 
 	paymentRepository := repository.NewPaymentRepository(gormDB)
-	paymentUseCase := usecase.NewPaymentUseCase(paymentRepository)
+	paymentUseCase := usecase.NewPaymentUseCase(paymentRepository, orderRepository)
 	paymentHandler := handler.NewPaymentHandler(paymentUseCase)
 
 	
@@ -118,8 +119,6 @@ func InitializeAPI(cfg config.Config) (*http.ServerHTTP, error) {
 		offerHandler,
 		wishlistHandler,
 	)
-
-
 
 	return serverHTTP, nil
 }

@@ -8,37 +8,38 @@ import (
 )
 
 type paymentUsecase struct {
-	repository repository.PaymentRepository
+	repository      repository.PaymentRepository
+	orderRepository repository.OrderRepository
 }
 
-func NewPaymentUseCase(repo repository.PaymentRepository) *paymentUsecase {
+func NewPaymentUseCase(repo repository.PaymentRepository, orderRepository repository.OrderRepository) *paymentUsecase {
 	return &paymentUsecase{
-		repository: repo,
+		repository:      repo,
+		orderRepository: orderRepository,
 	}
 }
 
 type PaymentUseCase interface {
-	CreateSePayQR(ammount uint64, user_id uint) (models.CreateQR, error)
-	SePayWebhook(transaction models.Transaction) error
+	CreateSePayQR(user_id, order_id uint, amount uint64) (models.CreateQR, error)
+	Webhook(transaction models.Transaction) error
 }
 
-func (p *paymentUsecase) CreateSePayQR(ammount uint64, user_id uint) (models.CreateQR, error) {
-	// Generate description string
+func (p *paymentUsecase) CreateSePayQR(user_id, order_id uint, amount uint64) (models.CreateQR, error) {
+
 	description := fmt.Sprintf("AHV%07d", rand.Intn(10000000))
 
-	// Generate the link string
-	result := fmt.Sprintf("https://qr.sepay.vn/img?acc=%s&bank=%s&amount=%d&des=%s", "18896441", "ACB", ammount, description)
+	result := fmt.Sprintf("https://qr.sepay.vn/img?acc=%s&bank=%s&amount=%d&des=%s&template=compact", "18896441", "ACB", amount, description)
 
-	// Construct the QR model
 	qr := models.CreateQR{
+		OrderID:       order_id,
 		AccountNumber: "18896441",
 		BankName:      "ACB",
-		Amount:        ammount,
+		Amount:        amount,
 		Description:   description,
 		Link:          result,
 	}
 
-	err := p.repository.CreateSePayQR(qr, user_id)
+	err := p.repository.CreateQR(qr, user_id)
 	if err != nil {
 		return models.CreateQR{}, err
 	}
@@ -46,11 +47,31 @@ func (p *paymentUsecase) CreateSePayQR(ammount uint64, user_id uint) (models.Cre
 	return qr, nil
 }
 
-func (p *paymentUsecase) SePayWebhook(transaction models.Transaction) error {
+func (p *paymentUsecase) Webhook(transaction models.Transaction) error {
 
-	err := p.repository.SePayWebhook(transaction)
+	// Save the transaction
+	transaction, err := p.repository.SaveTransaction(transaction)
 	if err != nil {
 		return err
+	}
+
+	// Get the order details
+	order, err := p.orderRepository.GetOrderDetails(transaction.OrderID)
+	if err != nil {
+		return err
+	}
+
+	// Check if the order has been paid: if the final price is greater than or equal to the transfer amount
+	if order.FinalPrice >= transaction.TransferAmount {
+		_, err = p.orderRepository.UpdateOrder(transaction.OrderID, models.Order{PaymentStatus: "PAID"})
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = p.orderRepository.UpdateOrder(transaction.OrderID, models.Order{PaymentStatus: "INCOMPLETE"})
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
