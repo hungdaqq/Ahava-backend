@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -10,6 +13,10 @@ import (
 	services "ahava/pkg/usecase"
 	"ahava/pkg/utils/models"
 	"ahava/pkg/utils/response"
+)
+
+const (
+	provinceAPI = "https://open.oapi.vn/location/provinces"
 )
 
 type UserHandler struct {
@@ -73,6 +80,19 @@ func (u *UserHandler) LoginHandler(c *gin.Context) {
 	successRes := response.ClientResponse(http.StatusOK, "User successfully logged in", user_details, nil)
 	c.JSON(http.StatusOK, successRes)
 
+}
+
+func (i *UserHandler) GetProvince(c *gin.Context) {
+
+	provinces := models.Provinces{}
+	provinces, err := FetchProvinceAPI(provinceAPI, provinces)
+	if err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", provinces, nil)
+	c.JSON(http.StatusOK, successRes)
 }
 
 func (i *UserHandler) AddAddress(c *gin.Context) {
@@ -275,3 +295,37 @@ func (i *UserHandler) EditProfile(c *gin.Context) {
 // 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all products in cart", link, nil)
 // 	c.JSON(http.StatusOK, successRes)
 // }
+
+// FetchProvinces fetches the list of provinces from the API.
+func FetchProvinceAPI(baseURL string, model interface{}) (interface{}, error) {
+
+	req, err := http.NewRequest("GET", baseURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error making request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("request failed with status code: %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body: %w", err)
+	}
+
+	err = json.Unmarshal(body, &model)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing JSON: %w", err)
+	}
+
+	return model, nil
+}

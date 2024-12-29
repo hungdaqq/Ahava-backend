@@ -20,7 +20,7 @@ type CombinedOrderDetails struct {
 	State          string `json:"state" validate:"required"`
 	Pin            string `json:"pin" validate:"required"`
 	Street         string `json:"street"`
-	City           string `json:"city"`
+	Province       string `json:"province"`
 }
 
 type OrderPaymentDetails struct {

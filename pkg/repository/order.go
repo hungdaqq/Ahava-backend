@@ -180,7 +180,7 @@ func (or *orderRepository) UpdateOrder(order_id uint, updateOrder models.Order) 
 // func (or *orderRepository) AdminOrders(status string) ([]domain.OrderDetails, error) {
 
 // 	var orders []domain.OrderDetails
-// 	if err := or.DB.Raw("SELECT orders.id AS id, users.name AS username, CONCAT('House Name:',addresses.house_name, ',', 'Street:', addresses.street, ',', 'City:', addresses.city, ',', 'State', addresses.state, ',', 'Phone:', addresses.phone) AS address, payment_methods.payment_name AS payment_method, orders.final_price As total FROM orders JOIN users ON users.id = orders.user_id JOIN payment_methods ON payment_methods.id = orders.payment_method_id JOIN addresses ON orders.address_id = addresses.id WHERE order_status = $1", status).Scan(&orders).Error; err != nil {
+// 	if err := or.DB.Raw("SELECT orders.id AS id, users.name AS username, CONCAT('House Name:',addresses.house_name, ',', 'Street:', addresses.street, ',', 'Province:', addresses.province, ',', 'State', addresses.state, ',', 'Phone:', addresses.phone) AS address, payment_methods.payment_name AS payment_method, orders.final_price As total FROM orders JOIN users ON users.id = orders.user_id JOIN payment_methods ON payment_methods.id = orders.payment_method_id JOIN addresses ON orders.address_id = addresses.id WHERE order_status = $1", status).Scan(&orders).Error; err != nil {
 // 		return []domain.OrderDetails{}, err
 // 	}
 
@@ -340,7 +340,7 @@ func (or *orderRepository) UpdateOrder(order_id uint, updateOrder models.Order) 
 
 // 	var details models.IndividualOrderDetails
 // 	err := o.DB.Raw(`SELECT orders.id AS order_id,
-// 	CONCAT('House Name:',addresses.house_name, ' ', 'Street:', addresses.street, ' ', 'City:', addresses.city, ' ', 'State', addresses.state) AS address,
+// 	CONCAT('House Name:',addresses.house_name, ' ', 'Street:', addresses.street, ' ', 'Province:', addresses.province, ' ', 'State', addresses.state) AS address,
 // 	addresses.phone AS phone,
 // 	orders.coupon_used,
 // 	payment_methods.payment_name AS payment_method,

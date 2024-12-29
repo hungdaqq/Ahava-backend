@@ -156,7 +156,7 @@ type Address struct {
 	Street   string    `json:"street" validate:"required"`
 	Ward     string    `json:"ward" validate:"required"`
 	District string    `json:"district" validate:"required"`
-	City     string    `json:"city" validate:"required"`
+	Province string    `json:"province" validate:"required"`
 	Phone    string    `json:"phone"`
 	Default  bool      `json:"default" gorm:"default:false"`
 	Type     string    `json:"type" gorm:"default:'HOME';check:type IN ('HOME', 'WORK')"`

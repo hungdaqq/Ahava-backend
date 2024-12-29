@@ -166,7 +166,7 @@ type Address struct {
 	Street   string    `json:"street"`
 	Ward     string    `json:"ward"`
 	District string    `json:"district"`
-	City     string    `json:"city"`
+	Province string    `json:"province"`
 	Phone    string    `json:"phone"`
 	Default  bool      `json:"default"`
 	Type     string    `json:"type"`
@@ -242,4 +242,17 @@ type Offer struct {
 	ProductID uint      `json:"product_id"`
 	OfferRate uint      `json:"offer_rate"`
 	ExpireAt  time.Time `json:"expire_at"`
+}
+
+type Province struct {
+	ID       uint   `json:"id"`
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	TypeText string `json:"typeText"`
+	Slug     string `json:"slug"`
+}
+
+type Provinces struct {
+	Total     int        `json:"total"`
+	Provinces []Province `json:"data"`
 }
