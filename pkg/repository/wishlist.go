@@ -10,7 +10,7 @@ import (
 
 type WishlistRepository interface {
 	AddToWishlist(user_id, product_id uint) (models.Wishlist, error)
-	UpdateWishlist(user_id, product_id uint, is_deleted bool) error
+	UpdateWishlist(user_id, product_id uint, is_deleted bool) (models.Wishlist, error)
 	GetWishList(user_id uint) ([]models.Products, error)
 	CheckIfTheItemIsPresentAtWishlist(user_id, product_id uint) (bool, error)
 	// CheckIfTheItemIsPresentAtCart(user_id, product_id uint) (bool, error)
@@ -39,21 +39,25 @@ func (w *wishlistRepository) AddToWishlist(user_id, product_id uint) (models.Wis
 	return addWishlist, nil
 }
 
-func (w *wishlistRepository) UpdateWishlist(user_id, product_id uint, is_deleted bool) error {
+func (w *wishlistRepository) UpdateWishlist(user_id, product_id uint, is_deleted bool) (models.Wishlist, error) {
 
-	result := w.DB.Model(&domain.Wishlist{}).
+	var updateWishlist models.Wishlist
+
+	result := w.DB.
+		Model(&domain.Wishlist{}).
 		Where("user_id = ? AND product_id = ?", user_id, product_id).
-		Update("is_deleted", is_deleted)
+		Update("is_deleted", is_deleted).
+		Scan(&updateWishlist)
 
 	if result.Error != nil {
-		return result.Error
+		return models.Wishlist{}, result.Error
 	}
 
 	if result.RowsAffected == 0 {
-		return errors.ErrEntityNotFound
+		return models.Wishlist{}, errors.ErrEntityNotFound
 	}
 
-	return nil
+	return updateWishlist, nil
 }
 
 func (w *wishlistRepository) GetWishList(id uint) ([]models.Products, error) {

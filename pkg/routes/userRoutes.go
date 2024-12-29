@@ -57,6 +57,7 @@ func UserRoutes(
 			product.GET("", productHandler.ListCategoryProducts)
 			product.GET("/featured", productHandler.ListFeaturedProducts)
 		}
+
 		categorymanagement := engine.Group("/category")
 		{
 			categorymanagement.GET("", categoryHandler.GetCategory)
@@ -88,7 +89,7 @@ func UserRoutes(
 			cart.DELETE("/:cart_id", cartHandler.RemoveFromCart)
 			cart.PUT("/:cart_id/plus", cartHandler.UpdateQuantityAdd)
 			cart.PUT("/:cart_id/minus", cartHandler.UpdateQuantityLess)
-			cart.PUT("/:cart_id", cartHandler.UpdateQuantityLess)
+			cart.PUT("/:cart_id", cartHandler.UpdateQuantity)
 			cart.POST("/check-out", cartHandler.CheckOut)
 		}
 
@@ -101,8 +102,7 @@ func UserRoutes(
 
 		order := engine.Group("/order")
 		{
-			order.GET("/:order_id", orderHandler.GetOrderDetails)
-			order.GET("/paid-status/:order_id", orderHandler.GetOrderPaidStatus)
+			order.GET("/detail", orderHandler.GetOrderDetails)
 			order.POST("", orderHandler.PlaceOrder)
 		}
 

@@ -44,36 +44,18 @@ func (h *OrderHandler) PlaceOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, successRes)
 }
 
-func (h *OrderHandler) GetOrderPaidStatus(c *gin.Context) {
-
-	order_id, err := strconv.Atoi(c.Param("order_id"))
-	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
-
-	status, err := h.orderUseCase.GetOrderPaidStatus(uint(order_id))
-	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not get the order status", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
-
-	successRes := response.ClientResponse(http.StatusOK, "Successfully fetched the order status", status, nil)
-	c.JSON(http.StatusOK, successRes)
-}
-
 func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
 
-	order_id, err := strconv.Atoi(c.Param("order_id"))
+	user_id := c.MustGet("id").(int)
+
+	order_id, err := strconv.Atoi(c.Query("order_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	order, err := h.orderUseCase.GetOrderDetails(uint(order_id))
+	order, err := h.orderUseCase.GetOrderDetails(uint(user_id), uint(order_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not get the order details", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)

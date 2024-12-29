@@ -16,14 +16,14 @@ type UserRepository interface {
 	UserBlockStatus(email, username string) (bool, error)
 	AddAddress(user_id uint, address models.Address) (models.Address, error)
 	GetAddresses(user_id uint) ([]models.Address, error)
-	UpdateAddress(address_id uint, address models.Address) (models.Address, error)
-	DeleteAddress(address_id uint) error
+	UpdateAddress(user_id, address_id uint, address models.Address) (models.Address, error)
+	DeleteAddress(user_id, address_id uint) error
 
 	GetUserDetails(user_id uint) (models.UserDetailsResponse, error)
 	ChangePassword(user_id uint, password string) error
 	GetPassword(user_id uint) (string, error)
 	// FindIdFromPhone(phone string) (int, error)
-	EditProfile(user_id uint, name, email, phone string) (models.UserDetailsResponse, error)
+	EditProfile(user_id uint, profile models.EditProfile) (models.UserDetailsResponse, error)
 
 	// CheckIfFirstAddress(user_id uint) bool
 
@@ -57,16 +57,18 @@ func (c *userDatabase) UserSignUp(user models.UserDetails, referral string) (mod
 
 	var userDetails models.UserDetailsResponse
 
-	err := c.DB.Create(&domain.Users{
-		Name:         user.Name,
-		Username:     user.Username,
-		Gender:       user.Gender,
-		Email:        user.Email,
-		Password:     user.Password,
-		Phone:        user.Phone,
-		ReferralCode: referral,
-		BirthDate:    user.BirthDate,
-	}).Scan(&userDetails).Error
+	err := c.DB.
+		Create(&domain.Users{
+			Name:         user.Name,
+			Username:     user.Username,
+			Gender:       user.Gender,
+			Email:        user.Email,
+			Password:     user.Password,
+			Phone:        user.Phone,
+			ReferralCode: referral,
+			BirthDate:    user.BirthDate,
+		}).
+		Scan(&userDetails).Error
 	if err != nil {
 		return models.UserDetailsResponse{}, err
 	}
@@ -102,30 +104,10 @@ func (i *userDatabase) AddAddress(user_id uint, address models.Address) (models.
 
 	var addAddress models.Address
 
-	err := i.DB.Model(&domain.Address{}).Create(&domain.Address{
-		UserID:   user_id,
-		Name:     address.Name,
-		Street:   address.Street,
-		Ward:     address.Ward,
-		District: address.District,
-		City:     address.City,
-		Phone:    address.Phone,
-		Type:     address.Type,
-		Default:  address.Default,
-	}).Scan(&addAddress).Error
-	if err != nil {
-		return models.Address{}, err
-	}
-
-	return addAddress, nil
-}
-
-func (i *userDatabase) UpdateAddress(address_id uint, address models.Address) (models.Address, error) {
-
-	var updateAddress models.Address
-
-	result := i.DB.Model(&domain.Address{}).Where("id = ?", address_id).Updates(
-		domain.Address{
+	err := i.DB.
+		Model(&domain.Address{}).
+		Create(&domain.Address{
+			UserID:   user_id,
 			Name:     address.Name,
 			Street:   address.Street,
 			Ward:     address.Ward,
@@ -134,7 +116,33 @@ func (i *userDatabase) UpdateAddress(address_id uint, address models.Address) (m
 			Phone:    address.Phone,
 			Type:     address.Type,
 			Default:  address.Default,
-		}).Scan(&updateAddress)
+		}).
+		Scan(&addAddress).Error
+	if err != nil {
+		return models.Address{}, err
+	}
+
+	return addAddress, nil
+}
+
+func (i *userDatabase) UpdateAddress(user_id, address_id uint, address models.Address) (models.Address, error) {
+
+	var updateAddress models.Address
+
+	result := i.DB.
+		Model(&domain.Address{}).
+		Where("id = ? AND user_id =?", address_id, user_id).
+		Updates(domain.Address{
+			Name:     address.Name,
+			Street:   address.Street,
+			Ward:     address.Ward,
+			District: address.District,
+			City:     address.City,
+			Phone:    address.Phone,
+			Type:     address.Type,
+			Default:  address.Default,
+		}).
+		Scan(&updateAddress)
 
 	if result.Error != nil {
 		return models.Address{}, result.Error
@@ -147,9 +155,10 @@ func (i *userDatabase) UpdateAddress(address_id uint, address models.Address) (m
 	return updateAddress, nil
 }
 
-func (i *userDatabase) DeleteAddress(address_id uint) error {
+func (i *userDatabase) DeleteAddress(address_id, user_id uint) error {
 
-	err := i.DB.Exec(`DELETE FROM addresses WHERE id=?`, address_id).Error
+	err := i.DB.Exec(`DELETE FROM addresses WHERE id=? AND user_id=?`,
+		address_id, user_id).Error
 	if err != nil {
 		return err
 	}
@@ -232,14 +241,15 @@ func (i *userDatabase) GetPassword(id uint) (string, error) {
 
 // }
 
-func (i *userDatabase) EditProfile(userID uint, name, email, phone string) (models.UserDetailsResponse, error) {
+func (i *userDatabase) EditProfile(userID uint, profile models.EditProfile) (models.UserDetailsResponse, error) {
 
 	var user models.UserDetailsResponse
 
 	result := i.DB.Model(&domain.Users{}).Where("id = ?", userID).Updates(domain.Users{
-		Name:  name,
-		Email: email,
-		Phone: phone,
+		Name:      profile.Name,
+		Phone:     profile.Phone,
+		BirthDate: profile.BirthDate,
+		Gender:    profile.Gender,
 	}).Scan(&user)
 
 	if result.Error != nil {

@@ -14,11 +14,10 @@ type CartRepository interface {
 	GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error)
 	AddToCart(user_id, product_id uint, quantity uint) (models.CartDetails, error)
 	CheckIfItemIsAlreadyAdded(user_id, product_id uint) (uint, error)
-	UpdateQuantityAdd(cart_id uint, quantity uint) (models.CartDetails, error)
-	UpdateQuantityLess(cart_id uint, quantity uint) (models.CartDetails, error)
-	UpdateQuantity(cart_id uint, quantity uint) (models.CartDetails, error)
-
-	RemoveFromCart(cart_id uint) error
+	UpdateQuantityAdd(user_id, cart_id, quantity uint) (models.CartDetails, error)
+	UpdateQuantityLess(user_id, cart_id, quantity uint) (models.CartDetails, error)
+	UpdateQuantity(user_id, cart_id, quantity uint) (models.CartDetails, error)
+	RemoveFromCart(user_id, cart_id uint) error
 
 	// GetAddresses(id uint) ([]models.Address, error)
 	// GetPaymentOptions() ([]models.PaymentMethod, error)
@@ -128,10 +127,10 @@ func (ad *cartRepository) CheckIfItemIsAlreadyAdded(user_id, product_id uint) (u
 	return count, nil
 }
 
-func (ad *cartRepository) RemoveFromCart(cart_id uint) error {
+func (ad *cartRepository) RemoveFromCart(user_id, cart_id uint) error {
 
-	err := ad.DB.Exec(`DELETE FROM cart_items WHERE id=$1`,
-		cart_id).Error
+	err := ad.DB.Exec(`DELETE FROM cart_items WHERE id=$1 AND user_id=$2`,
+		cart_id, user_id).Error
 	if err != nil {
 		return err
 	}
@@ -140,33 +139,15 @@ func (ad *cartRepository) RemoveFromCart(cart_id uint) error {
 
 }
 
-func (ad *cartRepository) UpdateQuantityAdd(cart_id uint, quantity uint) (models.CartDetails, error) {
+func (ad *cartRepository) UpdateQuantityAdd(user_id, cart_id, quantity uint) (models.CartDetails, error) {
 
-	var cartItem domain.CartItems
+	var cartDetails models.CartDetails
 
-	result := ad.DB.Model(&cartItem).Where("id = ?", cart_id).Update("quantity", gorm.Expr("quantity + ?", quantity))
-
-	if result.Error != nil {
-		return models.CartDetails{}, result.Error
-	}
-
-	if result.RowsAffected == 0 {
-		return models.CartDetails{}, errors.ErrEntityNotFound
-	}
-
-	return models.CartDetails{
-		ID:        cartItem.ID,
-		UserID:    cartItem.UserID,
-		ProductID: cartItem.ProductID,
-		Quantity:  cartItem.Quantity,
-	}, nil
-}
-
-func (ad *cartRepository) UpdateQuantityLess(cart_id uint, quantity uint) (models.CartDetails, error) {
-
-	var cartItem domain.CartItems
-
-	result := ad.DB.Model(&cartItem).Where("id = ?", cart_id).Update("quantity", gorm.Expr("quantity - ?", quantity))
+	result := ad.DB.
+		Model(&domain.CartItems{}).
+		Where("id=? AND user_id=?", cart_id, user_id).
+		Update("quantity", gorm.Expr("quantity + ?", quantity)).
+		Scan(&cartDetails)
 
 	if result.Error != nil {
 		return models.CartDetails{}, result.Error
@@ -176,19 +157,18 @@ func (ad *cartRepository) UpdateQuantityLess(cart_id uint, quantity uint) (model
 		return models.CartDetails{}, errors.ErrEntityNotFound
 	}
 
-	return models.CartDetails{
-		ID:        cartItem.ID,
-		UserID:    cartItem.UserID,
-		ProductID: cartItem.ProductID,
-		Quantity:  cartItem.Quantity,
-	}, nil
+	return cartDetails, nil
 }
 
-func (ad *cartRepository) UpdateQuantity(cart_id uint, quantity uint) (models.CartDetails, error) {
+func (ad *cartRepository) UpdateQuantityLess(user_id, cart_id, quantity uint) (models.CartDetails, error) {
 
-	var cartItem domain.CartItems
+	var cartDetails models.CartDetails
 
-	result := ad.DB.Model(&cartItem).Where("id = ?", cart_id).Update("quantity", quantity)
+	result := ad.DB.
+		Model(&domain.CartItems{}).
+		Where("id=? AND user_id=?", cart_id, user_id).
+		Update("quantity", gorm.Expr("quantity - ?", quantity)).
+		Scan(&cartDetails)
 
 	if result.Error != nil {
 		return models.CartDetails{}, result.Error
@@ -198,15 +178,30 @@ func (ad *cartRepository) UpdateQuantity(cart_id uint, quantity uint) (models.Ca
 		return models.CartDetails{}, errors.ErrEntityNotFound
 	}
 
-	return models.CartDetails{
-		ID:        cartItem.ID,
-		UserID:    cartItem.UserID,
-		ProductID: cartItem.ProductID,
-		Quantity:  cartItem.Quantity,
-	}, nil
+	return cartDetails, nil
 }
 
-func (ad *cartRepository) AddToCart(user_id, product_id uint, quantity uint) (models.CartDetails, error) {
+func (ad *cartRepository) UpdateQuantity(user_id, cart_id, quantity uint) (models.CartDetails, error) {
+
+	var cartDetails models.CartDetails
+
+	result := ad.DB.
+		Model(&domain.CartItems{}).
+		Where("id=? AND user_id=?", cart_id, user_id).
+		Update("quantity", quantity)
+
+	if result.Error != nil {
+		return models.CartDetails{}, result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return models.CartDetails{}, errors.ErrEntityNotFound
+	}
+
+	return cartDetails, nil
+}
+
+func (ad *cartRepository) AddToCart(user_id, product_id, quantity uint) (models.CartDetails, error) {
 
 	var cartDetails models.CartDetails
 

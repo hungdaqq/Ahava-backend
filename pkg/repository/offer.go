@@ -51,7 +51,11 @@ func (repo *offerRepository) ExpireOffer(product_id uint) (models.Offer, error) 
 
 	var offer models.Offer
 
-	result := repo.DB.Model(&domain.Offer{}).Where("product_id = ?", product_id).Update("expire_at", time.Now()).Scan(&offer)
+	result := repo.DB.
+		Model(&domain.Offer{}).
+		Where("product_id = ?", product_id).
+		Update("expire_at", time.Now()).
+		Scan(&offer)
 
 	if result.Error != nil {
 		return models.Offer{}, result.Error
@@ -68,11 +72,14 @@ func (repo *offerRepository) UpdateOffer(product_id uint, model models.Offer) (m
 
 	var offer models.Offer
 
-	result := repo.DB.Model(&domain.Offer{}).Where("product_id = ?", product_id).Updates(
-		domain.Offer{
+	result := repo.DB.
+		Model(&domain.Offer{}).
+		Where("product_id = ?", product_id).
+		Updates(domain.Offer{
 			OfferRate: model.OfferRate,
 			ExpireAt:  model.ExpireAt,
-		}).Scan(&offer)
+		}).
+		Scan(&offer)
 
 	if result.Error != nil {
 		return models.Offer{}, result.Error

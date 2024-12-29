@@ -41,10 +41,14 @@ func (p *categoryRepository) UpdateCategory(category_id uint, name, description 
 
 	var updateCategory models.Category
 
-	result := p.DB.Model(&domain.Category{}).Where("id = ?", category_id).Updates(domain.Category{
-		Name:        name,
-		Description: description,
-	}).Scan(&updateCategory)
+	result := p.DB.
+		Model(&domain.Category{}).
+		Where("id = ?", category_id).
+		Updates(domain.Category{
+			Name:        name,
+			Description: description,
+		}).
+		Scan(&updateCategory)
 
 	if result.Error != nil {
 		return models.Category{}, result.Error

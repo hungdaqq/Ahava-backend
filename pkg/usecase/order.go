@@ -7,8 +7,7 @@ import (
 
 type OrderUseCase interface {
 	PlaceOrder(order models.PlaceOrder) (models.Order, error)
-	GetOrderPaidStatus(order_id uint) (string, error)
-	GetOrderDetails(order_id uint) (models.Order, error)
+	GetOrderDetails(user_id, order_id uint) (models.Order, error)
 	UpdateOrder(order_id uint, updateOrder models.Order) (models.Order, error)
 }
 
@@ -50,19 +49,9 @@ func (or *orderUseCase) PlaceOrder(placeOrder models.PlaceOrder) (models.Order, 
 	return order, nil
 }
 
-func (or *orderUseCase) GetOrderPaidStatus(order_id uint) (string, error) {
+func (or *orderUseCase) GetOrderDetails(user_id, order_id uint) (models.Order, error) {
 
-	status, err := or.repository.GetOrderPaidStatus(order_id)
-	if err != nil {
-		return "", err
-	}
-
-	return status, nil
-}
-
-func (or *orderUseCase) GetOrderDetails(order_id uint) (models.Order, error) {
-
-	result, err := or.repository.GetOrderDetails(order_id)
+	result, err := or.repository.GetOrderDetails(user_id, order_id)
 	if err != nil {
 		return models.Order{}, err
 	}

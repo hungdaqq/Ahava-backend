@@ -112,9 +112,10 @@ type Search struct {
 }
 
 type EditProfile struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
-	Phone string `json:"phone"`
+	Name      string    `json:"name"`
+	Phone     string    `json:"phone"`
+	BirthDate time.Time `json:"birth_date"`
+	Gender    string    `json:"gender"`
 }
 
 type CartItem struct {

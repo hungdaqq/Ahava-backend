@@ -14,8 +14,8 @@ type UserUseCase interface {
 	LoginHandler(user models.UserLogin) (models.TokenUsers, error)
 	AddAddress(user_id uint, address models.Address) (models.Address, error)
 	GetAddresses(user_id uint) ([]models.Address, error)
-	UpdateAddress(address_id uint, address models.Address) (models.Address, error)
-	DeleteAddress(address_id uint) error
+	UpdateAddress(user_id, address_id uint, address models.Address) (models.Address, error)
+	DeleteAddress(user_id, address_id uint) error
 
 	GetUserDetails(user_id uint) (models.UserDetailsResponse, error)
 
@@ -23,7 +23,7 @@ type UserUseCase interface {
 	// ForgotPasswordSend(phone string) error
 	// ForgotPasswordVerifyAndChange(model models.ForgotVerify) error
 
-	EditProfile(user_id uint, name, email, phone string) (models.UserDetailsResponse, error)
+	EditProfile(user_id uint, profile models.EditProfile) (models.UserDetailsResponse, error)
 
 	// GetMyReferenceLink(id uint) (string, error)
 }
@@ -180,9 +180,9 @@ func (i *userUseCase) AddAddress(user_id uint, address models.Address) (models.A
 
 }
 
-func (i *userUseCase) UpdateAddress(address_id uint, address models.Address) (models.Address, error) {
+func (i *userUseCase) UpdateAddress(user_id, address_id uint, address models.Address) (models.Address, error) {
 
-	updateAddress, err := i.userRepo.UpdateAddress(address_id, address)
+	updateAddress, err := i.userRepo.UpdateAddress(user_id, address_id, address)
 	if err != nil {
 		return models.Address{}, err
 	}
@@ -191,9 +191,9 @@ func (i *userUseCase) UpdateAddress(address_id uint, address models.Address) (mo
 
 }
 
-func (i *userUseCase) DeleteAddress(address_id uint) error {
+func (i *userUseCase) DeleteAddress(user_id, address_id uint) error {
 
-	err := i.userRepo.DeleteAddress(address_id)
+	err := i.userRepo.DeleteAddress(user_id, address_id)
 	if err != nil {
 		return err
 	}
@@ -291,11 +291,11 @@ func (u *userUseCase) ChangePassword(id uint, old string, password string, repas
 // 	return nil
 // }
 
-func (u *userUseCase) EditProfile(user_id uint, name, email, phone string) (models.UserDetailsResponse, error) {
+func (u *userUseCase) EditProfile(user_id uint, profile models.EditProfile) (models.UserDetailsResponse, error) {
 
-	result, err := u.userRepo.EditProfile(user_id, name, email, phone)
+	result, err := u.userRepo.EditProfile(user_id, profile)
 	if err != nil {
-		return models.UserDetailsResponse{}, errors.New("could not change")
+		return models.UserDetailsResponse{}, err
 	}
 
 	return result, nil

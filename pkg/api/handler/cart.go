@@ -56,6 +56,8 @@ func (i *CartHandler) GetCart(c *gin.Context) {
 
 func (i *CartHandler) RemoveFromCart(c *gin.Context) {
 
+	user_id := c.MustGet("id").(int)
+
 	cart_id, err := strconv.Atoi(c.Param("cart_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "check parameters properly", nil, err.Error())
@@ -63,7 +65,7 @@ func (i *CartHandler) RemoveFromCart(c *gin.Context) {
 		return
 	}
 
-	if err := i.usecase.RemoveFromCart(uint(cart_id)); err != nil {
+	if err := i.usecase.RemoveFromCart(uint(user_id), uint(cart_id)); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not remove from cart", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
@@ -74,6 +76,8 @@ func (i *CartHandler) RemoveFromCart(c *gin.Context) {
 }
 
 func (i *CartHandler) UpdateQuantityAdd(c *gin.Context) {
+
+	user_id := c.MustGet("id").(int)
 
 	cart_id, err := strconv.Atoi(c.Param("cart_id"))
 	if err != nil {
@@ -88,7 +92,7 @@ func (i *CartHandler) UpdateQuantityAdd(c *gin.Context) {
 		return
 	}
 
-	result, err := i.usecase.UpdateQuantityAdd(uint(cart_id), model.Quantity)
+	result, err := i.usecase.UpdateQuantityAdd(uint(user_id), uint(cart_id), model.Quantity)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not Add the quantity", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -101,6 +105,8 @@ func (i *CartHandler) UpdateQuantityAdd(c *gin.Context) {
 
 func (i *CartHandler) UpdateQuantityLess(c *gin.Context) {
 
+	user_id := c.MustGet("id").(int)
+
 	cart_id, err := strconv.Atoi(c.Param("cart_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "check parameters properly", nil, err.Error())
@@ -115,7 +121,7 @@ func (i *CartHandler) UpdateQuantityLess(c *gin.Context) {
 		return
 	}
 
-	result, err := i.usecase.UpdateQuantityLess(uint(cart_id), model.Quantity)
+	result, err := i.usecase.UpdateQuantityLess(uint(user_id), uint(cart_id), model.Quantity)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not subtract quantity", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -128,6 +134,8 @@ func (i *CartHandler) UpdateQuantityLess(c *gin.Context) {
 
 func (i *CartHandler) UpdateQuantity(c *gin.Context) {
 
+	user_id := c.MustGet("id").(int)
+
 	cart_id, err := strconv.Atoi(c.Param("cart_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "check parameters properly", nil, err.Error())
@@ -142,7 +150,7 @@ func (i *CartHandler) UpdateQuantity(c *gin.Context) {
 		return
 	}
 
-	result, err := i.usecase.UpdateQuantity(uint(cart_id), model.Quantity)
+	result, err := i.usecase.UpdateQuantity(uint(user_id), uint(cart_id), model.Quantity)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not  subtract quantity", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)

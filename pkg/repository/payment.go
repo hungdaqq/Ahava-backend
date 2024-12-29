@@ -36,17 +36,21 @@ func (p *paymentRepository) SaveTransaction(saveTransaction models.Transaction) 
 
 	var transaction models.Transaction
 
-	result := p.DB.Model(&domain.Transaction{}).Where("code = ?", saveTransaction.Code).Updates(domain.Transaction{
-		Gateway:         saveTransaction.Gateway,
-		TransactionDate: saveTransaction.TransactionDate,
-		AccountNumber:   saveTransaction.AccountNumber,
-		Content:         saveTransaction.Content,
-		TransferType:    saveTransaction.TransferType,
-		TransferAmount:  saveTransaction.TransferAmount,
-		Accumulated:     saveTransaction.Accumulated,
-		ReferenceCode:   saveTransaction.ReferenceCode,
-		Description:     saveTransaction.Description,
-	}).Scan(&transaction)
+	result := p.DB.
+		Model(&domain.Transaction{}).
+		Where("code = ?", saveTransaction.Code).
+		Updates(domain.Transaction{
+			Gateway:         saveTransaction.Gateway,
+			TransactionDate: saveTransaction.TransactionDate,
+			AccountNumber:   saveTransaction.AccountNumber,
+			Content:         saveTransaction.Content,
+			TransferType:    saveTransaction.TransferType,
+			TransferAmount:  saveTransaction.TransferAmount,
+			Accumulated:     saveTransaction.Accumulated,
+			ReferenceCode:   saveTransaction.ReferenceCode,
+			Description:     saveTransaction.Description,
+		}).
+		Scan(&transaction)
 
 	// Check for errors in the update process
 	if result.Error != nil {

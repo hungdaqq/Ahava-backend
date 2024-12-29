@@ -99,6 +99,8 @@ func (i *UserHandler) AddAddress(c *gin.Context) {
 
 func (i *UserHandler) UpdateAddress(c *gin.Context) {
 
+	user_id := c.MustGet("id").(int)
+
 	address_id, err := strconv.Atoi(c.Param("address_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
@@ -113,7 +115,7 @@ func (i *UserHandler) UpdateAddress(c *gin.Context) {
 		return
 	}
 
-	result, err := i.userUseCase.UpdateAddress(uint(address_id), model)
+	result, err := i.userUseCase.UpdateAddress(uint(user_id), uint(address_id), model)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not update the address", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -126,6 +128,8 @@ func (i *UserHandler) UpdateAddress(c *gin.Context) {
 
 func (i *UserHandler) DeleteAddress(c *gin.Context) {
 
+	user_id := c.MustGet("id").(int)
+
 	address_id, err := strconv.Atoi(c.Param("address_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
@@ -133,7 +137,7 @@ func (i *UserHandler) DeleteAddress(c *gin.Context) {
 		return
 	}
 
-	err = i.userUseCase.DeleteAddress(uint(address_id))
+	err = i.userUseCase.DeleteAddress(uint(user_id), uint(address_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not delete the address", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -242,7 +246,7 @@ func (i *UserHandler) EditProfile(c *gin.Context) {
 		return
 	}
 
-	result, err := i.userUseCase.EditProfile(uint(user_id), model.Name, model.Email, model.Phone)
+	result, err := i.userUseCase.EditProfile(uint(user_id), model)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not edit profile", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)

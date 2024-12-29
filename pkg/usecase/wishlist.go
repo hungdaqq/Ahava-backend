@@ -35,23 +35,23 @@ func (w *wishlistUseCase) AddToWishlist(user_id, product_id uint) (models.Wishli
 	}
 
 	if exists {
-		err = w.repository.UpdateWishlist(user_id, product_id, false)
+		result, err := w.repository.UpdateWishlist(user_id, product_id, false)
 		if err != nil {
-			return models.Wishlist{}, errors.New("could not add to wishlist")
+			return models.Wishlist{}, err
 		}
+		return result, nil
+	} else {
+		result, err := w.repository.AddToWishlist(user_id, product_id)
+		if err != nil {
+			return models.Wishlist{}, err
+		}
+		return result, nil
 	}
-
-	result, err := w.repository.AddToWishlist(user_id, product_id)
-	if err != nil {
-		return models.Wishlist{}, errors.New("could not add to wishlist")
-	}
-
-	return result, nil
 }
 
 func (w *wishlistUseCase) RemoveFromWishlist(user_id, product_id uint) error {
 
-	if err := w.repository.UpdateWishlist(user_id, product_id, true); err != nil {
+	if _, err := w.repository.UpdateWishlist(user_id, product_id, true); err != nil {
 		return errors.New("could not remove from wishlist")
 	}
 

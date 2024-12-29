@@ -11,8 +11,8 @@ import (
 type OrderRepository interface {
 	PlaceOrder(order models.PlaceOrder, final_price uint64) (models.Order, error)
 	PlaceOrderItem(order_id uint, item models.CartItem) error
-	GetOrderPaidStatus(order_id uint) (string, error)
-	GetOrderDetails(order_id uint) (models.Order, error)
+	GetOrderDetails(user_id, order_id uint) (models.Order, error)
+	GetOrderForWebhook(order_id uint) (models.Order, error)
 	UpdateOrder(order_id uint, order models.Order) (models.Order, error)
 }
 
@@ -47,11 +47,12 @@ func (or *orderRepository) PlaceOrderItem(order_id uint, item models.CartItem) e
 	return nil
 }
 
-func (or *orderRepository) GetOrderDetails(order_id uint) (models.Order, error) {
+func (or *orderRepository) GetOrderForWebhook(order_id uint) (models.Order, error) {
 
 	var orderDetails models.Order
 
-	err := or.DB.Raw(`SELECT * FROM orders WHERE id=?`, order_id).Scan(&orderDetails).Error
+	err := or.DB.Raw(`SELECT id,final_price FROM orders WHERE id=?`,
+		order_id).Scan(&orderDetails).Error
 	if err != nil {
 		return models.Order{}, err
 	}
@@ -59,28 +60,32 @@ func (or *orderRepository) GetOrderDetails(order_id uint) (models.Order, error) 
 	return orderDetails, nil
 }
 
-func (or *orderRepository) GetOrderPaidStatus(order_id uint) (string, error) {
+func (or *orderRepository) GetOrderDetails(user_id, order_id uint) (models.Order, error) {
 
-	var status string
+	var orderDetails models.Order
 
-	err := or.DB.Raw(`SELECT payment_status FROM orders WHERE id=?`, order_id).Scan(&status).Error
+	err := or.DB.Raw(`SELECT * FROM orders WHERE id=? AND user_id=?`,
+		order_id, user_id).Scan(&orderDetails).Error
 	if err != nil {
-		return "", err
+		return models.Order{}, err
 	}
 
-	return status, nil
+	return orderDetails, nil
 }
 
 func (or *orderRepository) UpdateOrder(order_id uint, updateOrder models.Order) (models.Order, error) {
 
 	var order models.Order
 
-	result := or.DB.Model(&domain.Order{}).Where("id = ?", order_id).Updates(
-		domain.Order{
+	result := or.DB.
+		Model(&domain.Order{}).
+		Where("id = ?", order_id).
+		Updates(domain.Order{
 			PaymentMethod: updateOrder.PaymentMethod,
 			OrderStatus:   updateOrder.OrderStatus,
 			PaymentStatus: updateOrder.PaymentStatus,
-		}).Scan(&order)
+		}).
+		Scan(&order)
 
 	if result.Error != nil {
 		return models.Order{}, result.Error

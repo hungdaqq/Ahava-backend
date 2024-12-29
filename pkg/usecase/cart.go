@@ -8,11 +8,10 @@ import (
 type CartUseCase interface {
 	GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error)
 	AddToCart(user_id, product_id uint, quantity uint) (models.CartDetails, error)
-	UpdateQuantityAdd(cart_id uint, quantity uint) (models.CartDetails, error)
-	UpdateQuantityLess(cart_id uint, quantity uint) (models.CartDetails, error)
-	UpdateQuantity(cart_id uint, quantity uint) (models.CartDetails, error)
-	RemoveFromCart(cart_id uint) error
-
+	UpdateQuantityAdd(user_id, cart_id uint, quantity uint) (models.CartDetails, error)
+	UpdateQuantityLess(user_id, cart_id uint, quantity uint) (models.CartDetails, error)
+	UpdateQuantity(user_id, cart_id uint, quantity uint) (models.CartDetails, error)
+	RemoveFromCart(user_id, cart_id uint) error
 	CheckOut(user_id uint, cart_ids []uint) (models.CheckOut, error)
 }
 
@@ -42,7 +41,7 @@ func (i *cartUseCase) AddToCart(user_id, product_id uint, quantity uint) (models
 	}
 
 	if cart_id != 0 {
-		result, err := i.repo.UpdateQuantityAdd(cart_id, quantity)
+		result, err := i.repo.UpdateQuantityAdd(user_id, cart_id, quantity)
 		if err != nil {
 			return models.CartDetails{}, err
 		}
@@ -112,9 +111,9 @@ func (i *cartUseCase) GetCart(user_id uint, cart_ids []uint) ([]models.CartItem,
 	return cartItems, nil
 }
 
-func (i *cartUseCase) RemoveFromCart(cart_id uint) error {
+func (i *cartUseCase) RemoveFromCart(user_id, cart_id uint) error {
 
-	err := i.repo.RemoveFromCart(cart_id)
+	err := i.repo.RemoveFromCart(user_id, cart_id)
 	if err != nil {
 		return err
 	}
@@ -122,9 +121,9 @@ func (i *cartUseCase) RemoveFromCart(cart_id uint) error {
 	return nil
 }
 
-func (i *cartUseCase) UpdateQuantityAdd(cart_id uint, quantity uint) (models.CartDetails, error) {
+func (i *cartUseCase) UpdateQuantityAdd(user_id, cart_id uint, quantity uint) (models.CartDetails, error) {
 
-	result, err := i.repo.UpdateQuantityAdd(cart_id, quantity)
+	result, err := i.repo.UpdateQuantityAdd(user_id, cart_id, quantity)
 	if err != nil {
 		return models.CartDetails{}, err
 	}
@@ -132,15 +131,15 @@ func (i *cartUseCase) UpdateQuantityAdd(cart_id uint, quantity uint) (models.Car
 	return result, nil
 }
 
-func (i *cartUseCase) UpdateQuantityLess(cart_id uint, quantity uint) (models.CartDetails, error) {
+func (i *cartUseCase) UpdateQuantityLess(user_id, cart_id uint, quantity uint) (models.CartDetails, error) {
 
-	result, err := i.repo.UpdateQuantityLess(cart_id, quantity)
+	result, err := i.repo.UpdateQuantityLess(user_id, cart_id, quantity)
 	if err != nil {
 		return models.CartDetails{}, err
 	}
 
 	if result.Quantity <= 0 {
-		err := i.repo.RemoveFromCart(cart_id)
+		err := i.repo.RemoveFromCart(user_id, cart_id)
 		if err != nil {
 			return models.CartDetails{}, err
 		}
@@ -149,15 +148,15 @@ func (i *cartUseCase) UpdateQuantityLess(cart_id uint, quantity uint) (models.Ca
 	return result, nil
 }
 
-func (i *cartUseCase) UpdateQuantity(cart_id uint, quantity uint) (models.CartDetails, error) {
+func (i *cartUseCase) UpdateQuantity(user_id, cart_id uint, quantity uint) (models.CartDetails, error) {
 
-	result, err := i.repo.UpdateQuantity(cart_id, quantity)
+	result, err := i.repo.UpdateQuantity(user_id, cart_id, quantity)
 	if err != nil {
 		return models.CartDetails{}, err
 	}
 
 	if result.Quantity <= 0 {
-		err := i.repo.RemoveFromCart(cart_id)
+		err := i.repo.RemoveFromCart(user_id, cart_id)
 		if err != nil {
 			return models.CartDetails{}, err
 		}

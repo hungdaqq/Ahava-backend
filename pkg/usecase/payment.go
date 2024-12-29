@@ -56,7 +56,7 @@ func (p *paymentUsecase) Webhook(transaction models.Transaction) error {
 	}
 
 	// Get the order details
-	order, err := p.orderRepository.GetOrderDetails(transaction.OrderID)
+	order, err := p.orderRepository.GetOrderForWebhook(transaction.OrderID)
 	if err != nil {
 		return err
 	}
