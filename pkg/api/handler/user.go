@@ -25,14 +25,12 @@ func NewUserHandler(usecase services.UserUseCase) *UserHandler {
 func (u *UserHandler) UserSignUp(c *gin.Context) {
 
 	var user models.UserDetails
-	// bind the user details to the struct
 	if err := c.BindJSON(&user); err != nil {
 		errRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errRes)
 		return
 	}
 
-	// checking whether the data sent by the user has all the correct constraints specified by Users struct
 	err := validator.New().Struct(user)
 	if err != nil {
 		errRes := response.ClientResponse(http.StatusBadRequest, "constraints not satisfied", nil, err.Error())
@@ -41,10 +39,8 @@ func (u *UserHandler) UserSignUp(c *gin.Context) {
 		return
 	}
 
-	//if the user wants to mention the referral code of other user
 	ref := c.Query("reference")
 
-	// business logic goes inside this function
 	userCreated, err := u.userUseCase.UserSignUp(user, ref)
 	if err != nil {
 		errRes := response.ClientResponse(http.StatusBadRequest, "User could not signed up", nil, err.Error())
@@ -63,13 +59,6 @@ func (u *UserHandler) LoginHandler(c *gin.Context) {
 
 	if err := c.BindJSON(&user); err != nil {
 		errRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errRes)
-		return
-	}
-
-	err := validator.New().Struct(user)
-	if err != nil {
-		errRes := response.ClientResponse(http.StatusBadRequest, "constraints not satisfied", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errRes)
 		return
 	}

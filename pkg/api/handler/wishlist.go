@@ -2,6 +2,7 @@ package handler
 
 import (
 	services "ahava/pkg/usecase"
+	models "ahava/pkg/utils/models"
 	"ahava/pkg/utils/response"
 	"net/http"
 	"strconv"
@@ -23,13 +24,14 @@ func (w *WishlistHandler) AddToWishlist(c *gin.Context) {
 
 	user_id := c.MustGet("id").(int)
 
-	product_id, err := strconv.Atoi(c.Query("product_id"))
-	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "check parameters properly", nil, err.Error())
+	var model models.AddToWishlist
+	if err := c.BindJSON(&model); err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-	result, err := w.usecase.AddToWishlist(uint(user_id), uint(product_id))
+
+	result, err := w.usecase.AddToWishlist(uint(user_id), model.ProductID)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add to Wishlist", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)

@@ -2,7 +2,7 @@ package models
 
 // type ProductsReceiver struct {
 // 	CategoryID  string  `json:"Category_id"`
-// 	ProductName string  `json:"product_name"`
+// 	ProductName string  `json:"name"`
 // 	Size_id     uint    `json:"size_id"`
 // 	Stock       int     `json:"stock"`
 // 	Price       float64 `json:"price"`

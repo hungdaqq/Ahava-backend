@@ -2,8 +2,8 @@ package repository
 
 import (
 	"ahava/pkg/domain"
+	errors "ahava/pkg/utils/errors"
 	"ahava/pkg/utils/models"
-	"errors"
 
 	"github.com/lib/pq"
 
@@ -54,7 +54,7 @@ func (ad *cartRepository) GetCart(user_id uint, cart_ids []uint) ([]models.CartI
 	var cart []models.CartItem
 
 	query := `
-        SELECT ci.id AS cart_id, p.id as product_id, p.product_name, p.image, p.price, ci.quantity, 
+        SELECT ci.id AS cart_id, p.id as product_id, p.name, p.default_image, p.price, ci.quantity, 
                (ci.quantity * p.price) AS item_price 
         FROM cart_items ci JOIN products p ON ci.product_id = p.id WHERE ci.user_id = $1`
 
@@ -151,7 +151,7 @@ func (ad *cartRepository) UpdateQuantityAdd(cart_id uint, quantity uint) (models
 	}
 
 	if result.RowsAffected == 0 {
-		return models.CartDetails{}, errors.New("cart item not found")
+		return models.CartDetails{}, errors.ErrEntityNotFound
 	}
 
 	return models.CartDetails{
@@ -173,7 +173,7 @@ func (ad *cartRepository) UpdateQuantityLess(cart_id uint, quantity uint) (model
 	}
 
 	if result.RowsAffected == 0 {
-		return models.CartDetails{}, errors.New("cart item not found")
+		return models.CartDetails{}, errors.ErrEntityNotFound
 	}
 
 	return models.CartDetails{
@@ -195,7 +195,7 @@ func (ad *cartRepository) UpdateQuantity(cart_id uint, quantity uint) (models.Ca
 	}
 
 	if result.RowsAffected == 0 {
-		return models.CartDetails{}, errors.New("cart item not found")
+		return models.CartDetails{}, errors.ErrEntityNotFound
 	}
 
 	return models.CartDetails{

@@ -2,8 +2,8 @@ package repository
 
 import (
 	"ahava/pkg/domain"
+	errors "ahava/pkg/utils/errors"
 	"ahava/pkg/utils/models"
-	"errors"
 
 	"gorm.io/gorm"
 )
@@ -87,7 +87,7 @@ func (or *orderRepository) UpdateOrder(order_id uint, updateOrder models.Order) 
 	}
 
 	if result.RowsAffected == 0 {
-		return models.Order{}, errors.New("no rows updated, possibly invalid order ID")
+		return models.Order{}, errors.ErrEntityNotFound
 	}
 
 	return order, nil
@@ -109,7 +109,7 @@ func (or *orderRepository) UpdateOrder(order_id uint, updateOrder models.Order) 
 
 // 	var cart []models.GetCart
 
-// 	if err := ad.DB.Raw("SELECT products.product_name,cart_products.quantity,cart_products.total_price AS Total FROM cart_products JOIN products ON cart_products.product_id=products.id WHERE user_id=$1", id).Scan(&cart).Error; err != nil {
+// 	if err := ad.DB.Raw("SELECT products.name,cart_products.quantity,cart_products.total_price AS Total FROM cart_products JOIN products ON cart_products.product_id=products.id WHERE user_id=$1", id).Scan(&cart).Error; err != nil {
 // 		return []models.GetCart{}, err
 // 	}
 // 	return cart, nil
@@ -139,7 +139,7 @@ func (or *orderRepository) UpdateOrder(order_id uint, updateOrder models.Order) 
 
 // 	for _, v := range cart {
 // 		var inv int
-// 		if err := i.DB.Raw("select id from products where product_name=$1", v.ProductName).Scan(&inv).Error; err != nil {
+// 		if err := i.DB.Raw("select id from products where name=$1", v.ProductName).Scan(&inv).Error; err != nil {
 // 			return err
 // 		}
 
@@ -356,7 +356,7 @@ func (or *orderRepository) UpdateOrder(order_id uint, updateOrder models.Order) 
 // func (o *orderRepository) GetProductDetailsInOrder(id uint) ([]models.ProductDetails, error) {
 
 // 	var products []models.ProductDetails
-// 	err := o.DB.Raw(`SELECT  products.product_name,
+// 	err := o.DB.Raw(`SELECT  products.name,
 // 	products.image,
 // 	order_items.quantity,
 // 	order_items.total_price AS amount

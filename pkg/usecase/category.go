@@ -3,15 +3,14 @@ package usecase
 import (
 	repository "ahava/pkg/repository"
 	"ahava/pkg/utils/models"
-	"fmt"
 )
 
 type CategoryUseCase interface {
 	AddCategory(category models.Category) (models.Category, error)
-	UpdateCategory(categoryID uint, category, description string) (models.Category, error)
-	DeleteCategory(categoryID uint) error
+	UpdateCategory(category_id uint, category, description string) (models.Category, error)
+	DeleteCategory(category_id uint) error
 	GetCategories() ([]models.Category, error)
-	GetBannersForUsers() ([]models.Banner, error)
+	// GetBannersForUsers() ([]models.Banner, error)
 }
 
 type categoryUseCase struct {
@@ -55,19 +54,19 @@ func (Cat *categoryUseCase) GetCategories() ([]models.Category, error) {
 
 }
 
-func (Cat *categoryUseCase) UpdateCategory(categoryID uint, category, description string) (models.Category, error) {
+func (Cat *categoryUseCase) UpdateCategory(category_id uint, name, description string) (models.Category, error) {
 
-	newcat, err := Cat.repository.UpdateCategory(categoryID, category, description)
+	result, err := Cat.repository.UpdateCategory(category_id, name, description)
 	if err != nil {
 		return models.Category{}, err
 	}
 
-	return newcat, err
+	return result, err
 }
 
-func (Cat *categoryUseCase) DeleteCategory(categoryID uint) error {
+func (Cat *categoryUseCase) DeleteCategory(category_id uint) error {
 
-	err := Cat.repository.DeleteCategory(categoryID)
+	err := Cat.repository.DeleteCategory(category_id)
 	if err != nil {
 		return err
 	}
@@ -75,23 +74,23 @@ func (Cat *categoryUseCase) DeleteCategory(categoryID uint) error {
 
 }
 
-func (Cat *categoryUseCase) GetBannersForUsers() ([]models.Banner, error) {
-	// Find categories with the highest offer percentage, at least one, maximum 3.
-	banners, err := Cat.repository.GetBannersForUsers()
-	if err != nil {
-		return nil, err
-	}
+// func (Cat *categoryUseCase) GetBannersForUsers() ([]models.Banner, error) {
+// 	// Find categories with the highest offer percentage, at least one, maximum 3.
+// 	banners, err := Cat.repository.GetBannersForUsers()
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	// Find images of 2 products from each category.
-	for i := range banners {
-		images, err := Cat.repository.GetImagesOfProductsFromACategory(banners[i].CategoryID)
-		if err != nil {
-			return nil, err
-		}
-		banners[i].Images = images
-		fmt.Println("loop instance", banners[i])
-	}
+// 	// Find images of 2 products from each category.
+// 	for i := range banners {
+// 		images, err := Cat.repository.GetImagesOfProductsFromACategory(banners[i].CategoryID)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		banners[i].Images = images
+// 		fmt.Println("loop instance", banners[i])
+// 	}
 
-	fmt.Println("banners", banners)
-	return banners, nil
-}
+// 	fmt.Println("banners", banners)
+// 	return banners, nil
+// }

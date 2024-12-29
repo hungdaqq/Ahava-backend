@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"errors"
+	errors "ahava/pkg/utils/errors"
 	"fmt"
 
 	"ahava/pkg/domain"
@@ -47,7 +47,7 @@ func (ad *adminRepository) GetUserByID(user_id uint) (domain.Users, error) {
 		return domain.Users{}, err
 	}
 	if count < 1 {
-		return domain.Users{}, errors.New("user for the given id does not exist")
+		return domain.Users{}, errors.ErrEntityNotFound
 	}
 
 	query := fmt.Sprintf("select * from users where id = '%d'", user_id)
@@ -63,7 +63,7 @@ func (ad *adminRepository) GetUserByID(user_id uint) (domain.Users, error) {
 // function which will both block and unblock a user
 func (ad *adminRepository) UpdateBlockUserByID(user domain.Users) error {
 
-	err := ad.DB.Exec("update users set blocked = ? where id = ?", user.Blocked, user.ID).Error
+	err := ad.DB.Exec("update users set is_blocked = ? where id = ?", user.IsBlocked, user.ID).Error
 	if err != nil {
 		return err
 	}

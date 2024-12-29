@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"errors"
+	errors "ahava/pkg/utils/errors"
 
 	"ahava/pkg/domain"
 	"ahava/pkg/utils/models"
@@ -11,9 +11,9 @@ import (
 
 type UserRepository interface {
 	UserSignUp(user models.UserDetails, referal string) (models.UserDetailsResponse, error)
-	CheckUserAvailability(email, phone string) bool
-	FindUserByEmail(user models.UserLogin) (models.UserSignInResponse, error)
-	UserBlockStatus(email string) (bool, error)
+	CheckUserAvailability(email, username string) bool
+	FindUser(user models.UserLogin) (models.UserSignInResponse, error)
+	UserBlockStatus(email, username string) (bool, error)
 	AddAddress(user_id uint, address models.Address) (models.Address, error)
 	GetAddresses(user_id uint) ([]models.Address, error)
 	UpdateAddress(address_id uint, address models.Address) (models.Address, error)
@@ -45,7 +45,7 @@ func (c *userDatabase) CheckUserAvailability(email, phone string) bool {
 
 	var count int
 
-	if err := c.DB.Raw(`SELECT COUNT(*) FROM users WHERE email = $1 OR phone = $2`,
+	if err := c.DB.Raw(`SELECT COUNT(*) FROM users WHERE email = $1 OR username = $2`,
 		email, phone).Scan(&count).Error; err != nil {
 		return false
 	}
@@ -56,9 +56,17 @@ func (c *userDatabase) CheckUserAvailability(email, phone string) bool {
 func (c *userDatabase) UserSignUp(user models.UserDetails, referral string) (models.UserDetailsResponse, error) {
 
 	var userDetails models.UserDetailsResponse
-	err := c.DB.Raw("INSERT INTO users (name, email, password, phone, referral_code, birth_date) VALUES (?, ?, ?, ?, ?, ?) RETURNING *",
-		user.Name, user.Email, user.Password, user.Phone, referral, user.BirthDate).Scan(&userDetails).Error
 
+	err := c.DB.Create(&domain.Users{
+		Name:         user.Name,
+		Username:     user.Username,
+		Gender:       user.Gender,
+		Email:        user.Email,
+		Password:     user.Password,
+		Phone:        user.Phone,
+		ReferralCode: referral,
+		BirthDate:    user.BirthDate,
+	}).Scan(&userDetails).Error
 	if err != nil {
 		return models.UserDetailsResponse{}, err
 	}
@@ -66,40 +74,47 @@ func (c *userDatabase) UserSignUp(user models.UserDetails, referral string) (mod
 	return userDetails, nil
 }
 
-func (cr *userDatabase) UserBlockStatus(email string) (bool, error) {
+func (cr *userDatabase) UserBlockStatus(email, username string) (bool, error) {
 	var isBlocked bool
-	err := cr.DB.Raw("select blocked from users where email = ?", email).Scan(&isBlocked).Error
+	err := cr.DB.Raw("SELECT is_blocked FROM users WHERE email=? OR username=?",
+		email, username).Scan(&isBlocked).Error
 	if err != nil {
 		return false, err
 	}
 	return isBlocked, nil
 }
 
-func (c *userDatabase) FindUserByEmail(user models.UserLogin) (models.UserSignInResponse, error) {
+func (c *userDatabase) FindUser(login models.UserLogin) (models.UserSignInResponse, error) {
 
-	var user_details models.UserSignInResponse
+	var response models.UserSignInResponse
 
-	err := c.DB.Raw(`SELECT * FROM users where email = ? and blocked = false`,
-		user.Email).Scan(&user_details).Error
+	err := c.DB.Raw(`SELECT * FROM users WHERE (email = ? OR username = ?) AND is_blocked = false`,
+		login.Email, login.Username).Scan(&response).Error
 	if err != nil {
-		return models.UserSignInResponse{}, errors.New("error checking user details")
+		return models.UserSignInResponse{}, err
 	}
 
-	return user_details, nil
+	return response, nil
 
 }
 
 func (i *userDatabase) AddAddress(user_id uint, address models.Address) (models.Address, error) {
 
 	var addAddress models.Address
-	if address.Type == "" {
-		address.Type = "HOME"
-	}
-	err := i.DB.Raw(`INSERT INTO addresses (user_id, name, street, ward, district, city, phone, type, "default") 
-					VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-		user_id, address.Name, address.Street, address.Ward, address.District, address.City, address.Phone, address.Type, address.Default).Scan(&addAddress).Error
+
+	err := i.DB.Model(&domain.Address{}).Create(&domain.Address{
+		UserID:   user_id,
+		Name:     address.Name,
+		Street:   address.Street,
+		Ward:     address.Ward,
+		District: address.District,
+		City:     address.City,
+		Phone:    address.Phone,
+		Type:     address.Type,
+		Default:  address.Default,
+	}).Scan(&addAddress).Error
 	if err != nil {
-		return models.Address{}, errors.New("could not add address")
+		return models.Address{}, err
 	}
 
 	return addAddress, nil
@@ -126,7 +141,7 @@ func (i *userDatabase) UpdateAddress(address_id uint, address models.Address) (m
 	}
 
 	if result.RowsAffected == 0 {
-		return models.Address{}, errors.New("no address_id with that ID exist")
+		return models.Address{}, errors.ErrEntityNotFound
 	}
 
 	return updateAddress, nil
@@ -136,7 +151,7 @@ func (i *userDatabase) DeleteAddress(address_id uint) error {
 
 	err := i.DB.Exec(`DELETE FROM addresses WHERE id=?`, address_id).Error
 	if err != nil {
-		return errors.New("could not delete address")
+		return err
 	}
 
 	return nil
@@ -160,7 +175,7 @@ func (ad *userDatabase) GetAddresses(user_id uint) ([]models.Address, error) {
 
 	if err := ad.DB.Raw("SELECT * FROM addresses WHERE user_id=?",
 		user_id).Scan(&addresses).Error; err != nil {
-		return []models.Address{}, errors.New("error in getting addresses")
+		return []models.Address{}, err
 	}
 
 	return addresses, nil
@@ -172,7 +187,7 @@ func (ad *userDatabase) GetUserDetails(user_id uint) (models.UserDetailsResponse
 	var details models.UserDetailsResponse
 	if err := ad.DB.Raw("SELECT * FROM users where id=?",
 		user_id).Scan(&details).Error; err != nil {
-		return models.UserDetailsResponse{}, errors.New("could not get user details")
+		return models.UserDetailsResponse{}, err
 	}
 
 	return details, nil
@@ -188,7 +203,7 @@ func (i *userDatabase) ChangePassword(id uint, password string) error {
 	}
 
 	if result.RowsAffected == 0 {
-		return errors.New("user not found")
+		return errors.ErrEntityNotFound
 	}
 
 	return nil
@@ -232,7 +247,7 @@ func (i *userDatabase) EditProfile(userID uint, name, email, phone string) (mode
 	}
 
 	if result.RowsAffected == 0 {
-		return models.UserDetailsResponse{}, errors.New("user not found")
+		return models.UserDetailsResponse{}, errors.ErrEntityNotFound
 	}
 
 	return user, nil
@@ -281,7 +296,7 @@ func (i *userDatabase) GetReferralCodeFromID(id uint) (string, error) {
 
 func (i *userDatabase) FindProductImage(id uint) (string, error) {
 	var image string
-	err := i.DB.Raw("SELECT image FROM products WHERE id = ?", id).Scan(&image).Error
+	err := i.DB.Raw("SELECT default_image FROM products WHERE id = ?", id).Scan(&image).Error
 	if err != nil {
 		return "", err
 	}

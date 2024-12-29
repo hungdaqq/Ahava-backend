@@ -2,8 +2,8 @@ package repository
 
 import (
 	"ahava/pkg/domain"
+	errors "ahava/pkg/utils/errors"
 	"ahava/pkg/utils/models"
-	"errors"
 
 	"gorm.io/gorm"
 )
@@ -50,7 +50,7 @@ func (w *wishlistRepository) UpdateWishlist(user_id, product_id uint, is_deleted
 	}
 
 	if result.RowsAffected == 0 {
-		return errors.New("no matching record found in wishlist")
+		return errors.ErrEntityNotFound
 	}
 
 	return nil
@@ -62,8 +62,8 @@ func (w *wishlistRepository) GetWishList(id uint) ([]models.Products, error) {
 	query := `
         SELECT products.id,
                products.category_id,
-               products.product_name,
-               products.image,
+               products.name,
+               products.default_image,
                products.size,
                products.stock,
                products.price

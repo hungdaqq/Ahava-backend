@@ -47,7 +47,8 @@ func UserRoutes(
 		home := engine.Group("/home")
 		{
 			home.POST("/search", productHandler.SearchProducts)
-			home.GET("/search", productHandler.GetSearchHistory)
+			home.GET("/category", categoryHandler.GetCategory)
+			// home.GET("/search", productHandler.GetSearchHistory)
 		}
 
 		product := engine.Group("/product")
@@ -64,21 +65,14 @@ func UserRoutes(
 		profile := engine.Group("/profile")
 		{
 			profile.GET("/detail", userHandler.GetUserDetails)
-			profile.GET("/address", userHandler.GetAddresses)
-			profile.POST("/address", userHandler.AddAddress)
-			profile.PUT("/address", userHandler.UpdateAddress)
-			profile.DELETE("/address", userHandler.DeleteAddress)
-
+			address := profile.Group("/address")
+			{
+				address.GET("", userHandler.GetAddresses)
+				address.POST("", userHandler.AddAddress)
+				address.PUT("/:address_id", userHandler.UpdateAddress)
+				address.DELETE("/:address_id", userHandler.DeleteAddress)
+			}
 			// profile.GET("/reference-link", userHandler.GetMyReferenceLink)
-
-			// orders := profile.Group("/orders")
-			// {
-			// 	orders.GET("", orderHandler.GetOrders)
-			// 	orders.GET("/:id", orderHandler.GetIndividualOrderDetails)
-			// 	orders.DELETE("", orderHandler.CancelOrder)
-			// 	orders.PUT("/return", orderHandler.ReturnOrder)
-			// }
-
 			edit := profile.Group("/edit")
 			{
 				edit.PUT("", userHandler.EditProfile)
@@ -100,7 +94,7 @@ func UserRoutes(
 
 		wishlist := engine.Group("/wishlist")
 		{
-			wishlist.POST("/:product_id", wishlisthandler.AddToWishlist)
+			wishlist.POST("", wishlisthandler.AddToWishlist)
 			wishlist.GET("", wishlisthandler.GetWishList)
 			wishlist.DELETE("/:product_id", wishlisthandler.RemoveFromWishlist)
 		}

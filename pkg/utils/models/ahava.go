@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type AdminLogin struct {
 	Email    string `json:"email,omitempty" validate:"required"`
@@ -14,23 +16,14 @@ type AdminDetailsResponse struct {
 }
 
 type Category struct {
-	ID           uint   `json:"id"`
-	CategoryName string `json:"category_name" validate:"required"`
-	Description  string `json:"description" validate:"required"`
-}
-
-type CategoryResponse struct {
-	ID          uint   `json:"id" gorm:"unique;not null"`
-	Category    string `json:"Category"`
-	ProductName string `json:"product_name"`
-	Size        string `json:"size"`
-	Stock       int    `json:"stock"`
-	Price       uint64 `json:"price"`
+	ID          uint   `json:"id"`
+	Name        string `json:"name" validate:"required"`
+	Description string `json:"description" validate:"required"`
 }
 
 type UpdateCategory struct {
-	CategoryName string `json:"category_name"`
-	Description  string `json:"description"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 type ListProducts struct {
@@ -41,16 +34,19 @@ type ListProducts struct {
 }
 
 type Products struct {
-	ID              uint   `json:"id"`
-	CategoryID      uint   `json:"category_id"`
-	ProductName     string `json:"product_name"`
-	Size            string `json:"size"`
-	Stock           uint   `json:"stock"`
-	Image           string `json:"image"`
-	Price           uint64 `json:"price"`
-	DiscountedPrice uint64 `json:"discounted_price"`
-	Description     string `json:"description"`
-	HowToUse        string `json:"how_to_use"`
+	ID               uint   `json:"id"`
+	CategoryID       uint   `json:"category_id"`
+	Name             string `json:"name"`
+	Size             string `json:"size"`
+	Stock            uint   `json:"stock"`
+	DefaultImage     string `json:"default_image"`
+	Images           string `json:"images"`
+	Price            uint64 `json:"price"`
+	DiscountedPrice  uint64 `json:"discounted_price"`
+	ShortDescription string `json:"short_description"`
+	Description      string `json:"description"`
+	HowToUse         string `json:"how_to_use"`
+	IsFeatured       bool   `json:"is_featured"`
 }
 
 type ChangePassword struct {
@@ -60,25 +56,29 @@ type ChangePassword struct {
 }
 
 type UserSignInResponse struct {
-	ID       uint   `json:"id"`
-	UserID   uint   `json:"user_id"`
-	Name     string `json:"name"`
-	Email    string `json:"email" validate:"email"`
-	Phone    string `json:"phone"`
-	Password string `json:"password"`
+	ID        uint   `json:"id"`
+	UserID    uint   `json:"user_id"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	Phone     string `json:"phone"`
+	Password  string `json:"password"`
+	BirthDate string `json:"birth_date"`
+	Gender    string `json:"gender"`
 }
 
 type UserDetailsResponse struct {
 	ID        uint      `json:"id"`
+	Username  string    `json:"username"`
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
 	Phone     string    `json:"phone"`
+	Gender    string    `json:"gender"`
 	BirthDate time.Time `json:"birth_date"`
 }
 
 type UserLogin struct {
-	Email    string `json:"email" validate:"email"`
-	Phone    string `json:"phone"`
+	Username string `json:"username" validate:"required"`
+	Email    string `json:"email" validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
 
@@ -89,7 +89,9 @@ type TokenUsers struct {
 
 type UserDetails struct {
 	Name            string    `json:"name"`
+	Username        string    `json:"username"`
 	Email           string    `json:"email" validate:"email"`
+	Gender          string    `json:"gender"`
 	Phone           string    `json:"phone"`
 	Password        string    `json:"password"`
 	ConfirmPassword string    `json:"confirmpassword"`
@@ -118,8 +120,8 @@ type EditProfile struct {
 type CartItem struct {
 	CartID              uint   `json:"cart_id"`
 	ProductID           uint   `json:"product_id"`
-	ProductName         string `json:"product_name"`
-	Image               string `json:"image"`
+	ProductName         string `json:"name"`
+	DefaultImage        string `json:"default_image"`
 	Quantity            uint   `json:"quantity"`
 	ItemPrice           uint64 `json:"item_price"`
 	ItemDiscountedPrice uint64 `json:"item_discounted_price"`
@@ -174,6 +176,10 @@ type Address struct {
 type Wishlist struct {
 	ID        uint `json:"id"`
 	UserID    uint `json:"user_id"`
+	ProductID uint `json:"product_id"`
+}
+
+type AddToWishlist struct {
 	ProductID uint `json:"product_id"`
 }
 

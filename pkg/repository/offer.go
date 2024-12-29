@@ -2,8 +2,8 @@ package repository
 
 import (
 	"ahava/pkg/domain"
+	errors "ahava/pkg/utils/errors"
 	"ahava/pkg/utils/models"
-	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -58,7 +58,7 @@ func (repo *offerRepository) ExpireOffer(product_id uint) (models.Offer, error) 
 	}
 
 	if result.RowsAffected == 0 {
-		return models.Offer{}, errors.New("no matching offer found")
+		return models.Offer{}, errors.ErrEntityNotFound
 	}
 
 	return offer, nil
@@ -79,7 +79,7 @@ func (repo *offerRepository) UpdateOffer(product_id uint, model models.Offer) (m
 	}
 
 	if result.RowsAffected == 0 {
-		return models.Offer{}, errors.New("no matching offer found")
+		return models.Offer{}, errors.ErrEntityNotFound
 	}
 
 	return offer, nil

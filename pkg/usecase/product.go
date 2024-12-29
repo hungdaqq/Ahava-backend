@@ -8,18 +8,17 @@ import (
 )
 
 type ProductUseCase interface {
-	AddProduct(product models.Products, image *multipart.FileHeader) (models.Products, error)
+	AddProduct(product models.Products, default_image *multipart.FileHeader, images []*multipart.FileHeader) (models.Products, error)
 	UpdateProduct(uint, models.Products) (models.Products, error)
 	UpdateProductImage(product_id uint, file *multipart.FileHeader) (models.Products, error)
-	DeleteProduct(product_id string) error
-
+	DeleteProduct(product_id uint) error
 	GetProductDetails(product_id uint) (models.Products, error)
-	ListCategoryProducts(category_id uint) (models.Products, error)
+	ListCategoryProducts(category_id uint) ([]models.Products, error)
 	ListProductsForAdmin(limit, offest int) (models.ListProducts, error)
 	ListFeaturedProducts() ([]models.Products, error)
 
-	SearchProducts(user_id uint, key string) ([]models.Products, error)
-	GetSearchHistory(user_id uint) ([]models.SearchHistory, error)
+	SearchProducts(key string) ([]models.Products, error)
+	// GetSearchHistory(user_id uint) ([]models.SearchHistory, error)
 }
 
 type productUseCase struct {
@@ -43,21 +42,35 @@ func NewProductUseCase(
 	}
 }
 
-func (i *productUseCase) AddProduct(product models.Products, image *multipart.FileHeader) (models.Products, error) {
+func (i *productUseCase) AddProduct(product models.Products, default_image *multipart.FileHeader, images []*multipart.FileHeader) (models.Products, error) {
 
-	url, err := i.helper.AddImageToS3(image, "ahava")
+	default_image_url, err := i.helper.AddImageToS3(default_image, "ahava")
 	if err != nil {
 		return models.Products{}, err
 	}
 
-	product.Image = url
-	ProductResponse, err := i.repository.AddProduct(product)
+	var urls string
+
+	for idx, image := range images {
+		url, err := i.helper.AddImageToS3(image, "ahava")
+		if err != nil {
+			return models.Products{}, err
+		}
+
+		if idx > 0 {
+			urls += "," // Add a comma before every subsequent URL (except the first one)
+		}
+		urls += url // Append the URL
+	}
+
+	product.DefaultImage = default_image_url
+	product.Images = urls
+	result, err := i.repository.AddProduct(product)
 	if err != nil {
 		return models.Products{}, err
 	}
 
-	return ProductResponse, nil
-
+	return result, nil
 }
 
 func (i *productUseCase) UpdateProductImage(id uint, file *multipart.FileHeader) (models.Products, error) {
@@ -86,45 +99,55 @@ func (i *productUseCase) UpdateProduct(id uint, model models.Products) (models.P
 	}
 
 	return result, nil
-
 }
 
-func (i *productUseCase) DeleteProduct(productID string) error {
+func (i *productUseCase) DeleteProduct(product_id uint) error {
 
-	err := i.repository.DeleteProduct(productID)
+	err := i.repository.DeleteProduct(product_id)
 	if err != nil {
 		return err
 	}
 	return nil
-
 }
 
-func (i *productUseCase) GetProductDetails(id uint) (models.Products, error) {
+func (i *productUseCase) GetProductDetails(product_id uint) (models.Products, error) {
 
-	product, err := i.repository.GetProductDetails(id)
+	product, err := i.repository.GetProductDetails(product_id)
 	if err != nil {
 		return models.Products{}, err
 	}
 
-	offerPercentage, err := i.offerRepository.FindOfferRate(product.CategoryID)
+	offerPercentage, err := i.offerRepository.FindOfferRate(product.ID)
 	if err != nil {
 		return models.Products{}, err
 	}
 
 	if offerPercentage > 0 {
-		discount := (product.Price * uint64(offerPercentage)) / 100
-		product.DiscountedPrice = product.Price - discount
+		product.DiscountedPrice = product.Price - (product.Price*uint64(offerPercentage))/100
+	} else {
+		product.DiscountedPrice = product.Price
 	}
 
 	return product, nil
-
 }
 
-func (i *productUseCase) ListCategoryProducts(category_id uint) (models.Products, error) {
+func (i *productUseCase) ListCategoryProducts(category_id uint) ([]models.Products, error) {
 
 	products, err := i.repository.ListCategoryProducts(category_id)
 	if err != nil {
-		return models.Products{}, err
+		return nil, err
+	}
+
+	for idx := range products {
+		offerPercentage, err := i.offerRepository.FindOfferRate(products[idx].CategoryID)
+		if err != nil {
+			return nil, err
+		}
+		if offerPercentage > 0 {
+			products[idx].DiscountedPrice = products[idx].Price - (products[idx].Price*uint64(offerPercentage))/100
+		} else {
+			products[idx].DiscountedPrice = products[idx].Price
+		}
 	}
 
 	return products, nil
@@ -135,6 +158,18 @@ func (i *productUseCase) ListFeaturedProducts() ([]models.Products, error) {
 	products, err := i.repository.ListFeaturedProducts()
 	if err != nil {
 		return []models.Products{}, err
+	}
+
+	for idx := range products {
+		offerPercentage, err := i.offerRepository.FindOfferRate(products[idx].CategoryID)
+		if err != nil {
+			return nil, err
+		}
+		if offerPercentage > 0 {
+			products[idx].DiscountedPrice = products[idx].Price - (products[idx].Price*uint64(offerPercentage))/100
+		} else {
+			products[idx].DiscountedPrice = products[idx].Price
+		}
 	}
 
 	return products, nil
@@ -185,64 +220,50 @@ func (i *productUseCase) ListProductsForAdmin(limit, offset int) (models.ListPro
 		return models.ListProducts{}, err
 	}
 
-	// //loop inside products and then calculate discounted price of each then return
-	// for j := range listProducts.Products {
-	// 	discount_percentage, err := i.offerRepository.FindDiscountPercentage(listProducts.Products[j].CategoryID)
-	// 	if err != nil {
-	// 		return models.ListProducts{}, errors.New("there was some error in finding the discounted prices")
-	// 	}
-	// 	var discount float64
-
-	// 	if discount_percentage > 0 {
-	// 		discount = (listProducts.Products[j].Price * float64(discount_percentage)) / 100
-	// 	}
-
-	// 	listProducts.Products[j].DiscountedPrice = listProducts.Products[j].Price - discount
-
-	// }
+	for idx := range listProducts.Products {
+		offerPercentage, err := i.offerRepository.FindOfferRate(listProducts.Products[idx].CategoryID)
+		if err != nil {
+			return models.ListProducts{}, err
+		}
+		if offerPercentage > 0 {
+			listProducts.Products[idx].DiscountedPrice = listProducts.Products[idx].Price - (listProducts.Products[idx].Price*uint64(offerPercentage))/100
+		} else {
+			listProducts.Products[idx].DiscountedPrice = listProducts.Products[idx].Price
+		}
+	}
 
 	return listProducts, nil
-
 }
 
-func (i *productUseCase) SearchProducts(user_id uint, key string) ([]models.Products, error) {
+func (i *productUseCase) SearchProducts(key string) ([]models.Products, error) {
 
-	productDetails, err := i.repository.SearchProducts(key)
+	products, err := i.repository.SearchProducts(key)
 	if err != nil {
 		return []models.Products{}, err
 	}
 
-	err = i.repository.SaveSearchHistory(user_id, key)
-	if err != nil {
-		return []models.Products{}, err
+	for idx := range products {
+		offerPercentage, err := i.offerRepository.FindOfferRate(products[idx].CategoryID)
+		if err != nil {
+			return nil, err
+		}
+		if offerPercentage > 0 {
+			products[idx].DiscountedPrice = products[idx].Price - (products[idx].Price*uint64(offerPercentage))/100
+		} else {
+			products[idx].DiscountedPrice = products[idx].Price
+		}
 	}
 
-	return productDetails, nil
-	// //loop inside products and then calculate discounted price of each then return
-	// for j := range productDetails {
-	// 	discount_percentage, err := i.offerRepository.FindDiscountPercentage(productDetails[j].CategoryID)
-	// 	if err != nil {
-	// 		return []models.Products{}, errors.New("there was some error in finding the discounted prices")
-	// 	}
-	// 	var discount float64
-
-	// 	if discount_percentage > 0 {
-	// 		discount = (productDetails[j].Price * float64(discount_percentage)) / 100
-	// 	}
-
-	// 	productDetails[j].DiscountedPrice = productDetails[j].Price - discount
-
-	// }
-
+	return products, nil
 }
 
-func (i *productUseCase) GetSearchHistory(user_id uint) ([]models.SearchHistory, error) {
+// func (i *productUseCase) GetSearchHistory(user_id uint) ([]models.SearchHistory, error) {
 
-	searchHistory, err := i.repository.GetSearchHistory(user_id)
-	if err != nil {
-		return []models.SearchHistory{}, err
-	}
+// 	searchHistory, err := i.repository.GetSearchHistory(user_id)
+// 	if err != nil {
+// 		return []models.SearchHistory{}, err
+// 	}
 
-	return searchHistory, nil
+// 	return searchHistory, nil
 
-}
+// }

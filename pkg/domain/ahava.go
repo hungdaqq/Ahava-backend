@@ -107,38 +107,41 @@ type OrderDetailsWithImages struct {
 }
 
 type Products struct {
+	ID               uint      `json:"id" gorm:"primarykey"`
+	CategoryID       uint      `json:"category_id" gorm:"not null"`
+	Category         Category  `json:"-" gorm:"foreignkey:CategoryID;constraint:OnDelete:CASCADE"`
+	Name             string    `json:"name"`
+	DefaultImage     string    `json:"default_image"`
+	Images           string    `json:"images"`
+	Size             string    `json:"size"`
+	Stock            uint      `json:"stock"`
+	Price            uint64    `json:"price"`
+	ShortDescription string    `json:"short_description"`
+	Description      string    `json:"description"`
+	HowToUse         string    `json:"how_to_use"`
+	IsFeatured       bool      `json:"is_featured" gorm:"default:false"`
+	CreateAt         time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
+	UpdateAt         time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
+}
+
+type Category struct {
 	ID          uint      `json:"id" gorm:"primarykey"`
-	CategoryID  uint      `json:"category_id" gorm:"not null"`
-	Category    Category  `json:"-" gorm:"foreignkey:CategoryID;constraint:OnDelete:CASCADE"`
-	ProductName string    `json:"product_name"`
-	Image       string    `json:"image"`
-	Size        string    `json:"size"`
-	Stock       uint      `json:"stock"`
-	Price       uint64    `json:"price"`
+	Name        string    `json:"name"`
 	Description string    `json:"description"`
-	HowToUse    string    `json:"how_to_use"`
-	IsFeatured  bool      `json:"is_featured" gorm:"default:false"`
 	CreateAt    time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateAt    time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
-type Category struct {
-	ID           uint      `json:"id" gorm:"primarykey"`
-	CategoryName string    `json:"category_name"`
-	Description  string    `json:"description"`
-	CreateAt     time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdateAt     time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
-}
-
 type Users struct {
-	ID        uint      `json:"id" gorm:"unique;not null"`
-	Name      string    `json:"name"`
-	Email     string    `json:"email" validate:"email"`
-	Password  string    `json:"password" validate:"min=8,max=20"`
-	Phone     string    `json:"phone"`
-	BirthDate time.Time `json:"birth_date"`
-	// Address      string    `json:"address"`
-	Blocked      bool      `json:"blocked" gorm:"default:false"`
+	ID           uint      `json:"id" gorm:"unique;not null"`
+	Name         string    `json:"name"`
+	Username     string    `json:"username" gorm:"unique;not null"`
+	Email        string    `json:"email" validate:"email" gorm:"unique;not null"`
+	Gender       string    `json:"gender"`
+	Password     string    `json:"password" validate:"min=8,max=20"`
+	Phone        string    `json:"phone"`
+	BirthDate    time.Time `json:"birth_date"`
+	IsBlocked    bool      `json:"is_blocked" gorm:"default:false"`
 	IsAdmin      bool      `json:"is_admin" gorm:"default:false"`
 	ReferralCode string    `json:"referral_code"`
 	CreateAt     time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`

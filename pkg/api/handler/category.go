@@ -51,7 +51,7 @@ func (Cat *CategoryHandler) AddCategory(c *gin.Context) {
 
 func (Cat *CategoryHandler) UpdateCategory(c *gin.Context) {
 
-	categoryID, err := strconv.Atoi(c.Param("category_id"))
+	category_id, err := strconv.Atoi(c.Param("category_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Parameter problem", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -65,7 +65,7 @@ func (Cat *CategoryHandler) UpdateCategory(c *gin.Context) {
 		return
 	}
 
-	a, err := Cat.CategoryUseCase.UpdateCategory(uint(categoryID), p.CategoryName, p.Description)
+	a, err := Cat.CategoryUseCase.UpdateCategory(uint(category_id), p.Name, p.Description)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not update the Category", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -79,14 +79,14 @@ func (Cat *CategoryHandler) UpdateCategory(c *gin.Context) {
 
 func (Cat *CategoryHandler) DeleteCategory(c *gin.Context) {
 
-	categoryID, err := strconv.Atoi(c.Param("category_id"))
+	category_id, err := strconv.Atoi(c.Param("category_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	err = Cat.CategoryUseCase.DeleteCategory(uint(categoryID))
+	err = Cat.CategoryUseCase.DeleteCategory(uint(category_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)

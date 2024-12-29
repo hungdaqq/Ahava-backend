@@ -24,20 +24,19 @@ func NewProductHandler(usecase services.ProductUseCase) *ProductHandler {
 func (i *ProductHandler) AddProduct(c *gin.Context) {
 
 	var product models.Products
-	categoryID, err := strconv.Atoi(c.Request.FormValue("category_id"))
+	category_id, err := strconv.Atoi(c.Request.FormValue("category_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "form file error", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	p, err := strconv.Atoi(c.Request.FormValue("price"))
+	price, err := strconv.Atoi(c.Request.FormValue("price"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "form file error", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-	price := uint64(p)
 	stock, err := strconv.Atoi(c.Request.FormValue("stock"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "form file error", nil, err.Error())
@@ -45,37 +44,52 @@ func (i *ProductHandler) AddProduct(c *gin.Context) {
 		return
 	}
 
-	product.CategoryID = uint(categoryID)
-	product.ProductName = c.Request.FormValue("product_name")
+	product.CategoryID = uint(category_id)
+	product.Name = c.Request.FormValue("name")
 	product.Size = c.Request.FormValue("size")
-	product.Price = price
+	product.Price = uint64(price)
 	product.Stock = uint(stock)
 	product.Description = c.Request.FormValue("description")
+	product.ShortDescription = c.Request.FormValue("short_description")
 	product.HowToUse = c.Request.FormValue("how_to_use")
 
-	file, err := c.FormFile("image")
+	default_image, err := c.FormFile("default_image")
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "retrieving image from form error", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	ProductResponse, err := i.ProductUseCase.AddProduct(product, file)
+	form, err := c.MultipartForm()
+	if err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "retrieving image from form error", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+	images := form.File["images"]
+
+	result, err := i.ProductUseCase.AddProduct(product, default_image, images)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add the Product", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	successRes := response.ClientResponse(http.StatusOK, "Successfully added Product", ProductResponse, nil)
+	successRes := response.ClientResponse(http.StatusOK, "Successfully added Product", result, nil)
 	c.JSON(http.StatusOK, successRes)
 
 }
 
 func (i *ProductHandler) DeleteProduct(c *gin.Context) {
 
-	productID := c.Param("product_id")
-	err := i.ProductUseCase.DeleteProduct(productID)
+	product_id, err := strconv.Atoi(c.Param("product_id"))
+	if err != nil {
+		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
+		c.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+
+	err = i.ProductUseCase.DeleteProduct(uint(product_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -160,7 +174,7 @@ func (i *ProductHandler) ListFeaturedProducts(c *gin.Context) {
 
 func (i *ProductHandler) SearchProducts(c *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	// user_id := c.MustGet("id").(int)
 	var searchkey models.Search
 	if err := c.BindJSON(&searchkey); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
@@ -168,7 +182,7 @@ func (i *ProductHandler) SearchProducts(c *gin.Context) {
 		return
 	}
 
-	results, err := i.ProductUseCase.SearchProducts(uint(user_id), searchkey.Key)
+	results, err := i.ProductUseCase.SearchProducts(searchkey.Key)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve the records", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -179,19 +193,19 @@ func (i *ProductHandler) SearchProducts(c *gin.Context) {
 	c.JSON(http.StatusOK, successRes)
 }
 
-func (i *ProductHandler) GetSearchHistory(c *gin.Context) {
+// func (i *ProductHandler) GetSearchHistory(c *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
-	results, err := i.ProductUseCase.GetSearchHistory(uint(user_id))
-	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve the records", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
+// 	user_id := c.MustGet("id").(int)
+// 	results, err := i.ProductUseCase.GetSearchHistory(uint(user_id))
+// 	if err != nil {
+// 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve the records", nil, err.Error())
+// 		c.JSON(http.StatusBadRequest, errorRes)
+// 		return
+// 	}
 
-	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", results, nil)
-	c.JSON(http.StatusOK, successRes)
-}
+// 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", results, nil)
+// 	c.JSON(http.StatusOK, successRes)
+// }
 
 func (i *ProductHandler) UpdateProductImage(c *gin.Context) {
 
@@ -202,7 +216,7 @@ func (i *ProductHandler) UpdateProductImage(c *gin.Context) {
 		return
 	}
 
-	file, err := c.FormFile("image")
+	file, err := c.FormFile("default_image")
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "retrieving image from form error", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)

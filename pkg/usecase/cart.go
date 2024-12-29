@@ -179,13 +179,13 @@ func (i *cartUseCase) UpdateQuantity(cart_id uint, quantity uint) (models.CartDe
 // 		return models.GetCartResponse{}, errors.New(InternalError)
 // 	}
 // 	//find product names
-// 	var product_names []string
+// 	var names []string
 // 	for i := range products {
-// 		product_name, err := u.repo.FindProductNames(products[i])
+// 		name, err := u.repo.FindProductNames(products[i])
 // 		if err != nil {
 // 			return models.GetCartResponse{}, errors.New(InternalError)
 // 		}
-// 		product_names = append(product_names, product_name)
+// 		names = append(names, name)
 // 	}
 
 // 	//find quantity
@@ -235,10 +235,10 @@ func (i *cartUseCase) UpdateQuantity(cart_id uint, quantity uint) (models.CartDe
 // 	}
 
 // 	var getcart []models.GetCart
-// 	for i := range product_names {
+// 	for i := range names {
 // 		var get models.GetCart
 // 		get.ID = products[i]
-// 		get.ProductName = product_names[i]
+// 		get.ProductName = names[i]
 // 		get.Image = images[i]
 // 		get.Category_id = categories[i]
 // 		get.Quantity = quantity[i]

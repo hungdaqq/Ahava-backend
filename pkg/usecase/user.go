@@ -76,20 +76,20 @@ func (u *userUseCase) UserSignUp(user models.UserDetails, ref string) (models.To
 
 	hashedPassword, err := u.helper.PasswordHashing(user.Password)
 	if err != nil {
-		return models.TokenUsers{}, errors.New(ErrorHashingPassword)
+		return models.TokenUsers{}, err
 	}
 
 	user.Password = hashedPassword
 
 	referral, err := u.helper.GenerateRefferalCode()
 	if err != nil {
-		return models.TokenUsers{}, errors.New(InternalError)
+		return models.TokenUsers{}, err
 	}
 
 	// add user details to the database
 	userData, err := u.userRepo.UserSignUp(user, referral)
 	if err != nil {
-		return models.TokenUsers{}, errors.New("could not add the user")
+		return models.TokenUsers{}, err
 	}
 	user.Address.Name = user.Name
 	user.Address.Phone = user.Phone
@@ -97,13 +97,13 @@ func (u *userUseCase) UserSignUp(user models.UserDetails, ref string) (models.To
 
 	_, err = u.userRepo.AddAddress(userData.ID, user.Address)
 	if err != nil {
-		return models.TokenUsers{}, errors.New("could not add the address")
+		return models.TokenUsers{}, err
 	}
 
 	// crete a JWT token string for the user
 	tokenString, err := u.helper.GenerateTokenClients(userData)
 	if err != nil {
-		return models.TokenUsers{}, errors.New("could not create token due to some internal error")
+		return models.TokenUsers{}, err
 	}
 
 	// //credit 20 rupees to the user which is the source of the reference code
@@ -125,12 +125,12 @@ func (u *userUseCase) UserSignUp(user models.UserDetails, ref string) (models.To
 func (u *userUseCase) LoginHandler(user models.UserLogin) (models.TokenUsers, error) {
 
 	// checking if a username exist with this email address
-	ok := u.userRepo.CheckUserAvailability(user.Email, user.Phone)
+	ok := u.userRepo.CheckUserAvailability(user.Email, user.Username)
 	if !ok {
 		return models.TokenUsers{}, errors.New("the user does not exist")
 	}
 
-	isBlocked, err := u.userRepo.UserBlockStatus(user.Email)
+	isBlocked, err := u.userRepo.UserBlockStatus(user.Email, user.Username)
 	if err != nil {
 		return models.TokenUsers{}, errors.New(InternalError)
 	}
@@ -140,26 +140,26 @@ func (u *userUseCase) LoginHandler(user models.UserLogin) (models.TokenUsers, er
 	}
 
 	// Get the user details in order to check the password, in this case ( The same function can be reused in future )
-	user_details, err := u.userRepo.FindUserByEmail(user)
+	details, err := u.userRepo.FindUser(user)
 	if err != nil {
-		return models.TokenUsers{}, errors.New(InternalError)
+		return models.TokenUsers{}, err
 	}
 
-	err = u.helper.CompareHashAndPassword(user_details.Password, user.Password)
+	err = u.helper.CompareHashAndPassword(details.Password, user.Password)
 	if err != nil {
 		return models.TokenUsers{}, errors.New("password incorrect")
 	}
 
 	var userDetails models.UserDetailsResponse
 
-	userDetails.ID = user_details.ID
-	userDetails.Name = user_details.Name
-	userDetails.Email = user_details.Email
-	userDetails.Phone = user_details.Phone
+	userDetails.ID = details.ID
+	userDetails.Name = details.Name
+	userDetails.Email = details.Email
+	userDetails.Phone = details.Phone
 
 	tokenString, err := u.helper.GenerateTokenClients(userDetails)
 	if err != nil {
-		return models.TokenUsers{}, errors.New("could not create token")
+		return models.TokenUsers{}, err
 	}
 
 	return models.TokenUsers{
@@ -173,7 +173,7 @@ func (i *userUseCase) AddAddress(user_id uint, address models.Address) (models.A
 
 	addAddress, err := i.userRepo.AddAddress(user_id, address)
 	if err != nil {
-		return models.Address{}, errors.New("error in adding address")
+		return models.Address{}, err
 	}
 
 	return addAddress, nil
@@ -184,7 +184,7 @@ func (i *userUseCase) UpdateAddress(address_id uint, address models.Address) (mo
 
 	updateAddress, err := i.userRepo.UpdateAddress(address_id, address)
 	if err != nil {
-		return models.Address{}, errors.New("error in updating address")
+		return models.Address{}, err
 	}
 
 	return updateAddress, nil
@@ -195,7 +195,7 @@ func (i *userUseCase) DeleteAddress(address_id uint) error {
 
 	err := i.userRepo.DeleteAddress(address_id)
 	if err != nil {
-		return errors.New("error in deleting address")
+		return err
 	}
 
 	return nil
@@ -206,7 +206,7 @@ func (i *userUseCase) GetAddresses(user_id uint) ([]models.Address, error) {
 
 	addresses, err := i.userRepo.GetAddresses(user_id)
 	if err != nil {
-		return []models.Address{}, errors.New("error in getting addresses")
+		return []models.Address{}, err
 	}
 
 	return addresses, nil
@@ -217,7 +217,7 @@ func (u *userUseCase) GetUserDetails(id uint) (models.UserDetailsResponse, error
 
 	details, err := u.userRepo.GetUserDetails(id)
 	if err != nil {
-		return models.UserDetailsResponse{}, errors.New("error in getting details")
+		return models.UserDetailsResponse{}, err
 	}
 
 	return details, nil
@@ -233,16 +233,16 @@ func (u *userUseCase) ChangePassword(id uint, old string, password string, repas
 
 	err = u.helper.CompareHashAndPassword(userPassword, old)
 	if err != nil {
-		return errors.New("password incorrect")
+		return err
 	}
 
 	if password != repassword {
-		return errors.New("passwords does not match")
+		return err
 	}
 
 	newpassword, err := u.helper.PasswordHashing(password)
 	if err != nil {
-		return errors.New("error in hashing password")
+		return err
 	}
 
 	return u.userRepo.ChangePassword(id, string(newpassword))

@@ -1,14 +1,15 @@
 package handler
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
 	"ahava/pkg/helper"
 	services "ahava/pkg/usecase"
+	errors "ahava/pkg/utils/errors"
 	models "ahava/pkg/utils/models"
+
 	response "ahava/pkg/utils/response"
 
 	"github.com/gin-gonic/gin"
@@ -113,16 +114,6 @@ func (ad *AdminHandler) GetUsers(c *gin.Context) {
 
 }
 
-// @Summary		ADD NEW PAYMENT METHOD
-// @Description	admin can add new payment methods
-// @Tags			Admin
-// @Accept			json
-// @Produce		json
-// @Security		Bearer
-// @Param			payment	body		models.NewPaymentMethod	true	"payment method"
-// @Success		200		{object}	response.Response{}
-// @Failure		500		{object}	response.Response{}
-// @Router			/admin/payment/payment-method/new [post]
 func (i *AdminHandler) NewPaymentMethod(c *gin.Context) {
 
 	var method models.NewPaymentMethod
@@ -189,7 +180,7 @@ func (a *AdminHandler) ValidateRefreshTokenAndCreateNewAccess(c *gin.Context) {
 	})
 	if err != nil {
 		// The refresh token is invalid.
-		c.AbortWithError(401, errors.New("refresh token is invalid:user have to login again"))
+		c.AbortWithError(401, errors.ErrInvalidToken)
 		return
 	}
 
@@ -204,7 +195,7 @@ func (a *AdminHandler) ValidateRefreshTokenAndCreateNewAccess(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	newAccessToken, err := token.SignedString([]byte("accesssecret"))
 	if err != nil {
-		c.AbortWithError(500, errors.New("error in creating new access token"))
+		c.AbortWithError(500, errors.ErrCreateToken)
 	}
 
 	c.JSON(200, newAccessToken)

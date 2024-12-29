@@ -77,10 +77,10 @@ func (ad *adminUseCase) BlockUser(user_id uint) error {
 		return err
 	}
 
-	if user.Blocked {
+	if user.IsBlocked {
 		return errors.New("already blocked")
 	} else {
-		user.Blocked = true
+		user.IsBlocked = true
 	}
 
 	err = ad.adminRepository.UpdateBlockUserByID(user)
@@ -100,8 +100,8 @@ func (ad *adminUseCase) UnBlockUser(user_id uint) error {
 		return err
 	}
 
-	if user.Blocked {
-		user.Blocked = false
+	if user.IsBlocked {
+		user.IsBlocked = false
 	} else {
 		return errors.New("already unblocked")
 	}
