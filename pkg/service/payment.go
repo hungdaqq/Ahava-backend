@@ -1,4 +1,4 @@
-package usecase
+package service
 
 import (
 	repository "ahava/pkg/repository"
@@ -7,21 +7,21 @@ import (
 	"math/rand"
 )
 
+type PaymentService interface {
+	CreateSePayQR(user_id, order_id uint, amount uint64) (models.CreateQR, error)
+	Webhook(transaction models.Transaction) error
+}
+
 type paymentUsecase struct {
 	repository      repository.PaymentRepository
 	orderRepository repository.OrderRepository
 }
 
-func NewPaymentUseCase(repo repository.PaymentRepository, orderRepository repository.OrderRepository) *paymentUsecase {
+func NewPaymentService(repo repository.PaymentRepository, orderRepository repository.OrderRepository) PaymentService {
 	return &paymentUsecase{
 		repository:      repo,
 		orderRepository: orderRepository,
 	}
-}
-
-type PaymentUseCase interface {
-	CreateSePayQR(user_id, order_id uint, amount uint64) (models.CreateQR, error)
-	Webhook(transaction models.Transaction) error
 }
 
 func (p *paymentUsecase) CreateSePayQR(user_id, order_id uint, amount uint64) (models.CreateQR, error) {

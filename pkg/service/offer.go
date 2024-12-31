@@ -1,28 +1,28 @@
-package usecase
+package service
 
 import (
 	repository "ahava/pkg/repository"
 	"ahava/pkg/utils/models"
 )
 
-type offerUseCase struct {
-	repository repository.OfferRepository
-}
-
-type OfferUseCase interface {
+type OfferService interface {
 	AddNewOffer(model models.Offer) (models.Offer, error)
 	ExpireOffer(product_id uint) (models.Offer, error)
 	UpdateOffer(product_id uint, model models.Offer) (models.Offer, error)
 	GetOffers() ([]models.Offer, error)
 }
 
-func NewOfferUseCase(repo repository.OfferRepository) *offerUseCase {
-	return &offerUseCase{
+type offerService struct {
+	repository repository.OfferRepository
+}
+
+func NewOfferService(repo repository.OfferRepository) OfferService {
+	return &offerService{
 		repository: repo,
 	}
 }
 
-func (off *offerUseCase) AddNewOffer(model models.Offer) (models.Offer, error) {
+func (off *offerService) AddNewOffer(model models.Offer) (models.Offer, error) {
 
 	result, err := off.repository.AddNewOffer(model)
 	if err != nil {
@@ -32,7 +32,7 @@ func (off *offerUseCase) AddNewOffer(model models.Offer) (models.Offer, error) {
 	return result, nil
 }
 
-func (off *offerUseCase) UpdateOffer(product_id uint, model models.Offer) (models.Offer, error) {
+func (off *offerService) UpdateOffer(product_id uint, model models.Offer) (models.Offer, error) {
 
 	result, err := off.repository.UpdateOffer(product_id, model)
 	if err != nil {
@@ -42,7 +42,7 @@ func (off *offerUseCase) UpdateOffer(product_id uint, model models.Offer) (model
 	return result, nil
 }
 
-func (off *offerUseCase) ExpireOffer(product_id uint) (models.Offer, error) {
+func (off *offerService) ExpireOffer(product_id uint) (models.Offer, error) {
 
 	result, err := off.repository.ExpireOffer(product_id)
 	if err != nil {
@@ -52,7 +52,7 @@ func (off *offerUseCase) ExpireOffer(product_id uint) (models.Offer, error) {
 	return result, nil
 }
 
-func (o *offerUseCase) GetOffers() ([]models.Offer, error) {
+func (o *offerService) GetOffers() ([]models.Offer, error) {
 
 	offers, err := o.repository.GetOffers()
 	if err != nil {

@@ -1,34 +1,31 @@
-package usecase
+package service
 
 import (
 	repository "ahava/pkg/repository"
 	"ahava/pkg/utils/models"
 )
 
-type OrderUseCase interface {
+type OrderService interface {
 	PlaceOrder(order models.PlaceOrder) (models.Order, error)
 	GetOrderDetails(user_id, order_id uint) (models.Order, error)
 	UpdateOrder(order_id uint, updateOrder models.Order) (models.Order, error)
 }
 
-type orderUseCase struct {
+type orderService struct {
 	repository  repository.OrderRepository
-	cartUseCase CartUseCase
+	cartService CartService
 }
 
-func NewOrderUseCase(
-	repo repository.OrderRepository,
-	cartUseCase CartUseCase,
-) *orderUseCase {
-	return &orderUseCase{
+func NewOrderService(repo repository.OrderRepository, cartService CartService) OrderService {
+	return &orderService{
 		repository:  repo,
-		cartUseCase: cartUseCase,
+		cartService: cartService,
 	}
 }
 
-func (or *orderUseCase) PlaceOrder(placeOrder models.PlaceOrder) (models.Order, error) {
+func (or *orderService) PlaceOrder(placeOrder models.PlaceOrder) (models.Order, error) {
 
-	checkout, err := or.cartUseCase.CheckOut(placeOrder.UserID, placeOrder.CartIDs)
+	checkout, err := or.cartService.CheckOut(placeOrder.UserID, placeOrder.CartIDs)
 	if err != nil {
 		return models.Order{}, err
 	}
@@ -49,7 +46,7 @@ func (or *orderUseCase) PlaceOrder(placeOrder models.PlaceOrder) (models.Order, 
 	return order, nil
 }
 
-func (or *orderUseCase) GetOrderDetails(user_id, order_id uint) (models.Order, error) {
+func (or *orderService) GetOrderDetails(user_id, order_id uint) (models.Order, error) {
 
 	result, err := or.repository.GetOrderDetails(user_id, order_id)
 	if err != nil {
@@ -59,7 +56,7 @@ func (or *orderUseCase) GetOrderDetails(user_id, order_id uint) (models.Order, e
 	return result, nil
 }
 
-func (or *orderUseCase) UpdateOrder(order_id uint, updateOrder models.Order) (models.Order, error) {
+func (or *orderService) UpdateOrder(order_id uint, updateOrder models.Order) (models.Order, error) {
 
 	result, err := or.repository.UpdateOrder(order_id, updateOrder)
 	if err != nil {
@@ -69,7 +66,7 @@ func (or *orderUseCase) UpdateOrder(order_id uint, updateOrder models.Order) (mo
 	return result, nil
 }
 
-// func (or *orderUseCase) UpdateOrderPaidStatus(order_id uint, status string) error {
+// func (or *orderService) UpdateOrderPaidStatus(order_id uint, status string) error {
 
 // 	err := or.repository.UpdateOrderPaidStatus(order_id, status)
 // 	if err != nil {

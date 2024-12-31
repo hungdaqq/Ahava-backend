@@ -1,4 +1,4 @@
-package usecase
+package service
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 	"ahava/pkg/utils/models"
 )
 
-type UserUseCase interface {
+type UserService interface {
 	UserSignUp(user models.UserDetails, ref string) (models.TokenUsers, error)
 	LoginHandler(user models.UserLogin) (models.TokenUsers, error)
 	AddAddress(user_id uint, address models.Address) (models.Address, error)
@@ -28,7 +28,7 @@ type UserUseCase interface {
 	// GetMyReferenceLink(id uint) (string, error)
 }
 
-type userUseCase struct {
+type USERUSECASE struct {
 	userRepo repository.UserRepository
 	cfg      config.Config
 	// otpRepository     repository.OtpRepository
@@ -37,14 +37,14 @@ type userUseCase struct {
 	helper helper.Helper
 }
 
-func NewUserUseCase(repo repository.UserRepository,
+func NewUserService(repo repository.UserRepository,
 	cfg config.Config,
 	// otp repository.OtpRepository,
 	// inv repository.ProductRepository,
 	// order repository.OrderRepository,
-	h helper.Helper) *userUseCase {
+	h helper.Helper) UserService {
 
-	return &userUseCase{
+	return &USERUSECASE{
 		userRepo: repo,
 		cfg:      cfg,
 		// otpRepository:     otp,
@@ -57,7 +57,7 @@ func NewUserUseCase(repo repository.UserRepository,
 var InternalError = "Internal Server Error"
 var ErrorHashingPassword = "Error In Hashing Password"
 
-func (u *userUseCase) UserSignUp(user models.UserDetails, ref string) (models.TokenUsers, error) {
+func (u *USERUSECASE) UserSignUp(user models.UserDetails, ref string) (models.TokenUsers, error) {
 	// Check whether the user already exist. If yes, show the error message, since this is signUp
 	userExist := u.userRepo.CheckUserAvailability(user.Email, user.Phone)
 	if userExist {
@@ -122,7 +122,7 @@ func (u *userUseCase) UserSignUp(user models.UserDetails, ref string) (models.To
 	}, nil
 }
 
-func (u *userUseCase) LoginHandler(user models.UserLogin) (models.TokenUsers, error) {
+func (u *USERUSECASE) LoginHandler(user models.UserLogin) (models.TokenUsers, error) {
 
 	// checking if a username exist with this email address
 	ok := u.userRepo.CheckUserAvailability(user.Email, user.Username)
@@ -169,7 +169,7 @@ func (u *userUseCase) LoginHandler(user models.UserLogin) (models.TokenUsers, er
 
 }
 
-func (i *userUseCase) AddAddress(user_id uint, address models.Address) (models.Address, error) {
+func (i *USERUSECASE) AddAddress(user_id uint, address models.Address) (models.Address, error) {
 
 	addAddress, err := i.userRepo.AddAddress(user_id, address)
 	if err != nil {
@@ -180,7 +180,7 @@ func (i *userUseCase) AddAddress(user_id uint, address models.Address) (models.A
 
 }
 
-func (i *userUseCase) UpdateAddress(user_id, address_id uint, address models.Address) (models.Address, error) {
+func (i *USERUSECASE) UpdateAddress(user_id, address_id uint, address models.Address) (models.Address, error) {
 
 	updateAddress, err := i.userRepo.UpdateAddress(user_id, address_id, address)
 	if err != nil {
@@ -191,7 +191,7 @@ func (i *userUseCase) UpdateAddress(user_id, address_id uint, address models.Add
 
 }
 
-func (i *userUseCase) DeleteAddress(user_id, address_id uint) error {
+func (i *USERUSECASE) DeleteAddress(user_id, address_id uint) error {
 
 	err := i.userRepo.DeleteAddress(user_id, address_id)
 	if err != nil {
@@ -202,7 +202,7 @@ func (i *userUseCase) DeleteAddress(user_id, address_id uint) error {
 
 }
 
-func (i *userUseCase) GetAddresses(user_id uint) ([]models.Address, error) {
+func (i *USERUSECASE) GetAddresses(user_id uint) ([]models.Address, error) {
 
 	addresses, err := i.userRepo.GetAddresses(user_id)
 	if err != nil {
@@ -213,7 +213,7 @@ func (i *userUseCase) GetAddresses(user_id uint) ([]models.Address, error) {
 
 }
 
-func (u *userUseCase) GetUserDetails(id uint) (models.UserDetailsResponse, error) {
+func (u *USERUSECASE) GetUserDetails(id uint) (models.UserDetailsResponse, error) {
 
 	details, err := u.userRepo.GetUserDetails(id)
 	if err != nil {
@@ -224,7 +224,7 @@ func (u *userUseCase) GetUserDetails(id uint) (models.UserDetailsResponse, error
 
 }
 
-func (u *userUseCase) ChangePassword(id uint, old string, password string, repassword string) error {
+func (u *USERUSECASE) ChangePassword(id uint, old string, password string, repassword string) error {
 
 	userPassword, err := u.userRepo.GetPassword(id)
 	if err != nil {
@@ -249,7 +249,7 @@ func (u *userUseCase) ChangePassword(id uint, old string, password string, repas
 
 }
 
-// func (u *userUseCase) ForgotPasswordSend(phone string) error {
+// func (u *USERUSECASE) ForgotPasswordSend(phone string) error {
 
 // 	ok := u.otpRepository.FindUserByMobileNumber(phone)
 // 	if !ok {
@@ -266,7 +266,7 @@ func (u *userUseCase) ChangePassword(id uint, old string, password string, repas
 
 // }
 
-// func (u *userUseCase) ForgotPasswordVerifyAndChange(model models.ForgotVerify) error {
+// func (u *USERUSECASE) ForgotPasswordVerifyAndChange(model models.ForgotVerify) error {
 // 	u.helper.TwilioSetup(u.cfg.ACCOUNTSID, u.cfg.AUTHTOKEN)
 // 	err := u.helper.TwilioVerifyOTP(u.cfg.SERVICESID, model.Otp, model.Phone)
 // 	if err != nil {
@@ -291,7 +291,7 @@ func (u *userUseCase) ChangePassword(id uint, old string, password string, repas
 // 	return nil
 // }
 
-func (u *userUseCase) EditProfile(user_id uint, profile models.EditProfile) (models.UserDetailsResponse, error) {
+func (u *USERUSECASE) EditProfile(user_id uint, profile models.EditProfile) (models.UserDetailsResponse, error) {
 
 	result, err := u.userRepo.EditProfile(user_id, profile)
 	if err != nil {
@@ -302,7 +302,7 @@ func (u *userUseCase) EditProfile(user_id uint, profile models.EditProfile) (mod
 
 }
 
-// func (u *userUseCase) GetMyReferenceLink(id uint) (string, error) {
+// func (u *USERUSECASE) GetMyReferenceLink(id uint) (string, error) {
 
 // 	baseURL := "ahava.com/users/signup"
 

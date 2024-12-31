@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	services "ahava/pkg/usecase"
+	services "ahava/pkg/service"
 	models "ahava/pkg/utils/models"
 	response "ahava/pkg/utils/response"
 
@@ -11,17 +11,22 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type PaymentHandler struct {
-	orderUseCase services.PaymentUseCase
+type PaymentHandler interface {
+	CreateQR(ctx *gin.Context)
+	Webhook(ctx *gin.Context)
 }
 
-func NewPaymentHandler(usecase services.PaymentUseCase) *PaymentHandler {
-	return &PaymentHandler{
-		orderUseCase: usecase,
+type paymentHandler struct {
+	paymentService services.PaymentService
+}
+
+func NewPaymentHandler(service services.PaymentService) PaymentHandler {
+	return &paymentHandler{
+		paymentService: service,
 	}
 }
 
-func (h *PaymentHandler) CreateQR(c *gin.Context) {
+func (h *paymentHandler) CreateQR(c *gin.Context) {
 
 	user_id := c.MustGet("id").(int)
 
@@ -40,7 +45,7 @@ func (h *PaymentHandler) CreateQR(c *gin.Context) {
 		return
 	}
 
-	result, err := h.orderUseCase.CreateSePayQR(uint(user_id), model.OrderID, model.Amount)
+	result, err := h.paymentService.CreateSePayQR(uint(user_id), model.OrderID, model.Amount)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not create QR", nil, err.Error())
 		c.JSON(http.StatusBadRequest, errorRes)
@@ -51,7 +56,7 @@ func (h *PaymentHandler) CreateQR(c *gin.Context) {
 	c.JSON(http.StatusOK, successRes)
 }
 
-func (h *PaymentHandler) Webhook(c *gin.Context) {
+func (h *paymentHandler) Webhook(c *gin.Context) {
 
 	var model models.Transaction
 	err := c.BindJSON(&model)
@@ -61,7 +66,7 @@ func (h *PaymentHandler) Webhook(c *gin.Context) {
 		return
 	}
 
-	err = h.orderUseCase.Webhook(model)
+	err = h.paymentService.Webhook(model)
 	if err != nil {
 		errorRes := response.ClientWebhookResponse(false)
 		c.JSON(http.StatusBadRequest, errorRes)

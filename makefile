@@ -40,7 +40,7 @@ wire: ## Generate wire_gen.go
 
 mock: ##make mock files using mockgen
 	mockgen -source=pkg/repository/interface/user.go -destination=pkg/mock/mockrepo/user_mock.go -package=mockrepo
-	mockgen -source=pkg/usecase/interface/user.go -destination=pkg/mock/mockusecase/user_mock.go -package=mockusecase
+	mockgen -source=pkg/service/interface/user.go -destination=pkg/mock/mockservice/user_mock.go -package=mockservice
 	mockgen -source=pkg/repository/interface/product.go -destination=pkg/mock/mockrepo/product_mock.go -package=mockrepo
 	mockgen -source=pkg/repository/interface/order.go -destination=pkg/mock/mockrepo/order_mock.go -package=mockrepo
 

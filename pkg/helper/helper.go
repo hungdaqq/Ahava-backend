@@ -43,7 +43,7 @@ type helper struct {
 	cfg cfg.Config
 }
 
-func NewHelper(config cfg.Config) *helper {
+func NewHelper(config cfg.Config) Helper {
 	return &helper{
 		cfg: config,
 	}
@@ -58,7 +58,7 @@ type AuthCustomClaims struct {
 	jwt.StandardClaims
 }
 
-func (helper *helper) GenerateTokenAdmin(admin models.AdminDetailsResponse) (string, string, error) {
+func (h *helper) GenerateTokenAdmin(admin models.AdminDetailsResponse) (string, string, error) {
 	accessTokenClaims := &AuthCustomClaims{
 		ID:    admin.ID,
 		Email: admin.Email,

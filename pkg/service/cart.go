@@ -1,11 +1,11 @@
-package usecase
+package service
 
 import (
 	repository "ahava/pkg/repository"
 	"ahava/pkg/utils/models"
 )
 
-type CartUseCase interface {
+type CartService interface {
 	GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error)
 	AddToCart(user_id, product_id uint, quantity uint) (models.CartDetails, error)
 	UpdateQuantityAdd(user_id, cart_id uint, quantity uint) (models.CartDetails, error)
@@ -15,25 +15,25 @@ type CartUseCase interface {
 	CheckOut(user_id uint, cart_ids []uint) (models.CheckOut, error)
 }
 
-type cartUseCase struct {
+type cartService struct {
 	repo            repository.CartRepository
 	userRepository  repository.UserRepository
 	offerRepository repository.OfferRepository
 }
 
-func NewCartUseCase(
+func NewCartService(
 	repo repository.CartRepository,
 	userRepository repository.UserRepository,
 	offerRepository repository.OfferRepository,
-) *cartUseCase {
-	return &cartUseCase{
+) CartService {
+	return &cartService{
 		repo:            repo,
 		userRepository:  userRepository,
 		offerRepository: offerRepository,
 	}
 }
 
-func (i *cartUseCase) AddToCart(user_id, product_id uint, quantity uint) (models.CartDetails, error) {
+func (i *cartService) AddToCart(user_id, product_id uint, quantity uint) (models.CartDetails, error) {
 
 	cart_id, err := i.repo.CheckIfItemIsAlreadyAdded(user_id, product_id)
 	if err != nil {
@@ -55,7 +55,7 @@ func (i *cartUseCase) AddToCart(user_id, product_id uint, quantity uint) (models
 	}
 }
 
-func (i *cartUseCase) CheckOut(user_id uint, cart_ids []uint) (models.CheckOut, error) {
+func (i *cartService) CheckOut(user_id uint, cart_ids []uint) (models.CheckOut, error) {
 
 	cartItems, err := i.repo.GetCart(user_id, cart_ids)
 
@@ -89,7 +89,7 @@ func (i *cartUseCase) CheckOut(user_id uint, cart_ids []uint) (models.CheckOut, 
 	return checkout, nil
 }
 
-func (i *cartUseCase) GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error) {
+func (i *cartService) GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error) {
 
 	cartItems, err := i.repo.GetCart(user_id, cart_ids)
 	if err != nil {
@@ -111,7 +111,7 @@ func (i *cartUseCase) GetCart(user_id uint, cart_ids []uint) ([]models.CartItem,
 	return cartItems, nil
 }
 
-func (i *cartUseCase) RemoveFromCart(user_id, cart_id uint) error {
+func (i *cartService) RemoveFromCart(user_id, cart_id uint) error {
 
 	err := i.repo.RemoveFromCart(user_id, cart_id)
 	if err != nil {
@@ -121,7 +121,7 @@ func (i *cartUseCase) RemoveFromCart(user_id, cart_id uint) error {
 	return nil
 }
 
-func (i *cartUseCase) UpdateQuantityAdd(user_id, cart_id uint, quantity uint) (models.CartDetails, error) {
+func (i *cartService) UpdateQuantityAdd(user_id, cart_id uint, quantity uint) (models.CartDetails, error) {
 
 	result, err := i.repo.UpdateQuantityAdd(user_id, cart_id, quantity)
 	if err != nil {
@@ -131,7 +131,7 @@ func (i *cartUseCase) UpdateQuantityAdd(user_id, cart_id uint, quantity uint) (m
 	return result, nil
 }
 
-func (i *cartUseCase) UpdateQuantityLess(user_id, cart_id uint, quantity uint) (models.CartDetails, error) {
+func (i *cartService) UpdateQuantityLess(user_id, cart_id uint, quantity uint) (models.CartDetails, error) {
 
 	result, err := i.repo.UpdateQuantityLess(user_id, cart_id, quantity)
 	if err != nil {
@@ -148,7 +148,7 @@ func (i *cartUseCase) UpdateQuantityLess(user_id, cart_id uint, quantity uint) (
 	return result, nil
 }
 
-func (i *cartUseCase) UpdateQuantity(user_id, cart_id uint, quantity uint) (models.CartDetails, error) {
+func (i *cartService) UpdateQuantity(user_id, cart_id uint, quantity uint) (models.CartDetails, error) {
 
 	result, err := i.repo.UpdateQuantity(user_id, cart_id, quantity)
 	if err != nil {
@@ -165,7 +165,7 @@ func (i *cartUseCase) UpdateQuantity(user_id, cart_id uint, quantity uint) (mode
 	return result, nil
 }
 
-// func (u *cartUseCase) GetCart(id uint) (models.GetCartResponse, error) {
+// func (u *cartService) GetCart(id uint) (models.GetCartResponse, error) {
 
 // 	//find cart id
 // 	cart_id, err := u.repo.GetCartID(id)

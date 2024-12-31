@@ -10,290 +10,288 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 
-	services "ahava/pkg/usecase"
+	services "ahava/pkg/service"
 	"ahava/pkg/utils/models"
 	"ahava/pkg/utils/response"
 )
 
-const (
-	provinceAPI = "https://open.oapi.vn/location/provinces"
-)
-
-type UserHandler struct {
-	userUseCase services.UserUseCase
+type UserHandler interface {
+	UserSignUp(ctx *gin.Context)
+	LoginHandler(ctx *gin.Context)
+	AddAddress(ctx *gin.Context)
+	UpdateAddress(ctx *gin.Context)
+	DeleteAddress(ctx *gin.Context)
+	GetAddresses(ctx *gin.Context)
+	GetUserDetails(ctx *gin.Context)
+	ChangePassword(ctx *gin.Context)
+	// ForgotPasswordSend(ctx *gin.Context)
+	// ForgotPasswordVerifyAndChange(ctx *gin.Context)
+	EditProfile(ctx *gin.Context)
+	// GetMyReferenceLink(ctx *gin.Context)
 }
 
-func NewUserHandler(usecase services.UserUseCase) *UserHandler {
-	return &UserHandler{
-		userUseCase: usecase,
+type userHandler struct {
+	userService services.UserService
+}
+
+func NewUserHandler(service services.UserService) UserHandler {
+	return &userHandler{
+		userService: service,
 	}
 }
 
-func (u *UserHandler) UserSignUp(c *gin.Context) {
+func (h *userHandler) UserSignUp(ctx *gin.Context) {
 
 	var user models.UserDetails
-	if err := c.BindJSON(&user); err != nil {
+	if err := ctx.BindJSON(&user); err != nil {
 		errRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errRes)
+		ctx.JSON(http.StatusBadRequest, errRes)
 		return
 	}
 
 	err := validator.New().Struct(user)
 	if err != nil {
 		errRes := response.ClientResponse(http.StatusBadRequest, "constraints not satisfied", nil, err.Error())
-		c.JSON(http.StatusBadRequest,
+		ctx.JSON(http.StatusBadRequest,
 			errRes)
 		return
 	}
 
-	ref := c.Query("reference")
+	ref := ctx.Query("reference")
 
-	userCreated, err := u.userUseCase.UserSignUp(user, ref)
+	userCreated, err := h.userService.UserSignUp(user, ref)
 	if err != nil {
 		errRes := response.ClientResponse(http.StatusBadRequest, "User could not signed up", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errRes)
+		ctx.JSON(http.StatusBadRequest, errRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusCreated, "User successfully signed up", userCreated, nil)
-	c.JSON(http.StatusCreated, successRes)
+	ctx.JSON(http.StatusCreated, successRes)
 
 }
 
-func (u *UserHandler) LoginHandler(c *gin.Context) {
+func (h *userHandler) LoginHandler(ctx *gin.Context) {
 
 	var user models.UserLogin
 
-	if err := c.BindJSON(&user); err != nil {
+	if err := ctx.BindJSON(&user); err != nil {
 		errRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errRes)
+		ctx.JSON(http.StatusBadRequest, errRes)
 		return
 	}
 
-	user_details, err := u.userUseCase.LoginHandler(user)
+	user_details, err := h.userService.LoginHandler(user)
 	if err != nil {
 		errRes := response.ClientResponse(http.StatusBadRequest, "User could not be logged in", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errRes)
+		ctx.JSON(http.StatusBadRequest, errRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "User successfully logged in", user_details, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-func (i *UserHandler) GetProvince(c *gin.Context) {
+func (i *userHandler) AddAddress(ctx *gin.Context) {
 
-	provinces := models.Provinces{}
-	provinces, err := FetchProvinceAPI(provinceAPI, provinces)
-	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
-	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", provinces, nil)
-	c.JSON(http.StatusOK, successRes)
-}
-
-func (i *UserHandler) AddAddress(c *gin.Context) {
-
-	user_id := c.MustGet("id").(int)
+	user_id := ctx.MustGet("id").(int)
 	var address models.Address
-	if err := c.BindJSON(&address); err != nil {
+	if err := ctx.BindJSON(&address); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	result, err := i.userUseCase.AddAddress(uint(user_id), address)
+	result, err := i.userService.AddAddress(uint(user_id), address)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add the address", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully added address", result, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-func (i *UserHandler) UpdateAddress(c *gin.Context) {
+func (i *userHandler) UpdateAddress(ctx *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := ctx.MustGet("id").(int)
 
-	address_id, err := strconv.Atoi(c.Param("address_id"))
+	address_id, err := strconv.Atoi(ctx.Param("address_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	var model models.Address
-	if err := c.BindJSON(&model); err != nil {
+	if err := ctx.BindJSON(&model); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	result, err := i.userUseCase.UpdateAddress(uint(user_id), uint(address_id), model)
+	result, err := i.userService.UpdateAddress(uint(user_id), uint(address_id), model)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not update the address", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully updated address", result, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 }
 
-func (i *UserHandler) DeleteAddress(c *gin.Context) {
+func (i *userHandler) DeleteAddress(ctx *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := ctx.MustGet("id").(int)
 
-	address_id, err := strconv.Atoi(c.Param("address_id"))
+	address_id, err := strconv.Atoi(ctx.Param("address_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	err = i.userUseCase.DeleteAddress(uint(user_id), uint(address_id))
+	err = i.userService.DeleteAddress(uint(user_id), uint(address_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not delete the address", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully deleted address", nil, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 }
 
-func (i *UserHandler) GetAddresses(c *gin.Context) {
+func (i *userHandler) GetAddresses(ctx *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
-	addresses, err := i.userUseCase.GetAddresses(uint(user_id))
+	user_id := ctx.MustGet("id").(int)
+	addresses, err := i.userService.GetAddresses(uint(user_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", addresses, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 }
 
-func (i *UserHandler) GetUserDetails(c *gin.Context) {
+func (i *userHandler) GetUserDetails(ctx *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
-	details, err := i.userUseCase.GetUserDetails(uint(user_id))
+	user_id := ctx.MustGet("id").(int)
+	details, err := i.userService.GetUserDetails(uint(user_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", details, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 }
 
-func (i *UserHandler) ChangePassword(c *gin.Context) {
+func (i *userHandler) ChangePassword(ctx *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := ctx.MustGet("id").(int)
 	var ChangePassword models.ChangePassword
-	if err := c.BindJSON(&ChangePassword); err != nil {
+	if err := ctx.BindJSON(&ChangePassword); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	if err := i.userUseCase.ChangePassword(uint(user_id), ChangePassword.Oldpassword, ChangePassword.Password, ChangePassword.Repassword); err != nil {
+	if err := i.userService.ChangePassword(uint(user_id), ChangePassword.Oldpassword, ChangePassword.Password, ChangePassword.Repassword); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not change the password", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "password changed Successfully ", nil, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-// func (i *UserHandler) ForgotPasswordSend(c *gin.Context) {
+// func (i *userHandler) ForgotPasswordSend(ctx *gin.Context) {
 
 // 	var model models.ForgotPasswordSend
-// 	if err := c.BindJSON(&model); err != nil {
+// 	if err := ctx.BindJSON(&model); err != nil {
 // 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-// 		c.JSON(http.StatusBadRequest, errorRes)
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
 // 		return
 // 	}
-// 	err := i.userUseCase.ForgotPasswordSend(model.Phone)
+// 	err := i.userService.ForgotPasswordSend(model.Phone)
 // 	if err != nil {
 // 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not send OTP", nil, err.Error())
-// 		c.JSON(http.StatusBadRequest, errorRes)
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
 // 		return
 // 	}
 
 // 	successRes := response.ClientResponse(http.StatusOK, "OTP sent successfully", nil, nil)
-// 	c.JSON(http.StatusOK, successRes)
+// 	ctx.JSON(http.StatusOK, successRes)
 
 // }
 
-// func (i *UserHandler) ForgotPasswordVerifyAndChange(c *gin.Context) {
+// func (i *userHandler) ForgotPasswordVerifyAndChange(ctx *gin.Context) {
 
 // 	var model models.ForgotVerify
-// 	if err := c.BindJSON(&model); err != nil {
+// 	if err := ctx.BindJSON(&model); err != nil {
 // 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-// 		c.JSON(http.StatusBadRequest, errorRes)
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
 // 		return
 // 	}
 
-// 	err := i.userUseCase.ForgotPasswordVerifyAndChange(model)
+// 	err := i.userService.ForgotPasswordVerifyAndChange(model)
 // 	if err != nil {
 // 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not verify OTP", nil, err.Error())
-// 		c.JSON(http.StatusBadRequest, errorRes)
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
 // 		return
 // 	}
 
 // 	successRes := response.ClientResponse(http.StatusOK, "Successfully Changed the password", nil, nil)
-// 	c.JSON(http.StatusOK, successRes)
+// 	ctx.JSON(http.StatusOK, successRes)
 
 // }
 
-func (i *UserHandler) EditProfile(c *gin.Context) {
+func (i *userHandler) EditProfile(ctx *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := ctx.MustGet("id").(int)
 	var model models.EditProfile
-	if err := c.BindJSON(&model); err != nil {
+	if err := ctx.BindJSON(&model); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	result, err := i.userUseCase.EditProfile(uint(user_id), model)
+	result, err := i.userService.EditProfile(uint(user_id), model)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not edit profile", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully edited profile", result, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-// func (i *UserHandler) GetMyReferenceLink(c *gin.Context) {
-// 	id, err := strconv.Atoi(c.Query("id"))
+// func (i *userHandler) GetMyReferenceLink(ctx *gin.Context) {
+// 	id, err := strconv.Atoi(ctx.Query("id"))
 // 	if err != nil {
 // 		errorRes := response.ClientResponse(http.StatusBadRequest, "check parameters properly", nil, err.Error())
-// 		c.JSON(http.StatusBadRequest, errorRes)
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
 // 		return
 // 	}
 
-// 	link, err := i.userUseCase.GetMyReferenceLink(id)
+// 	link, err := i.userService.GetMyReferenceLink(id)
 // 	if err != nil {
 // 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve referral link", nil, err.Error())
-// 		c.JSON(http.StatusBadRequest, errorRes)
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
 // 		return
 // 	}
 // 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all products in cart", link, nil)
-// 	c.JSON(http.StatusOK, successRes)
+// 	ctx.JSON(http.StatusOK, successRes)
 // }
 
 // FetchProvinces fetches the list of provinces from the API.

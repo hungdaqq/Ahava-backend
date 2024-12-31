@@ -1,4 +1,4 @@
-package usecase
+package service
 
 import (
 	repository "ahava/pkg/repository"
@@ -6,28 +6,28 @@ import (
 	"errors"
 )
 
-type WishlistUseCase interface {
+type WishlistService interface {
 	AddToWishlist(user_id, product_id uint) (models.Wishlist, error)
 	RemoveFromWishlist(user_id, product_id uint) error
 	GetWishList(user_id uint) ([]models.Products, error)
 }
 
-type wishlistUseCase struct {
+type wishlistService struct {
 	repository repository.WishlistRepository
 	// offerRepo  repository.OfferRepository
 }
 
-func NewWishlistUseCase(
+func NewWishlistService(
 	repo repository.WishlistRepository,
 	// offer repository.OfferRepository,
-) *wishlistUseCase {
-	return &wishlistUseCase{
+) WishlistService {
+	return &wishlistService{
 		repository: repo,
 		// offerRepo:  offer,
 	}
 }
 
-func (w *wishlistUseCase) AddToWishlist(user_id, product_id uint) (models.Wishlist, error) {
+func (w *wishlistService) AddToWishlist(user_id, product_id uint) (models.Wishlist, error) {
 
 	exists, err := w.repository.CheckIfTheItemIsPresentAtWishlist(user_id, product_id)
 	if err != nil {
@@ -49,7 +49,7 @@ func (w *wishlistUseCase) AddToWishlist(user_id, product_id uint) (models.Wishli
 	}
 }
 
-func (w *wishlistUseCase) RemoveFromWishlist(user_id, product_id uint) error {
+func (w *wishlistService) RemoveFromWishlist(user_id, product_id uint) error {
 
 	if _, err := w.repository.UpdateWishlist(user_id, product_id, true); err != nil {
 		return errors.New("could not remove from wishlist")
@@ -58,7 +58,7 @@ func (w *wishlistUseCase) RemoveFromWishlist(user_id, product_id uint) error {
 	return nil
 }
 
-func (w *wishlistUseCase) GetWishList(id uint) ([]models.Products, error) {
+func (w *wishlistService) GetWishList(id uint) ([]models.Products, error) {
 
 	productDetails, err := w.repository.GetWishList(id)
 	if err != nil {

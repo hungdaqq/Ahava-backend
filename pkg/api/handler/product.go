@@ -1,7 +1,7 @@
 package handler
 
 import (
-	services "ahava/pkg/usecase"
+	services "ahava/pkg/service"
 	"ahava/pkg/utils/models"
 	"ahava/pkg/utils/response"
 	"net/http"
@@ -11,280 +11,294 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type ProductHandler struct {
-	ProductUseCase services.ProductUseCase
+type ProductHandler interface {
+	AddProduct(ctx *gin.Context)
+	DeleteProduct(ctx *gin.Context)
+	GetProductDetails(ctx *gin.Context)
+	ListCategoryProducts(ctx *gin.Context)
+	ListFeaturedProducts(ctx *gin.Context)
+	// ListProductsForUser(ctx *gin.Context)
+	SearchProducts(ctx *gin.Context)
+	// GetSearchHistory(ctx *gin.Context)
+	UpdateProductImage(ctx *gin.Context)
+	UpdateProduct(ctx *gin.Context)
+	ListProductsForAdmin(ctx *gin.Context)
 }
 
-func NewProductHandler(usecase services.ProductUseCase) *ProductHandler {
-	return &ProductHandler{
-		ProductUseCase: usecase,
+type productHandler struct {
+	ProductService services.ProductService
+}
+
+func NewProductHandler(service services.ProductService) ProductHandler {
+	return &productHandler{
+		ProductService: service,
 	}
 }
 
-func (i *ProductHandler) AddProduct(c *gin.Context) {
+func (h *productHandler) AddProduct(ctx *gin.Context) {
 
 	var product models.Products
-	category_id, err := strconv.Atoi(c.Request.FormValue("category_id"))
+	category_id, err := strconv.Atoi(ctx.Request.FormValue("category_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "form file error", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	price, err := strconv.Atoi(c.Request.FormValue("price"))
+	price, err := strconv.Atoi(ctx.Request.FormValue("price"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "form file error", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-	stock, err := strconv.Atoi(c.Request.FormValue("stock"))
+	stock, err := strconv.Atoi(ctx.Request.FormValue("stock"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "form file error", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	product.CategoryID = uint(category_id)
-	product.Name = c.Request.FormValue("name")
-	product.Size = c.Request.FormValue("size")
+	product.Name = ctx.Request.FormValue("name")
+	product.Size = ctx.Request.FormValue("size")
 	product.Price = uint64(price)
 	product.Stock = uint(stock)
-	product.Description = c.Request.FormValue("description")
-	product.ShortDescription = c.Request.FormValue("short_description")
-	product.HowToUse = c.Request.FormValue("how_to_use")
+	product.Description = ctx.Request.FormValue("description")
+	product.ShortDescription = ctx.Request.FormValue("short_description")
+	product.HowToUse = ctx.Request.FormValue("how_to_use")
 
-	default_image, err := c.FormFile("default_image")
+	default_image, err := ctx.FormFile("default_image")
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "retrieving image from form error", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	form, err := c.MultipartForm()
+	form, err := ctx.MultipartForm()
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "retrieving image from form error", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 	images := form.File["images"]
 
-	result, err := i.ProductUseCase.AddProduct(product, default_image, images)
+	result, err := h.ProductService.AddProduct(product, default_image, images)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add the Product", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully added Product", result, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-func (i *ProductHandler) DeleteProduct(c *gin.Context) {
+func (h *productHandler) DeleteProduct(ctx *gin.Context) {
 
-	product_id, err := strconv.Atoi(c.Param("product_id"))
+	product_id, err := strconv.Atoi(ctx.Param("product_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	err = i.ProductUseCase.DeleteProduct(uint(product_id))
+	err = h.ProductService.DeleteProduct(uint(product_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully deleted the product", nil, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-func (i *ProductHandler) GetProductDetails(c *gin.Context) {
+func (h *productHandler) GetProductDetails(ctx *gin.Context) {
 
-	product_id, err := strconv.Atoi(c.Query("product_id"))
+	product_id, err := strconv.Atoi(ctx.Query("product_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	product, err := i.ProductUseCase.GetProductDetails(uint(product_id))
+	product, err := h.ProductService.GetProductDetails(uint(product_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve product", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Product details retrieved successfully", product, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 }
 
-func (i *ProductHandler) ListCategoryProducts(c *gin.Context) {
+func (h *productHandler) ListCategoryProducts(ctx *gin.Context) {
 
-	category_id, err := strconv.Atoi(c.Query("category_id"))
+	category_id, err := strconv.Atoi(ctx.Query("category_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	products, err := i.ProductUseCase.ListCategoryProducts(uint(category_id))
+	products, err := h.ProductService.ListCategoryProducts(uint(category_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all home products", products, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 }
 
-func (i *ProductHandler) ListFeaturedProducts(c *gin.Context) {
+func (h *productHandler) ListFeaturedProducts(ctx *gin.Context) {
 
-	products, err := i.ProductUseCase.ListFeaturedProducts()
+	products, err := h.ProductService.ListFeaturedProducts()
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", products, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 }
 
-// func (i *ProductHandler) ListProductsForUser(c *gin.Context) {
+// func (h *productHandler) ListProductsForUser(ctx *gin.Context) {
 
-// 	id := c.MustGet("id")
+// 	id := ctx.MustGet("id")
 // 	userID, ok := id.(int)
 // 	if !ok {
 // 		errorRes := response.ClientResponse(http.StatusForbidden, "problem in identifying user from the context", nil, nil)
-// 		c.JSON(http.StatusBadRequest, errorRes)
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
 // 		return
 // 	}
 
-// 	products, err := i.ProductUseCase.ListProductsForUser(userID)
+// 	products, err := h.ProductService.ListProductsForUser(userID)
 // 	if err != nil {
 // 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
-// 		c.JSON(http.StatusBadRequest, errorRes)
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
 // 		return
 // 	}
 // 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", products, nil)
-// 	c.JSON(http.StatusOK, successRes)
+// 	ctx.JSON(http.StatusOK, successRes)
 // }
 
-func (i *ProductHandler) SearchProducts(c *gin.Context) {
+func (h *productHandler) SearchProducts(ctx *gin.Context) {
 
-	// user_id := c.MustGet("id").(int)
+	// user_id := ctx.MustGet("id").(int)
 	var searchkey models.Search
-	if err := c.BindJSON(&searchkey); err != nil {
+	if err := ctx.BindJSON(&searchkey); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	results, err := i.ProductUseCase.SearchProducts(searchkey.Key)
+	results, err := h.ProductService.SearchProducts(searchkey.Key)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve the records", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", results, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 }
 
-// func (i *ProductHandler) GetSearchHistory(c *gin.Context) {
+// func (h *productHandler) GetSearchHistory(ctx *gin.Context) {
 
-// 	user_id := c.MustGet("id").(int)
-// 	results, err := i.ProductUseCase.GetSearchHistory(uint(user_id))
+// 	user_id := ctx.MustGet("id").(int)
+// 	results, err := h.ProductService.GetSearchHistory(uint(user_id))
 // 	if err != nil {
 // 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve the records", nil, err.Error())
-// 		c.JSON(http.StatusBadRequest, errorRes)
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
 // 		return
 // 	}
 
 // 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", results, nil)
-// 	c.JSON(http.StatusOK, successRes)
+// 	ctx.JSON(http.StatusOK, successRes)
 // }
 
-func (i *ProductHandler) UpdateProductImage(c *gin.Context) {
+func (h *productHandler) UpdateProductImage(ctx *gin.Context) {
 
-	product_id, err := strconv.Atoi(c.Param("product_id"))
+	product_id, err := strconv.Atoi(ctx.Param("product_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	file, err := c.FormFile("default_image")
+	file, err := ctx.FormFile("default_image")
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "retrieving image from form error", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	results, err := i.ProductUseCase.UpdateProductImage(uint(product_id), file)
+	results, err := h.ProductService.UpdateProductImage(uint(product_id), file)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not change the image", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully changed image", results, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-func (i *ProductHandler) UpdateProduct(c *gin.Context) {
+func (h *productHandler) UpdateProduct(ctx *gin.Context) {
 
-	product_id, err := strconv.Atoi(c.Param("product_id"))
+	product_id, err := strconv.Atoi(ctx.Param("product_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	var model models.Products
-	err = c.BindJSON(&model)
+	err = ctx.BindJSON(&model)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 	err = validator.New().Struct(model)
 	if err != nil {
 		errRes := response.ClientResponse(http.StatusBadRequest, "constraints not satisfied", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errRes)
+		ctx.JSON(http.StatusBadRequest, errRes)
 		return
 	}
 
-	results, err := i.ProductUseCase.UpdateProduct(uint(product_id), model)
+	results, err := h.ProductService.UpdateProduct(uint(product_id), model)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not update product", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully updated product", results, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-func (i *ProductHandler) ListProductsForAdmin(c *gin.Context) {
-	limit, err := strconv.Atoi(c.Query("limit"))
+func (h *productHandler) ListProductsForAdmin(ctx *gin.Context) {
+	limit, err := strconv.Atoi(ctx.Query("limit"))
 	if err != nil {
 		limit = 20
 	}
-	offset, err := strconv.Atoi(c.Query("offset"))
+	offset, err := strconv.Atoi(ctx.Query("offset"))
 	if err != nil {
 		offset = 0
 	}
-	products, err := i.ProductUseCase.ListProductsForAdmin(limit, offset)
+	products, err := h.ProductService.ListProductsForAdmin(limit, offset)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", products, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 }

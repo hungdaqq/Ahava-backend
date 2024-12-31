@@ -41,11 +41,11 @@ func NewUserRepository(DB *gorm.DB) UserRepository {
 	return &userDatabase{DB}
 }
 
-func (c *userDatabase) CheckUserAvailability(email, phone string) bool {
+func (r *userDatabase) CheckUserAvailability(email, phone string) bool {
 
 	var count int
 
-	if err := c.DB.Raw(`SELECT COUNT(*) FROM users WHERE email = $1 OR username = $2`,
+	if err := r.DB.Raw(`SELECT COUNT(*) FROM users WHERE email = $1 OR username = $2`,
 		email, phone).Scan(&count).Error; err != nil {
 		return false
 	}
@@ -53,11 +53,11 @@ func (c *userDatabase) CheckUserAvailability(email, phone string) bool {
 	return count > 0
 }
 
-func (c *userDatabase) UserSignUp(user models.UserDetails, referral string) (models.UserDetailsResponse, error) {
+func (r *userDatabase) UserSignUp(user models.UserDetails, referral string) (models.UserDetailsResponse, error) {
 
 	var userDetails models.UserDetailsResponse
 
-	err := c.DB.
+	err := r.DB.
 		Create(&domain.Users{
 			Name:         user.Name,
 			Username:     user.Username,
@@ -76,9 +76,9 @@ func (c *userDatabase) UserSignUp(user models.UserDetails, referral string) (mod
 	return userDetails, nil
 }
 
-func (cr *userDatabase) UserBlockStatus(email, username string) (bool, error) {
+func (r *userDatabase) UserBlockStatus(email, username string) (bool, error) {
 	var isBlocked bool
-	err := cr.DB.Raw("SELECT is_blocked FROM users WHERE email=? OR username=?",
+	err := r.DB.Raw("SELECT is_blocked FROM users WHERE email=? OR username=?",
 		email, username).Scan(&isBlocked).Error
 	if err != nil {
 		return false, err
@@ -86,11 +86,11 @@ func (cr *userDatabase) UserBlockStatus(email, username string) (bool, error) {
 	return isBlocked, nil
 }
 
-func (c *userDatabase) FindUser(login models.UserLogin) (models.UserSignInResponse, error) {
+func (r *userDatabase) FindUser(login models.UserLogin) (models.UserSignInResponse, error) {
 
 	var response models.UserSignInResponse
 
-	err := c.DB.Raw(`SELECT * FROM users WHERE (email = ? OR username = ?) AND is_blocked = false`,
+	err := r.DB.Raw(`SELECT * FROM users WHERE (email = ? OR username = ?) AND is_blocked = false`,
 		login.Email, login.Username).Scan(&response).Error
 	if err != nil {
 		return models.UserSignInResponse{}, err
@@ -100,11 +100,11 @@ func (c *userDatabase) FindUser(login models.UserLogin) (models.UserSignInRespon
 
 }
 
-func (i *userDatabase) AddAddress(user_id uint, address models.Address) (models.Address, error) {
+func (r *userDatabase) AddAddress(user_id uint, address models.Address) (models.Address, error) {
 
 	var addAddress models.Address
 
-	err := i.DB.
+	err := r.DB.
 		Model(&domain.Address{}).
 		Create(&domain.Address{
 			UserID:   user_id,
@@ -125,11 +125,11 @@ func (i *userDatabase) AddAddress(user_id uint, address models.Address) (models.
 	return addAddress, nil
 }
 
-func (i *userDatabase) UpdateAddress(user_id, address_id uint, address models.Address) (models.Address, error) {
+func (r *userDatabase) UpdateAddress(user_id, address_id uint, address models.Address) (models.Address, error) {
 
 	var updateAddress models.Address
 
-	result := i.DB.
+	result := r.DB.
 		Model(&domain.Address{}).
 		Where("id = ? AND user_id =?", address_id, user_id).
 		Updates(domain.Address{
@@ -155,9 +155,9 @@ func (i *userDatabase) UpdateAddress(user_id, address_id uint, address models.Ad
 	return updateAddress, nil
 }
 
-func (i *userDatabase) DeleteAddress(address_id, user_id uint) error {
+func (r *userDatabase) DeleteAddress(address_id, user_id uint) error {
 
-	err := i.DB.Exec(`DELETE FROM addresses WHERE id=? AND user_id=?`,
+	err := r.DB.Exec(`DELETE FROM addresses WHERE id=? AND user_id=?`,
 		address_id, user_id).Error
 	if err != nil {
 		return err
@@ -166,11 +166,11 @@ func (i *userDatabase) DeleteAddress(address_id, user_id uint) error {
 	return nil
 }
 
-// func (c *userDatabase) CheckIfFirstAddress(user_id uint) bool {
+// func (r *userDatabase) CheckIfFirstAddress(user_id uint) bool {
 
 // 	var count int
 // 	// query := fmt.Sprintf("select count(*) from addresses where user_id='%s'", id)
-// 	if err := c.DB.Raw("SELECT COUNT(*) FROM addresses WHERE user_id=$1", user_id).Scan(&count).Error; err != nil {
+// 	if err := r.DB.Raw("SELECT COUNT(*) FROM addresses WHERE user_id=$1", user_id).Scan(&count).Error; err != nil {
 // 		return false
 // 	}
 // 	// if count is greater than 0 that means the user already exist
@@ -203,9 +203,9 @@ func (ad *userDatabase) GetUserDetails(user_id uint) (models.UserDetailsResponse
 
 }
 
-func (i *userDatabase) ChangePassword(id uint, password string) error {
+func (r *userDatabase) ChangePassword(id uint, password string) error {
 
-	result := i.DB.Model(&domain.Users{}).Where("id = ?", id).Update("password", password)
+	result := r.DB.Model(&domain.Users{}).Where("id = ?", id).Update("password", password)
 
 	if result.Error != nil {
 		return result.Error
@@ -218,10 +218,10 @@ func (i *userDatabase) ChangePassword(id uint, password string) error {
 	return nil
 }
 
-func (i *userDatabase) GetPassword(id uint) (string, error) {
+func (r *userDatabase) GetPassword(id uint) (string, error) {
 
 	var userPassword string
-	err := i.DB.Raw("select password from users where id = ?", id).Scan(&userPassword).Error
+	err := r.DB.Raw("select password from users where id = ?", id).Scan(&userPassword).Error
 	if err != nil {
 		return "", err
 	}
@@ -241,11 +241,11 @@ func (i *userDatabase) GetPassword(id uint) (string, error) {
 
 // }
 
-func (i *userDatabase) EditProfile(userID uint, profile models.EditProfile) (models.UserDetailsResponse, error) {
+func (r *userDatabase) EditProfile(userID uint, profile models.EditProfile) (models.UserDetailsResponse, error) {
 
 	var user models.UserDetailsResponse
 
-	result := i.DB.Model(&domain.Users{}).Where("id = ?", userID).Updates(domain.Users{
+	result := r.DB.Model(&domain.Users{}).Where("id = ?", userID).Updates(domain.Users{
 		Name:      profile.Name,
 		Phone:     profile.Phone,
 		BirthDate: profile.BirthDate,
@@ -285,8 +285,8 @@ func (ad *userDatabase) GetCartID(id uint) (uint, error) {
 // 	return user, nil
 // }
 
-func (i *userDatabase) CreditReferencePointsToWallet(user_id uint) error {
-	err := i.DB.Exec("Update wallets set amount=amount+20 where user_id=$1", user_id).Error
+func (r *userDatabase) CreditReferencePointsToWallet(user_id uint) error {
+	err := r.DB.Exec("Update wallets set amount=amount+20 where user_id=$1", user_id).Error
 	if err != nil {
 		return err
 	}
@@ -294,9 +294,9 @@ func (i *userDatabase) CreditReferencePointsToWallet(user_id uint) error {
 	return nil
 }
 
-func (i *userDatabase) GetReferralCodeFromID(id uint) (string, error) {
+func (r *userDatabase) GetReferralCodeFromID(id uint) (string, error) {
 	var referral string
-	err := i.DB.Raw("SELECT referral_code FROM users WHERE id=?", id).Scan(&referral).Error
+	err := r.DB.Raw("SELECT referral_code FROM users WHERE id=?", id).Scan(&referral).Error
 	if err != nil {
 		return "", err
 	}
@@ -304,9 +304,9 @@ func (i *userDatabase) GetReferralCodeFromID(id uint) (string, error) {
 	return referral, nil
 }
 
-func (i *userDatabase) FindProductImage(id uint) (string, error) {
+func (r *userDatabase) FindProductImage(id uint) (string, error) {
 	var image string
-	err := i.DB.Raw("SELECT default_image FROM products WHERE id = ?", id).Scan(&image).Error
+	err := r.DB.Raw("SELECT default_image FROM products WHERE id = ?", id).Scan(&image).Error
 	if err != nil {
 		return "", err
 	}
@@ -314,9 +314,9 @@ func (i *userDatabase) FindProductImage(id uint) (string, error) {
 	return image, nil
 }
 
-func (i *userDatabase) FindStock(id uint) (int, error) {
+func (r *userDatabase) FindStock(id uint) (int, error) {
 	var stock int
-	err := i.DB.Raw("SELECT stock FROM products WHERE id = ?", id).Scan(&stock).Error
+	err := r.DB.Raw("SELECT stock FROM products WHERE id = ?", id).Scan(&stock).Error
 	if err != nil {
 		return 0, err
 	}

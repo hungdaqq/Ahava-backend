@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"ahava/pkg/helper"
-	services "ahava/pkg/usecase"
+	services "ahava/pkg/service"
 	errors "ahava/pkg/utils/errors"
 	models "ahava/pkg/utils/models"
 
@@ -16,163 +16,174 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-type AdminHandler struct {
-	adminUseCase services.AdminUseCase
+type AdminHandler interface {
+	LoginHandler(ctx *gin.Context)
+	BlockUser(ctx *gin.Context)
+	UnBlockUser(ctx *gin.Context)
+	GetUsers(ctx *gin.Context)
+	NewPaymentMethod(ctx *gin.Context)
+	ListPaymentMethods(ctx *gin.Context)
+	DeletePaymentMethod(ctx *gin.Context)
+	ValidateRefreshTokenAndCreateNewAccess(ctx *gin.Context)
 }
 
-func NewAdminHandler(usecase services.AdminUseCase) *AdminHandler {
-	return &AdminHandler{
-		adminUseCase: usecase,
+type adminHandler struct {
+	adminService services.AdminService
+}
+
+func NewAdminHandler(service services.AdminService) AdminHandler {
+	return &adminHandler{
+		adminService: service,
 	}
 }
 
-func (ad *AdminHandler) LoginHandler(c *gin.Context) { // login handler for the admin
+func (ad *adminHandler) LoginHandler(ctx *gin.Context) { // login handler for the admin
 
 	// var adminDetails models.AdminLogin
 	var adminDetails models.AdminLogin
-	if err := c.BindJSON(&adminDetails); err != nil {
+	if err := ctx.BindJSON(&adminDetails); err != nil {
 		errRes := response.ClientResponse(http.StatusBadRequest, "details not in correct format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errRes)
+		ctx.JSON(http.StatusBadRequest, errRes)
 		return
 	}
 
-	admin, err := ad.adminUseCase.LoginHandler(adminDetails)
+	admin, err := ad.adminService.LoginHandler(adminDetails)
 	if err != nil {
 		errRes := response.ClientResponse(http.StatusBadRequest, "cannot authenticate user", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errRes)
+		ctx.JSON(http.StatusBadRequest, errRes)
 		return
 	}
 
-	c.Set("Access", admin.AccessToken)
-	c.Set("Refresh", admin.RefreshToken)
+	ctx.Set("Access", admin.AccessToken)
+	ctx.Set("Refresh", admin.RefreshToken)
 
 	successRes := response.ClientResponse(http.StatusOK, "Admin authenticated successfully", admin, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-func (ad *AdminHandler) BlockUser(c *gin.Context) {
+func (ad *adminHandler) BlockUser(ctx *gin.Context) {
 
-	user_id, err := strconv.Atoi(c.Param("user_id"))
+	user_id, err := strconv.Atoi(ctx.Param("user_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "user_id not in right format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	err = ad.adminUseCase.BlockUser(uint(user_id))
+	err = ad.adminService.BlockUser(uint(user_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "user could not be blocked", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully blocked the user", nil, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-func (ad *AdminHandler) UnBlockUser(c *gin.Context) {
+func (ad *adminHandler) UnBlockUser(ctx *gin.Context) {
 
-	user_id, err := strconv.Atoi(c.Param("user_id"))
+	user_id, err := strconv.Atoi(ctx.Param("user_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "user_id not in right format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	err = ad.adminUseCase.UnBlockUser(uint(user_id))
+	err = ad.adminService.UnBlockUser(uint(user_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "user could not be unblocked", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully unblocked the user", nil, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 }
 
-func (ad *AdminHandler) GetUsers(c *gin.Context) {
+func (ad *adminHandler) GetUsers(ctx *gin.Context) {
 
-	pageStr := c.Query("page")
+	pageStr := ctx.Query("page")
 	page, err := strconv.Atoi(pageStr)
 
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "page number not in right format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	users, err := ad.adminUseCase.GetUsers(page)
+	users, err := ad.adminService.GetUsers(page)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 	successRes := response.ClientResponse(http.StatusOK, "Successfully retrieved the users", users, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-func (i *AdminHandler) NewPaymentMethod(c *gin.Context) {
+func (i *adminHandler) NewPaymentMethod(ctx *gin.Context) {
 
 	var method models.NewPaymentMethod
-	if err := c.BindJSON(&method); err != nil {
+	if err := ctx.BindJSON(&method); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	err := i.adminUseCase.NewPaymentMethod(method.PaymentMethod)
+	err := i.adminService.NewPaymentMethod(method.PaymentMethod)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add the payment method", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully added Payment Method", nil, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-func (a *AdminHandler) ListPaymentMethods(c *gin.Context) {
+func (a *adminHandler) ListPaymentMethods(ctx *gin.Context) {
 
-	categories, err := a.adminUseCase.ListPaymentMethods()
+	categories, err := a.adminService.ListPaymentMethods()
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusInternalServerError, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all payment methods", categories, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-func (a *AdminHandler) DeletePaymentMethod(c *gin.Context) {
+func (a *adminHandler) DeletePaymentMethod(ctx *gin.Context) {
 
-	id, err := strconv.Atoi(c.Query("id"))
+	id, err := strconv.Atoi(ctx.Query("id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	err = a.adminUseCase.DeletePaymentMethod(uint(id))
+	err = a.adminService.DeletePaymentMethod(uint(id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusInternalServerError, "error in deleting data", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully deleted the Category", nil, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-func (a *AdminHandler) ValidateRefreshTokenAndCreateNewAccess(c *gin.Context) {
+func (a *adminHandler) ValidateRefreshTokenAndCreateNewAccess(ctx *gin.Context) {
 
-	refreshToken := c.Request.Header.Get("RefreshToken")
+	refreshToken := ctx.Request.Header.Get("RefreshToken")
 
 	// Check if the refresh token is valid.
 	_, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
@@ -180,7 +191,7 @@ func (a *AdminHandler) ValidateRefreshTokenAndCreateNewAccess(c *gin.Context) {
 	})
 	if err != nil {
 		// The refresh token is invalid.
-		c.AbortWithError(401, errors.ErrInvalidToken)
+		ctx.AbortWithError(401, errors.ErrInvalidToken)
 		return
 	}
 
@@ -195,8 +206,8 @@ func (a *AdminHandler) ValidateRefreshTokenAndCreateNewAccess(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	newAccessToken, err := token.SignedString([]byte("accesssecret"))
 	if err != nil {
-		c.AbortWithError(500, errors.ErrCreateToken)
+		ctx.AbortWithError(500, errors.ErrCreateToken)
 	}
 
-	c.JSON(200, newAccessToken)
+	ctx.JSON(200, newAccessToken)
 }

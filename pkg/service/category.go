@@ -1,11 +1,11 @@
-package usecase
+package service
 
 import (
 	repository "ahava/pkg/repository"
 	"ahava/pkg/utils/models"
 )
 
-type CategoryUseCase interface {
+type CategoryService interface {
 	AddCategory(category models.Category) (models.Category, error)
 	UpdateCategory(category_id uint, category, description string) (models.Category, error)
 	DeleteCategory(category_id uint) error
@@ -13,25 +13,25 @@ type CategoryUseCase interface {
 	// GetBannersForUsers() ([]models.Banner, error)
 }
 
-type categoryUseCase struct {
+type categoryService struct {
 	repository repository.CategoryRepository
 	// productRepository repository.ProductRepository
 	// offerRepository   repository.OfferRepository
 }
 
-func NewCategoryUseCase(
+func NewCategoryService(
 	repo repository.CategoryRepository,
 	// inv interfaces.ProductRepository,
 	// offer interfaces.OfferRepository,
-) CategoryUseCase {
-	return &categoryUseCase{
+) CategoryService {
+	return &categoryService{
 		repository: repo,
 		// productRepository: inv,
 		// offerRepository:   offer,
 	}
 }
 
-func (Cat *categoryUseCase) AddCategory(category models.Category) (models.Category, error) {
+func (Cat *categoryService) AddCategory(category models.Category) (models.Category, error) {
 
 	result, err := Cat.repository.AddCategory(category)
 
@@ -42,7 +42,7 @@ func (Cat *categoryUseCase) AddCategory(category models.Category) (models.Catego
 	return result, nil
 
 }
-func (Cat *categoryUseCase) GetCategories() ([]models.Category, error) {
+func (Cat *categoryService) GetCategories() ([]models.Category, error) {
 
 	result, err := Cat.repository.GetCategories()
 
@@ -54,7 +54,7 @@ func (Cat *categoryUseCase) GetCategories() ([]models.Category, error) {
 
 }
 
-func (Cat *categoryUseCase) UpdateCategory(category_id uint, name, description string) (models.Category, error) {
+func (Cat *categoryService) UpdateCategory(category_id uint, name, description string) (models.Category, error) {
 
 	result, err := Cat.repository.UpdateCategory(category_id, name, description)
 	if err != nil {
@@ -64,7 +64,7 @@ func (Cat *categoryUseCase) UpdateCategory(category_id uint, name, description s
 	return result, err
 }
 
-func (Cat *categoryUseCase) DeleteCategory(category_id uint) error {
+func (Cat *categoryService) DeleteCategory(category_id uint) error {
 
 	err := Cat.repository.DeleteCategory(category_id)
 	if err != nil {
@@ -74,7 +74,7 @@ func (Cat *categoryUseCase) DeleteCategory(category_id uint) error {
 
 }
 
-// func (Cat *categoryUseCase) GetBannersForUsers() ([]models.Banner, error) {
+// func (Cat *categoryService) GetBannersForUsers() ([]models.Banner, error) {
 // 	// Find categories with the highest offer percentage, at least one, maximum 3.
 // 	banners, err := Cat.repository.GetBannersForUsers()
 // 	if err != nil {

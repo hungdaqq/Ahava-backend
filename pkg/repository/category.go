@@ -25,11 +25,11 @@ func NewCategoryRepository(DB *gorm.DB) CategoryRepository {
 	return &categoryRepository{DB}
 }
 
-func (p *categoryRepository) AddCategory(category models.Category) (models.Category, error) {
+func (r *categoryRepository) AddCategory(category models.Category) (models.Category, error) {
 
 	var addCategory models.Category
 
-	if err := p.DB.Raw(`INSERT INTO categories (name, description) VALUES (?, ?) RETURNING *`,
+	if err := r.DB.Raw(`INSERT INTO categories (name, description) VALUES (?, ?) RETURNING *`,
 		category.Name, category.Description).Scan(&addCategory).Error; err != nil {
 		return models.Category{}, err
 	}
@@ -37,11 +37,11 @@ func (p *categoryRepository) AddCategory(category models.Category) (models.Categ
 	return addCategory, nil
 }
 
-func (p *categoryRepository) UpdateCategory(category_id uint, name, description string) (models.Category, error) {
+func (r *categoryRepository) UpdateCategory(category_id uint, name, description string) (models.Category, error) {
 
 	var updateCategory models.Category
 
-	result := p.DB.
+	result := r.DB.
 		Model(&domain.Category{}).
 		Where("id = ?", category_id).
 		Updates(domain.Category{
@@ -61,9 +61,9 @@ func (p *categoryRepository) UpdateCategory(category_id uint, name, description 
 	return updateCategory, nil
 }
 
-func (c *categoryRepository) DeleteCategory(category_id uint) error {
+func (r *categoryRepository) DeleteCategory(category_id uint) error {
 
-	result := c.DB.Exec("DELETE FROM categories WHERE id = ?", category_id)
+	result := r.DB.Exec("DELETE FROM categories WHERE id = ?", category_id)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -74,9 +74,9 @@ func (c *categoryRepository) DeleteCategory(category_id uint) error {
 	return nil
 }
 
-func (c *categoryRepository) GetCategories() ([]models.Category, error) {
+func (r *categoryRepository) GetCategories() ([]models.Category, error) {
 	var model []models.Category
-	err := c.DB.Raw("SELECT * FROM categories").Scan(&model).Error
+	err := r.DB.Raw("SELECT * FROM categories").Scan(&model).Error
 	if err != nil {
 		return []models.Category{}, err
 	}

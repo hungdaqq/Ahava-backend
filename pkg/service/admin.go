@@ -1,4 +1,4 @@
-package usecase
+package service
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AdminUseCase interface {
+type AdminService interface {
 	LoginHandler(adminDetails models.AdminLogin) (domain.TokenAdmin, error)
 	BlockUser(user_id uint) error
 	UnBlockUser(user_id uint) error
@@ -22,19 +22,19 @@ type AdminUseCase interface {
 	DeletePaymentMethod(id uint) error
 }
 
-type adminUseCase struct {
+type adminService struct {
 	adminRepository repository.AdminRepository
 	helper          helper.Helper
 }
 
-func NewAdminUseCase(repo repository.AdminRepository, h helper.Helper) AdminUseCase {
-	return &adminUseCase{
+func NewAdminService(repo repository.AdminRepository, h helper.Helper) AdminService {
+	return &adminService{
 		adminRepository: repo,
 		helper:          h,
 	}
 }
 
-func (ad *adminUseCase) LoginHandler(adminDetails models.AdminLogin) (domain.TokenAdmin, error) {
+func (ad *adminService) LoginHandler(adminDetails models.AdminLogin) (domain.TokenAdmin, error) {
 
 	// getting details of the admin based on the email provided
 	adminCompareDetails, err := ad.adminRepository.LoginHandler(adminDetails)
@@ -70,7 +70,7 @@ func (ad *adminUseCase) LoginHandler(adminDetails models.AdminLogin) (domain.Tok
 
 }
 
-func (ad *adminUseCase) BlockUser(user_id uint) error {
+func (ad *adminService) BlockUser(user_id uint) error {
 
 	user, err := ad.adminRepository.GetUserByID(user_id)
 	if err != nil {
@@ -93,7 +93,7 @@ func (ad *adminUseCase) BlockUser(user_id uint) error {
 }
 
 // unblock user
-func (ad *adminUseCase) UnBlockUser(user_id uint) error {
+func (ad *adminService) UnBlockUser(user_id uint) error {
 
 	user, err := ad.adminRepository.GetUserByID(user_id)
 	if err != nil {
@@ -115,7 +115,7 @@ func (ad *adminUseCase) UnBlockUser(user_id uint) error {
 
 }
 
-func (ad *adminUseCase) GetUsers(page int) ([]models.UserDetailsAtAdmin, error) {
+func (ad *adminService) GetUsers(page int) ([]models.UserDetailsAtAdmin, error) {
 
 	userDetails, err := ad.adminRepository.GetUsers(page)
 	if err != nil {
@@ -126,7 +126,7 @@ func (ad *adminUseCase) GetUsers(page int) ([]models.UserDetailsAtAdmin, error) 
 
 }
 
-func (ad *adminUseCase) NewPaymentMethod(id string) error {
+func (ad *adminService) NewPaymentMethod(id string) error {
 
 	exists, err := ad.adminRepository.CheckIfPaymentMethodAlreadyExists(id)
 	if err != nil {
@@ -146,7 +146,7 @@ func (ad *adminUseCase) NewPaymentMethod(id string) error {
 
 }
 
-func (ad *adminUseCase) ListPaymentMethods() ([]domain.PaymentMethod, error) {
+func (ad *adminService) ListPaymentMethods() ([]domain.PaymentMethod, error) {
 
 	categories, err := ad.adminRepository.ListPaymentMethods()
 	if err != nil {
@@ -156,7 +156,7 @@ func (ad *adminUseCase) ListPaymentMethods() ([]domain.PaymentMethod, error) {
 
 }
 
-func (ad *adminUseCase) DeletePaymentMethod(id uint) error {
+func (ad *adminService) DeletePaymentMethod(id uint) error {
 
 	err := ad.adminRepository.DeletePaymentMethod(id)
 	if err != nil {

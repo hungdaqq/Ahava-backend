@@ -4,64 +4,69 @@ import (
 	"net/http"
 	"strconv"
 
-	services "ahava/pkg/usecase"
+	services "ahava/pkg/service"
 	models "ahava/pkg/utils/models"
 	response "ahava/pkg/utils/response"
 
 	"github.com/gin-gonic/gin"
 )
 
-type OrderHandler struct {
-	orderUseCase services.OrderUseCase
+type OrderHandler interface {
+	PlaceOrder(ctx *gin.Context)
+	GetOrderDetails(ctx *gin.Context)
 }
 
-func NewOrderHandler(usecase services.OrderUseCase) *OrderHandler {
-	return &OrderHandler{
-		orderUseCase: usecase,
+type orderHandler struct {
+	orderService services.OrderService
+}
+
+func NewOrderHandler(service services.OrderService) OrderHandler {
+	return &orderHandler{
+		orderService: service,
 	}
 }
 
-func (h *OrderHandler) PlaceOrder(c *gin.Context) {
+func (h *orderHandler) PlaceOrder(ctx *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := ctx.MustGet("id").(int)
 
 	var orderDetails models.PlaceOrder
-	if err := c.BindJSON(&orderDetails); err != nil {
+	if err := ctx.BindJSON(&orderDetails); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 	orderDetails.UserID = uint(user_id)
 
-	order, err := h.orderUseCase.PlaceOrder(orderDetails)
+	order, err := h.orderService.PlaceOrder(orderDetails)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not place the order", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully placed the order", order, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 }
 
-func (h *OrderHandler) GetOrderDetails(c *gin.Context) {
+func (h *orderHandler) GetOrderDetails(ctx *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := ctx.MustGet("id").(int)
 
-	order_id, err := strconv.Atoi(c.Query("order_id"))
+	order_id, err := strconv.Atoi(ctx.Query("order_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	order, err := h.orderUseCase.GetOrderDetails(uint(user_id), uint(order_id))
+	order, err := h.orderService.GetOrderDetails(uint(user_id), uint(order_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not get the order details", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully fetched the order details", order, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 }

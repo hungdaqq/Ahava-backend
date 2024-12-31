@@ -8,35 +8,35 @@ import (
 	"gorm.io/gorm"
 )
 
-type paymentRepository struct {
-	DB *gorm.DB
-}
-
-func NewPaymentRepository(db *gorm.DB) *paymentRepository {
-	return &paymentRepository{
-		DB: db,
-	}
-}
-
 type PaymentRepository interface {
 	CreateQR(qr models.CreateQR, user_id uint) error
 	SaveTransaction(transaction models.Transaction) (models.Transaction, error)
 }
 
-func (p *paymentRepository) CreateQR(qr models.CreateQR, user_id uint) error {
+type paymentRepository struct {
+	DB *gorm.DB
+}
 
-	if err := p.DB.Exec(`INSERT INTO transactions (user_id,order_id,code) VALUES (?,?,?)`, user_id, qr.OrderID, qr.Description).Error; err != nil {
+func NewPaymentRepository(db *gorm.DB) PaymentRepository {
+	return &paymentRepository{
+		DB: db,
+	}
+}
+
+func (r *paymentRepository) CreateQR(qr models.CreateQR, user_id uint) error {
+
+	if err := r.DB.Exec(`INSERT INTO transactions (user_id,order_id,code) VALUES (?,?,?)`, user_id, qr.OrderID, qr.Description).Error; err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (p *paymentRepository) SaveTransaction(saveTransaction models.Transaction) (models.Transaction, error) {
+func (r *paymentRepository) SaveTransaction(saveTransaction models.Transaction) (models.Transaction, error) {
 
 	var transaction models.Transaction
 
-	result := p.DB.
+	result := r.DB.
 		Model(&domain.Transaction{}).
 		Where("code = ?", saveTransaction.Code).
 		Updates(domain.Transaction{

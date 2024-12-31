@@ -20,16 +20,16 @@ type orderRepository struct {
 	DB *gorm.DB
 }
 
-func NewOrderRepository(db *gorm.DB) *orderRepository {
+func NewOrderRepository(db *gorm.DB) OrderRepository {
 	return &orderRepository{
 		DB: db,
 	}
 }
 
-func (or *orderRepository) PlaceOrder(order models.PlaceOrder, final_price uint64) (models.Order, error) {
+func (r *orderRepository) PlaceOrder(order models.PlaceOrder, final_price uint64) (models.Order, error) {
 
 	var orderDetails models.Order
-	if err := or.DB.Raw(`INSERT INTO orders (user_id, address, payment_method, final_price, coupon) VALUES (?,?,?,?,?) RETURNING *`,
+	if err := r.DB.Raw(`INSERT INTO orders (user_id, address, payment_method, final_price, coupon) VALUES (?,?,?,?,?) RETURNING *`,
 		order.UserID, order.Address, order.PaymentMethod, final_price, order.Coupon).Scan(&orderDetails).Error; err != nil {
 		return models.Order{}, err
 	}
@@ -37,9 +37,9 @@ func (or *orderRepository) PlaceOrder(order models.PlaceOrder, final_price uint6
 	return orderDetails, nil
 }
 
-func (or *orderRepository) PlaceOrderItem(order_id uint, item models.CartItem) error {
+func (r *orderRepository) PlaceOrderItem(order_id uint, item models.CartItem) error {
 
-	err := or.DB.Exec(`INSERT INTO order_items (order_id, product_id, quantity, item_price, item_discounted_price) VALUES (?,?,?,?,?)`,
+	err := r.DB.Exec(`INSERT INTO order_items (order_id, product_id, quantity, item_price, item_discounted_price) VALUES (?,?,?,?,?)`,
 		order_id, item.ProductID, item.Quantity, item.ItemPrice, item.ItemDiscountedPrice).Error
 	if err != nil {
 		return err
@@ -47,11 +47,11 @@ func (or *orderRepository) PlaceOrderItem(order_id uint, item models.CartItem) e
 	return nil
 }
 
-func (or *orderRepository) GetOrderForWebhook(order_id uint) (models.Order, error) {
+func (r *orderRepository) GetOrderForWebhook(order_id uint) (models.Order, error) {
 
 	var orderDetails models.Order
 
-	err := or.DB.Raw(`SELECT id,final_price FROM orders WHERE id=?`,
+	err := r.DB.Raw(`SELECT id,final_price FROM orders WHERE id=?`,
 		order_id).Scan(&orderDetails).Error
 	if err != nil {
 		return models.Order{}, err
@@ -60,11 +60,11 @@ func (or *orderRepository) GetOrderForWebhook(order_id uint) (models.Order, erro
 	return orderDetails, nil
 }
 
-func (or *orderRepository) GetOrderDetails(user_id, order_id uint) (models.Order, error) {
+func (r *orderRepository) GetOrderDetails(user_id, order_id uint) (models.Order, error) {
 
 	var orderDetails models.Order
 
-	err := or.DB.Raw(`SELECT * FROM orders WHERE id=? AND user_id=?`,
+	err := r.DB.Raw(`SELECT * FROM orders WHERE id=? AND user_id=?`,
 		order_id, user_id).Scan(&orderDetails).Error
 	if err != nil {
 		return models.Order{}, err
@@ -73,11 +73,11 @@ func (or *orderRepository) GetOrderDetails(user_id, order_id uint) (models.Order
 	return orderDetails, nil
 }
 
-func (or *orderRepository) UpdateOrder(order_id uint, updateOrder models.Order) (models.Order, error) {
+func (r *orderRepository) UpdateOrder(order_id uint, updateOrder models.Order) (models.Order, error) {
 
 	var order models.Order
 
-	result := or.DB.
+	result := r.DB.
 		Model(&domain.Order{}).
 		Where("id = ?", order_id).
 		Updates(domain.Order{
@@ -98,11 +98,11 @@ func (or *orderRepository) UpdateOrder(order_id uint, updateOrder models.Order) 
 	return order, nil
 }
 
-// func (or *orderRepository) GetOrders(order models.) ([]domain.Order, error) {
+// func (r *orderRepository) GetOrders(order models.) ([]domain.Order, error) {
 
 // 	var orders []domain.Order
 
-// 	if err := or.DB.Raw("select * from orders where user_id=?", id).Scan(&orders).Error; err != nil {
+// 	if err := r.DB.Raw("select * from orders where user_id=?", id).Scan(&orders).Error; err != nil {
 // 		return []domain.Order{}, err
 // 	}
 
@@ -177,10 +177,10 @@ func (or *orderRepository) UpdateOrder(order_id uint, updateOrder models.Order) 
 
 // }
 
-// func (or *orderRepository) AdminOrders(status string) ([]domain.OrderDetails, error) {
+// func (r *orderRepository) AdminOrders(status string) ([]domain.OrderDetails, error) {
 
 // 	var orders []domain.OrderDetails
-// 	if err := or.DB.Raw("SELECT orders.id AS id, users.name AS username, CONCAT('House Name:',addresses.house_name, ',', 'Street:', addresses.street, ',', 'Province:', addresses.province, ',', 'State', addresses.state, ',', 'Phone:', addresses.phone) AS address, payment_methods.payment_name AS payment_method, orders.final_price As total FROM orders JOIN users ON users.id = orders.user_id JOIN payment_methods ON payment_methods.id = orders.payment_method_id JOIN addresses ON orders.address_id = addresses.id WHERE order_status = $1", status).Scan(&orders).Error; err != nil {
+// 	if err := r.DB.Raw("SELECT orders.id AS id, users.name AS username, CONCAT('House Name:',addresses.house_name, ',', 'Street:', addresses.street, ',', 'Province:', addresses.province, ',', 'State', addresses.state, ',', 'Phone:', addresses.phone) AS address, payment_methods.payment_name AS payment_method, orders.final_price As total FROM orders JOIN users ON users.id = orders.user_id JOIN payment_methods ON payment_methods.id = orders.payment_method_id JOIN addresses ON orders.address_id = addresses.id WHERE order_status = $1", status).Scan(&orders).Error; err != nil {
 // 		return []domain.OrderDetails{}, err
 // 	}
 

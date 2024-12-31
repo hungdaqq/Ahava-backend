@@ -47,7 +47,7 @@ type Coupons struct {
 type Offer struct {
 	ProductID uint      `json:"product_id" gorm:"not null;unique"`
 	Product   Products  `json:"-" gorm:"foreignkey:ProductID;constraint:OnDelete:CASCADE"`
-	OfferRate uint      `json:"offer_rate" validate:"min=0,max=100"` // Validation: 0-100
+	OfferRate uint      `json:"offer_rate" validate:"min=0,max=100" gorm:"not null"`
 	ExpireAt  time.Time `json:"expire_at"`
 	CreateAt  time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateAt  time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
@@ -63,11 +63,11 @@ type Order struct {
 	ID            uint      `json:"id" gorm:"primarykey"`
 	UserID        uint      `json:"user_id" gorm:"not null"`
 	Users         Users     `json:"-" gorm:"foreignkey:UserID"`
-	Address       string    `json:"address"`
+	Address       string    `json:"address" gorm:"not null"`
 	PaymentMethod string    `json:"payment_method"`
 	Coupon        string    `json:"coupon" gorm:"default:null"`
-	FinalPrice    uint64    `json:"price"`
-	OrderStatus   string    `json:"order_status" gorm:"order_status:10;default:'PREPARE';check:order_status IN ('PREPARE','SHIP','DELIVER','CANCEL','RETURN')"`
+	FinalPrice    uint64    `json:"price" gorm:"not null"`
+	OrderStatus   string    `json:"order_status" gorm:"order_status:10;default:'UNCONFIRMED';check:order_status IN ('UNCONFIRMED', 'PREPARING','SHIPPING','DELIVERED','CANCELED','RETURNED')"`
 	PaymentStatus string    `json:"payment_status" gorm:"payment_status:2;default:'NOT PAID';check:payment_status IN ('PAID', 'NOT PAID', 'INCOMPLETE')"`
 	CreateAt      time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateAt      time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
@@ -79,9 +79,9 @@ type OrderItem struct {
 	Order               Order    `json:"-" gorm:"foreignkey:OrderID;constraint:OnDelete:CASCADE"`
 	ProductID           uint     `json:"product_id" gorm:"not null"`
 	Products            Products `json:"-" gorm:"foreignkey:ProductID"`
-	Quantity            uint     `json:"quantity"`
-	ItemPrice           uint64   `json:"item_price"`
-	ItemDiscountedPrice uint64   `json:"item_discounted_price"`
+	Quantity            uint     `json:"quantity" gorm:"not null"`
+	ItemPrice           uint64   `json:"item_price" gorm:"not null"`
+	ItemDiscountedPrice uint64   `json:"item_discounted_price" gorm:"not null"`
 }
 
 type AdminOrdersResponse struct {
@@ -110,12 +110,12 @@ type Products struct {
 	ID               uint      `json:"id" gorm:"primarykey"`
 	CategoryID       uint      `json:"category_id" gorm:"not null"`
 	Category         Category  `json:"-" gorm:"foreignkey:CategoryID;constraint:OnDelete:CASCADE"`
-	Name             string    `json:"name"`
-	DefaultImage     string    `json:"default_image"`
+	Name             string    `json:"name" gorm:"default:Ahava Product"`
+	DefaultImage     string    `json:"default_image" gorm:"not null"`
 	Images           string    `json:"images"`
 	Size             string    `json:"size"`
-	Stock            uint      `json:"stock"`
-	Price            uint64    `json:"price"`
+	Stock            uint      `json:"stock" gorm:"default:100"`
+	Price            uint64    `json:"price" gorm:"default:0"`
 	ShortDescription string    `json:"short_description"`
 	Description      string    `json:"description"`
 	HowToUse         string    `json:"how_to_use"`
@@ -134,12 +134,12 @@ type Category struct {
 
 type Users struct {
 	ID           uint      `json:"id" gorm:"unique;not null"`
-	Name         string    `json:"name"`
+	Name         string    `json:"name" gorm:"not null"`
 	Username     string    `json:"username" gorm:"unique;not null"`
 	Email        string    `json:"email" validate:"email" gorm:"unique;not null"`
-	Gender       string    `json:"gender"`
+	Gender       string    `json:"gender" gorm:"gender:2;default:'MALE';check:gender IN ('MALE', 'FEMALE', 'OTHER')"`
 	Password     string    `json:"password" validate:"min=8,max=20"`
-	Phone        string    `json:"phone"`
+	Phone        string    `json:"phone" gorm:"not null"`
 	BirthDate    time.Time `json:"birth_date"`
 	IsBlocked    bool      `json:"is_blocked" gorm:"default:false"`
 	IsAdmin      bool      `json:"is_admin" gorm:"default:false"`
@@ -152,12 +152,12 @@ type Address struct {
 	ID       uint      `json:"id" gorm:"unique;not null"`
 	UserID   uint      `json:"user_id" gorm:"not null"`
 	Users    Users     `json:"-" gorm:"foreignkey:UserID;constraint:OnDelete:CASCADE"`
-	Name     string    `json:"name" validate:"required"`
-	Street   string    `json:"street" validate:"required"`
-	Ward     string    `json:"ward" validate:"required"`
-	District string    `json:"district" validate:"required"`
-	Province string    `json:"province" validate:"required"`
-	Phone    string    `json:"phone"`
+	Name     string    `json:"name" gorm:"not null"`
+	Street   string    `json:"street" gorm:"not null"`
+	Ward     string    `json:"ward" gorm:"not null"`
+	District string    `json:"district" gorm:"not null"`
+	Province string    `json:"province" gorm:"not null"`
+	Phone    string    `json:"phone" gorm:"not null"`
 	Default  bool      `json:"default" gorm:"default:false"`
 	Type     string    `json:"type" gorm:"default:'HOME';check:type IN ('HOME', 'WORK')"`
 	CreateAt time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
@@ -180,14 +180,6 @@ type Wishlist struct {
 	IsDeleted bool      `json:"is_deleted" gorm:"default:false"`
 	CreateAt  time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateAt  time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
-}
-
-type SearchHistory struct {
-	ID        uint      `json:"id" gorm:"primarykey"`
-	UserID    uint      `json:"user_id" gorm:"not null"`
-	Users     Users     `json:"-" gorm:"foreignkey:UserID;constraint:OnDelete:CASCADE"`
-	SearchKey string    `json:"search_key" gorm:"not null"`
-	CreateAt  time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 }
 
 type Transaction struct {

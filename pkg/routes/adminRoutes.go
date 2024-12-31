@@ -9,13 +9,13 @@ import (
 
 func AdminRoutes(
 	engine *gin.RouterGroup,
-	adminHandler *handler.AdminHandler,
-	productHandler *handler.ProductHandler,
-	userHandler *handler.UserHandler,
-	categoryHandler *handler.CategoryHandler,
-	// orderHandler *handler.OrderHandler,
-	// couponHandler *handler.CouponHandler,
-	offerHandler *handler.OfferHandler,
+	adminHandler handler.AdminHandler,
+	productHandler handler.ProductHandler,
+	userHandler handler.UserHandler,
+	categoryHandler handler.CategoryHandler,
+	// orderHandler handler.OrderHandler,
+	// couponHandler handler.CouponHandler,
+	offerHandler handler.OfferHandler,
 ) {
 
 	engine.POST("/login", adminHandler.LoginHandler)

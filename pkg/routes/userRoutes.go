@@ -9,15 +9,15 @@ import (
 
 func UserRoutes(
 	engine *gin.RouterGroup,
-	userHandler *handler.UserHandler,
-	// otpHandler *handler.OtpHandler,
-	productHandler *handler.ProductHandler,
-	orderHandler *handler.OrderHandler,
-	cartHandler *handler.CartHandler,
-	paymentHandler *handler.PaymentHandler,
-	wishlisthandler *handler.WishlistHandler,
-	categoryHandler *handler.CategoryHandler,
-	// couponHandler *handler.CouponHandler
+	userHandler handler.UserHandler,
+	// otpHandler handler.OtpHandler,
+	productHandler handler.ProductHandler,
+	orderHandler handler.OrderHandler,
+	cartHandler handler.CartHandler,
+	paymentHandler handler.PaymentHandler,
+	wishlisthandler handler.WishlistHandler,
+	categoryHandler handler.CategoryHandler,
+	// couponHandler handler.CouponHandler
 ) {
 
 	engine.POST("/signup", userHandler.UserSignUp)

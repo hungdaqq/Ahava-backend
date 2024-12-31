@@ -1,7 +1,7 @@
 package handler
 
 import (
-	services "ahava/pkg/usecase"
+	services "ahava/pkg/service"
 	models "ahava/pkg/utils/models"
 	"ahava/pkg/utils/response"
 	"net/http"
@@ -10,69 +10,75 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type WishlistHandler struct {
-	usecase services.WishlistUseCase
+type WishlistHandler interface {
+	AddToWishlist(ctx *gin.Context)
+	RemoveFromWishlist(ctx *gin.Context)
+	GetWishList(ctx *gin.Context)
 }
 
-func NewWishlistHandler(use services.WishlistUseCase) *WishlistHandler {
-	return &WishlistHandler{
-		usecase: use,
+type wishlistHandler struct {
+	service services.WishlistService
+}
+
+func NewWishlistHandler(service services.WishlistService) WishlistHandler {
+	return &wishlistHandler{
+		service: service,
 	}
 }
 
-func (w *WishlistHandler) AddToWishlist(c *gin.Context) {
+func (h *wishlistHandler) AddToWishlist(ctx *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := ctx.MustGet("id").(int)
 
 	var model models.AddToWishlist
-	if err := c.BindJSON(&model); err != nil {
+	if err := ctx.BindJSON(&model); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	result, err := w.usecase.AddToWishlist(uint(user_id), model.ProductID)
+	result, err := h.service.AddToWishlist(uint(user_id), model.ProductID)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add to Wishlist", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully added To wishlist", result, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-func (w *WishlistHandler) RemoveFromWishlist(c *gin.Context) {
+func (h *wishlistHandler) RemoveFromWishlist(ctx *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := ctx.MustGet("id").(int)
 
-	product_id, err := strconv.Atoi(c.Query("product_id"))
+	product_id, err := strconv.Atoi(ctx.Query("product_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "check parameters properly", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-	if err := w.usecase.RemoveFromWishlist(uint(user_id), uint(product_id)); err != nil {
+	if err := h.service.RemoveFromWishlist(uint(user_id), uint(product_id)); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not remove from wishlist", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully Removed product from wishlist", nil, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 }
 
-func (w *WishlistHandler) GetWishList(c *gin.Context) {
+func (h *wishlistHandler) GetWishList(ctx *gin.Context) {
 
-	user_id := c.MustGet("id").(int)
+	user_id := ctx.MustGet("id").(int)
 
-	products, err := w.usecase.GetWishList(uint(user_id))
+	products, err := h.service.GetWishList(uint(user_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", products, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 }

@@ -9,11 +9,11 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-func UserAuthMiddleware(c *gin.Context) {
-	tokenString := c.GetHeader("Authorization")
+func UserAuthMiddleware(ctx *gin.Context) {
+	tokenString := ctx.GetHeader("Authorization")
 	if tokenString == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing authorization token"})
-		c.Abort()
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Missing authorization token"})
+		ctx.Abort()
 		return
 	}
 	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
@@ -24,15 +24,15 @@ func UserAuthMiddleware(c *gin.Context) {
 	})
 
 	if err != nil || !token.Valid {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization token"})
-		c.Abort()
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization token"})
+		ctx.Abort()
 		return
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization token"})
-		c.Abort()
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization token"})
+		ctx.Abort()
 		return
 	}
 
@@ -40,20 +40,20 @@ func UserAuthMiddleware(c *gin.Context) {
 
 	role, ok := claims["role"].(string)
 	if !ok || role != "client" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized access"})
-		c.Abort()
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized access"})
+		ctx.Abort()
 		return
 	}
 
 	id, ok := claims["id"].(float64)
 	if !ok || id == 0 {
-		c.JSON(http.StatusForbidden, gin.H{"error": "error in retrieving id"})
-		c.Abort()
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "error in retrieving id"})
+		ctx.Abort()
 		return
 	}
 
-	c.Set("role", role)
-	c.Set("id", int(id))
+	ctx.Set("role", role)
+	ctx.Set("id", int(id))
 
-	c.Next()
+	ctx.Next()
 }

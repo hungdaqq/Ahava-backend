@@ -8,6 +8,9 @@ import (
 	"ahava/pkg/api/handler"
 	config "ahava/pkg/config"
 	db "ahava/pkg/db"
+	"ahava/pkg/helper"
+	"ahava/pkg/repository"
+	"ahava/pkg/service"
 
 	"github.com/google/wire"
 )
@@ -16,10 +19,39 @@ import (
 func InitializeAPI(cfg config.Config) (*http.ServerHTTP, error) {
 	wire.Build(
 		db.ConnectDatabase, // Provides *db.Database
-		// repository.NewUserRepository, // Provides repository.UserRepository
-		// usecase.NewAdminUseCase,      // Other use case providers...
-		handler.NewUserHandler, // User handler
-		// handler.NewAdminHandler, // Admin handler
+
+		repository.NewUserRepository,
+		repository.NewAdminRepository,
+		repository.NewProductRepository,
+		repository.NewCategoryRepository,
+		repository.NewOfferRepository,
+		repository.NewWishlistRepository,
+		repository.NewCartRepository,
+		repository.NewOrderRepository,
+		repository.NewPaymentRepository,
+
+		service.NewUserService,  // User use case
+		service.NewAdminService, // Admin use case
+		service.NewProductService,
+		service.NewCategoryService,
+		service.NewOfferService,
+		service.NewWishlistService,
+		service.NewCartService,
+		service.NewOrderService,
+		service.NewPaymentService,
+
+		handler.NewUserHandler,  // User handler
+		handler.NewAdminHandler, // Admin handler
+		handler.NewProductHandler,
+		handler.NewCategoryHandler,
+		handler.NewOfferHandler,
+		handler.NewWishlistHandler,
+		handler.NewCartHandler,
+		handler.NewOrderHandler,
+		handler.NewPaymentHandler,
+
+		helper.NewHelper, // Provides repository.UserRepository
+
 		http.NewServerHTTP, // HTTP server setup
 	)
 

@@ -1,7 +1,7 @@
 package handler
 
 import (
-	services "ahava/pkg/usecase"
+	services "ahava/pkg/service"
 	"ahava/pkg/utils/models"
 	"ahava/pkg/utils/response"
 	"net/http"
@@ -10,95 +10,102 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type OfferHandler struct {
-	usecase services.OfferUseCase
+type OfferHandler interface {
+	AddNewOffer(ctx *gin.Context)
+	UpdateOffer(ctx *gin.Context)
+	ExpireOffer(ctx *gin.Context)
+	GetOffers(ctx *gin.Context)
 }
 
-func NewOfferHandler(usecase services.OfferUseCase) *OfferHandler {
-	return &OfferHandler{
-		usecase: usecase,
+type offerHandler struct {
+	service services.OfferService
+}
+
+func NewOfferHandler(service services.OfferService) OfferHandler {
+	return &offerHandler{
+		service: service,
 	}
 }
 
-func (off *OfferHandler) AddNewOffer(c *gin.Context) {
+func (h *offerHandler) AddNewOffer(ctx *gin.Context) {
 
 	var model models.Offer
-	if err := c.BindJSON(&model); err != nil {
+	if err := ctx.BindJSON(&model); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	result, err := off.usecase.AddNewOffer(model)
+	result, err := h.service.AddNewOffer(model)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add the Offer", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusCreated, "Successfully added Offer", result, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-func (off *OfferHandler) UpdateOffer(c *gin.Context) {
+func (h *offerHandler) UpdateOffer(ctx *gin.Context) {
 
-	product_id, err := strconv.Atoi(c.Param("product_id"))
+	product_id, err := strconv.Atoi(ctx.Param("product_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	var model models.Offer
-	if err := c.BindJSON(&model); err != nil {
+	if err := ctx.BindJSON(&model); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	result, err := off.usecase.UpdateOffer(uint(product_id), model)
+	result, err := h.service.UpdateOffer(uint(product_id), model)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not update the Offer", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully updated Offer", result, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }
 
-func (o *OfferHandler) ExpireOffer(c *gin.Context) {
+func (o *offerHandler) ExpireOffer(ctx *gin.Context) {
 
-	product_id, err := strconv.Atoi(c.Param("product_id"))
+	product_id, err := strconv.Atoi(ctx.Param("product_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
-	result, err := o.usecase.ExpireOffer(uint(product_id))
+	result, err := o.service.ExpireOffer(uint(product_id))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Offer cannot be made expired", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully made offer expired", result, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 }
 
-func (o *OfferHandler) GetOffers(c *gin.Context) {
+func (o *offerHandler) GetOffers(ctx *gin.Context) {
 
-	categories, err := o.usecase.GetOffers()
+	categories, err := o.service.GetOffers()
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		c.JSON(http.StatusBadRequest, errorRes)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
 
 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all offers", categories, nil)
-	c.JSON(http.StatusOK, successRes)
+	ctx.JSON(http.StatusOK, successRes)
 
 }

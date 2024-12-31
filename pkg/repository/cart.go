@@ -31,17 +31,17 @@ type cartRepository struct {
 	DB *gorm.DB
 }
 
-func NewCartRepository(db *gorm.DB) *cartRepository {
+func NewCartRepository(db *gorm.DB) CartRepository {
 	return &cartRepository{
 		DB: db,
 	}
 }
 
-// func (ad *cartRepository) GetAddresses(id uint) ([]models.Address, error) {
+// func (r *cartRepository) GetAddresses(id uint) ([]models.Address, error) {
 
 // 	var addresses []models.Address
 
-// 	if err := ad.DB.Raw("SELECT * FROM addresses WHERE user_id=$1", id).Scan(&addresses).Error; err != nil {
+// 	if err := r.DB.Raw("SELECT * FROM addresses WHERE user_id=$1", id).Scan(&addresses).Error; err != nil {
 // 		return []models.Address{}, err
 // 	}
 
@@ -49,7 +49,7 @@ func NewCartRepository(db *gorm.DB) *cartRepository {
 
 // }
 
-func (ad *cartRepository) GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error) {
+func (r *cartRepository) GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error) {
 	var cart []models.CartItem
 
 	query := `
@@ -63,9 +63,9 @@ func (ad *cartRepository) GetCart(user_id uint, cart_ids []uint) ([]models.CartI
 
 	var err error
 	if len(cart_ids) > 0 {
-		err = ad.DB.Raw(query, user_id, pq.Array(cart_ids)).Scan(&cart).Error
+		err = r.DB.Raw(query, user_id, pq.Array(cart_ids)).Scan(&cart).Error
 	} else {
-		err = ad.DB.Raw(query, user_id).Scan(&cart).Error
+		err = r.DB.Raw(query, user_id).Scan(&cart).Error
 	}
 
 	if err != nil {
@@ -75,11 +75,11 @@ func (ad *cartRepository) GetCart(user_id uint, cart_ids []uint) ([]models.CartI
 	return cart, nil
 }
 
-// func (ad *cartRepository) GetCartId(user_id uint) (int, error) {
+// func (r *cartRepository) GetCartId(user_id uint) (int, error) {
 
 // 	var id uint
 
-// 	if err := ad.DB.Raw("SELECT id FROM carts WHERE user_id=?", user_id).Scan(&id).Error; err != nil {
+// 	if err := r.DB.Raw("SELECT id FROM carts WHERE user_id=?", user_id).Scan(&id).Error; err != nil {
 // 		return 0, err
 // 	}
 
@@ -115,11 +115,11 @@ func (ad *cartRepository) GetCart(user_id uint, cart_ids []uint) ([]models.CartI
 // 	return nil
 // }
 
-func (ad *cartRepository) CheckIfItemIsAlreadyAdded(user_id, product_id uint) (uint, error) {
+func (r *cartRepository) CheckIfItemIsAlreadyAdded(user_id, product_id uint) (uint, error) {
 
 	var count uint
 
-	if err := ad.DB.Raw("SELECT id FROM cart_items WHERE user_id = $1 AND product_id=$2",
+	if err := r.DB.Raw("SELECT id FROM cart_items WHERE user_id = $1 AND product_id=$2",
 		user_id, product_id).Scan(&count).Error; err != nil {
 		return 0, err
 	}
@@ -127,9 +127,9 @@ func (ad *cartRepository) CheckIfItemIsAlreadyAdded(user_id, product_id uint) (u
 	return count, nil
 }
 
-func (ad *cartRepository) RemoveFromCart(user_id, cart_id uint) error {
+func (r *cartRepository) RemoveFromCart(user_id, cart_id uint) error {
 
-	err := ad.DB.Exec(`DELETE FROM cart_items WHERE id=$1 AND user_id=$2`,
+	err := r.DB.Exec(`DELETE FROM cart_items WHERE id=$1 AND user_id=$2`,
 		cart_id, user_id).Error
 	if err != nil {
 		return err
@@ -139,11 +139,11 @@ func (ad *cartRepository) RemoveFromCart(user_id, cart_id uint) error {
 
 }
 
-func (ad *cartRepository) UpdateQuantityAdd(user_id, cart_id, quantity uint) (models.CartDetails, error) {
+func (r *cartRepository) UpdateQuantityAdd(user_id, cart_id, quantity uint) (models.CartDetails, error) {
 
 	var cartDetails models.CartDetails
 
-	result := ad.DB.
+	result := r.DB.
 		Model(&domain.CartItems{}).
 		Where("id=? AND user_id=?", cart_id, user_id).
 		Update("quantity", gorm.Expr("quantity + ?", quantity)).
@@ -160,11 +160,11 @@ func (ad *cartRepository) UpdateQuantityAdd(user_id, cart_id, quantity uint) (mo
 	return cartDetails, nil
 }
 
-func (ad *cartRepository) UpdateQuantityLess(user_id, cart_id, quantity uint) (models.CartDetails, error) {
+func (r *cartRepository) UpdateQuantityLess(user_id, cart_id, quantity uint) (models.CartDetails, error) {
 
 	var cartDetails models.CartDetails
 
-	result := ad.DB.
+	result := r.DB.
 		Model(&domain.CartItems{}).
 		Where("id=? AND user_id=?", cart_id, user_id).
 		Update("quantity", gorm.Expr("quantity - ?", quantity)).
@@ -181,14 +181,15 @@ func (ad *cartRepository) UpdateQuantityLess(user_id, cart_id, quantity uint) (m
 	return cartDetails, nil
 }
 
-func (ad *cartRepository) UpdateQuantity(user_id, cart_id, quantity uint) (models.CartDetails, error) {
+func (r *cartRepository) UpdateQuantity(user_id, cart_id, quantity uint) (models.CartDetails, error) {
 
 	var cartDetails models.CartDetails
 
-	result := ad.DB.
+	result := r.DB.
 		Model(&domain.CartItems{}).
 		Where("id=? AND user_id=?", cart_id, user_id).
-		Update("quantity", quantity)
+		Update("quantity", quantity).
+		Scan(&cartDetails)
 
 	if result.Error != nil {
 		return models.CartDetails{}, result.Error
@@ -201,11 +202,11 @@ func (ad *cartRepository) UpdateQuantity(user_id, cart_id, quantity uint) (model
 	return cartDetails, nil
 }
 
-func (ad *cartRepository) AddToCart(user_id, product_id, quantity uint) (models.CartDetails, error) {
+func (r *cartRepository) AddToCart(user_id, product_id, quantity uint) (models.CartDetails, error) {
 
 	var cartDetails models.CartDetails
 
-	err := ad.DB.Raw(`INSERT INTO cart_items (user_id,product_id,quantity) VALUES ($1,$2,$3) RETURNING id, user_id, product_id, quantity`,
+	err := r.DB.Raw(`INSERT INTO cart_items (user_id,product_id,quantity) VALUES ($1,$2,$3) RETURNING id, user_id, product_id, quantity`,
 		user_id, product_id, quantity).Scan(&cartDetails).Error
 	if err != nil {
 		return models.CartDetails{}, err

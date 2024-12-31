@@ -20,17 +20,17 @@ type wishlistRepository struct {
 	DB *gorm.DB
 }
 
-func NewWishlistRepository(db *gorm.DB) *wishlistRepository {
+func NewWishlistRepository(db *gorm.DB) WishlistRepository {
 	return &wishlistRepository{
 		DB: db,
 	}
 }
 
-func (w *wishlistRepository) AddToWishlist(user_id, product_id uint) (models.Wishlist, error) {
+func (r *wishlistRepository) AddToWishlist(user_id, product_id uint) (models.Wishlist, error) {
 
 	var addWishlist models.Wishlist
 
-	err := w.DB.Raw(`INSERT INTO wishlists (user_id,product_id) VALUES ($1,$2)`,
+	err := r.DB.Raw(`INSERT INTO wishlists (user_id,product_id) VALUES ($1,$2)`,
 		user_id, product_id).Scan(&addWishlist).Error
 	if err != nil {
 		return models.Wishlist{}, err
@@ -39,11 +39,11 @@ func (w *wishlistRepository) AddToWishlist(user_id, product_id uint) (models.Wis
 	return addWishlist, nil
 }
 
-func (w *wishlistRepository) UpdateWishlist(user_id, product_id uint, is_deleted bool) (models.Wishlist, error) {
+func (r *wishlistRepository) UpdateWishlist(user_id, product_id uint, is_deleted bool) (models.Wishlist, error) {
 
 	var updateWishlist models.Wishlist
 
-	result := w.DB.
+	result := r.DB.
 		Model(&domain.Wishlist{}).
 		Where("user_id = ? AND product_id = ?", user_id, product_id).
 		Update("is_deleted", is_deleted).
@@ -60,7 +60,7 @@ func (w *wishlistRepository) UpdateWishlist(user_id, product_id uint, is_deleted
 	return updateWishlist, nil
 }
 
-func (w *wishlistRepository) GetWishList(id uint) ([]models.Products, error) {
+func (r *wishlistRepository) GetWishList(id uint) ([]models.Products, error) {
 	var productDetails []models.Products
 
 	query := `
@@ -76,7 +76,7 @@ func (w *wishlistRepository) GetWishList(id uint) ([]models.Products, error) {
         WHERE wishlists.user_id = ? AND wishlists.is_deleted = false
     `
 
-	if err := w.DB.Raw(query, id).Scan(&productDetails).Error; err != nil {
+	if err := r.DB.Raw(query, id).Scan(&productDetails).Error; err != nil {
 		// Log or handle the error appropriately.
 		return nil, err
 	}
@@ -84,11 +84,11 @@ func (w *wishlistRepository) GetWishList(id uint) ([]models.Products, error) {
 	return productDetails, nil
 }
 
-// func (w *wishlistRepository) CheckIfTheItemIsPresentAtCart(user_id, product_id uint) (bool, error) {
+// func (r *wishlistRepository) CheckIfTheItemIsPresentAtCart(user_id, product_id uint) (bool, error) {
 
 // 	var result int64
 
-// 	if err := w.DB.Raw(`SELECT COUNT (*)
+// 	if err := r.DB.Raw(`SELECT COUNT (*)
 // 	 FROM line_items
 // 	 JOIN carts ON carts.id = line_items.cart_id
 // 	 JOIN users ON users.id = carts.user_id
@@ -102,11 +102,11 @@ func (w *wishlistRepository) GetWishList(id uint) ([]models.Products, error) {
 
 // }
 
-func (w *wishlistRepository) CheckIfTheItemIsPresentAtWishlist(user_id, product_id uint) (bool, error) {
+func (r *wishlistRepository) CheckIfTheItemIsPresentAtWishlist(user_id, product_id uint) (bool, error) {
 
 	var result int64
 
-	if err := w.DB.Raw(`SELECT COUNT (*) FROM wishlists WHERE user_id=$1 AND product_id=$2`,
+	if err := r.DB.Raw(`SELECT COUNT (*) FROM wishlists WHERE user_id=$1 AND product_id=$2`,
 		user_id, product_id).Scan(&result).Error; err != nil {
 		return false, err
 	}
