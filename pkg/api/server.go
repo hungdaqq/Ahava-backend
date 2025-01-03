@@ -6,10 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	handler "ahava/pkg/api/handler"
+	"ahava/pkg/api/middleware"
 	"ahava/pkg/routes"
-
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type ServerHTTP struct {
@@ -31,12 +29,12 @@ func NewServerHTTP(
 ) *ServerHTTP {
 
 	engine := gin.New()
-
+	engine.Use(middleware.CORSMiddleware())
 	// engine.LoadHTMLGlob("templates/*.html")
 	// Use logger from Gin
 	engine.Use(gin.Logger())
 	//Swagger docs
-	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	engine.GET("/validate-token", adminHandler.ValidateRefreshTokenAndCreateNewAccess)
 

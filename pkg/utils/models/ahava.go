@@ -56,14 +56,14 @@ type ChangePassword struct {
 }
 
 type UserSignInResponse struct {
-	ID        uint   `json:"id"`
-	UserID    uint   `json:"user_id"`
-	Name      string `json:"name"`
-	Email     string `json:"email"`
-	Phone     string `json:"phone"`
-	Password  string `json:"password"`
-	BirthDate string `json:"birth_date"`
-	Gender    string `json:"gender"`
+	ID        uint      `json:"id"`
+	Username  string    `json:"username"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Phone     string    `json:"phone"`
+	Password  string    `json:"password"`
+	BirthDate time.Time `json:"birth_date"`
+	Gender    string    `json:"gender"`
 }
 
 type UserDetailsResponse struct {

@@ -156,6 +156,9 @@ func (u *USERUSECASE) LoginHandler(user models.UserLogin) (models.TokenUsers, er
 	userDetails.Name = details.Name
 	userDetails.Email = details.Email
 	userDetails.Phone = details.Phone
+	userDetails.Username = details.Username
+	userDetails.Gender = details.Gender
+	userDetails.BirthDate = details.BirthDate
 
 	tokenString, err := u.helper.GenerateTokenClients(userDetails)
 	if err != nil {
