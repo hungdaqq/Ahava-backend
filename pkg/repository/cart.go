@@ -50,6 +50,7 @@ func NewCartRepository(db *gorm.DB) CartRepository {
 // }
 
 func (r *cartRepository) GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error) {
+	
 	var cart []models.CartItem
 
 	query := `

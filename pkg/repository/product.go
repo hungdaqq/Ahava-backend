@@ -36,7 +36,7 @@ func NewProductRepository(DB *gorm.DB) ProductRepository {
 
 func (r *productRepository) AddProduct(product models.Products) (models.Products, error) {
 
-	var addProduct models.Products
+	var addProduct domain.Products
 
 	err := r.DB.Create(&domain.Products{
 		Name:             product.Name,
@@ -54,7 +54,19 @@ func (r *productRepository) AddProduct(product models.Products) (models.Products
 		return models.Products{}, err
 	}
 
-	return addProduct, nil
+	return models.Products{
+		ID:               addProduct.ID,
+		Name:             addProduct.Name,
+		CategoryID:       addProduct.CategoryID,
+		Price:            addProduct.Price,
+		Size:             addProduct.Size,
+		Stock:            addProduct.Stock,
+		DefaultImage:     addProduct.DefaultImage,
+		Images:           addProduct.Images,
+		ShortDescription: addProduct.ShortDescription,
+		Description:      addProduct.Description,
+		HowToUse:         addProduct.HowToUse,
+	}, nil
 }
 
 func (r *productRepository) DeleteProduct(product_id uint) error {

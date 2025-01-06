@@ -11,6 +11,7 @@ import (
 type WishlistRepository interface {
 	AddToWishlist(user_id, product_id uint) (models.Wishlist, error)
 	UpdateWishlist(user_id, product_id uint, is_deleted bool) (models.Wishlist, error)
+	UpdateRemoveFromWishlist(user_id, wishlist_id uint) error
 	GetWishList(user_id uint) ([]models.Products, error)
 	CheckIfTheItemIsPresentAtWishlist(user_id, product_id uint) (bool, error)
 	// CheckIfTheItemIsPresentAtCart(user_id, product_id uint) (bool, error)
@@ -60,7 +61,25 @@ func (r *wishlistRepository) UpdateWishlist(user_id, product_id uint, is_deleted
 	return updateWishlist, nil
 }
 
-func (r *wishlistRepository) GetWishList(id uint) ([]models.Products, error) {
+func (r *wishlistRepository) UpdateRemoveFromWishlist(user_id, wishlist_id uint) error {
+
+	result := r.DB.
+		Model(&domain.Wishlist{}).
+		Where("id=? AND user_id=?", wishlist_id, user_id).
+		Update("is_deleted", true)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.ErrEntityNotFound
+	}
+
+	return nil
+}
+
+func (r *wishlistRepository) GetWishList(user_id uint) ([]models.Products, error) {
 	var productDetails []models.Products
 
 	query := `
@@ -76,7 +95,7 @@ func (r *wishlistRepository) GetWishList(id uint) ([]models.Products, error) {
         WHERE wishlists.user_id = ? AND wishlists.is_deleted = false
     `
 
-	if err := r.DB.Raw(query, id).Scan(&productDetails).Error; err != nil {
+	if err := r.DB.Raw(query, user_id).Scan(&productDetails).Error; err != nil {
 		// Log or handle the error appropriately.
 		return nil, err
 	}

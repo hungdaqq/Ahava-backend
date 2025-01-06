@@ -3,12 +3,11 @@ package service
 import (
 	repository "ahava/pkg/repository"
 	"ahava/pkg/utils/models"
-	"errors"
 )
 
 type WishlistService interface {
 	AddToWishlist(user_id, product_id uint) (models.Wishlist, error)
-	RemoveFromWishlist(user_id, product_id uint) error
+	RemoveFromWishlist(user_id, wishlist_id uint) error
 	GetWishList(user_id uint) ([]models.Products, error)
 }
 
@@ -49,18 +48,18 @@ func (w *wishlistService) AddToWishlist(user_id, product_id uint) (models.Wishli
 	}
 }
 
-func (w *wishlistService) RemoveFromWishlist(user_id, product_id uint) error {
+func (w *wishlistService) RemoveFromWishlist(user_id, wishlist_id uint) error {
 
-	if _, err := w.repository.UpdateWishlist(user_id, product_id, true); err != nil {
-		return errors.New("could not remove from wishlist")
+	if err := w.repository.UpdateRemoveFromWishlist(user_id, wishlist_id); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (w *wishlistService) GetWishList(id uint) ([]models.Products, error) {
+func (w *wishlistService) GetWishList(user_id uint) ([]models.Products, error) {
 
-	productDetails, err := w.repository.GetWishList(id)
+	productDetails, err := w.repository.GetWishList(user_id)
 	if err != nil {
 		return []models.Products{}, err
 	}

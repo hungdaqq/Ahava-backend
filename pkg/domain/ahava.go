@@ -4,6 +4,8 @@ import (
 	"ahava/pkg/utils/models"
 	"time"
 
+	"github.com/lib/pq"
+
 	"gorm.io/gorm"
 )
 
@@ -32,7 +34,7 @@ type CartItems struct {
 	Users     Users     `json:"-" gorm:"foreignkey:UserID;constraint:OnDelete:CASCADE"`
 	ProductID uint      `json:"product_id" gorm:"not null"`
 	Products  Products  `json:"-" gorm:"foreignkey:ProductID;constraint:OnDelete:CASCADE"`
-	Quantity  uint      `json:"quantity" gorm:"default:1"`
+	Quantity  uint      `json:"quantity" gorm:"default:1;check:quantity > 0"`
 	CreatedAt time.Time `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateAt  time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
@@ -107,21 +109,21 @@ type OrderDetailsWithImages struct {
 }
 
 type Products struct {
-	ID               uint      `json:"id" gorm:"primarykey"`
-	CategoryID       uint      `json:"category_id" gorm:"not null"`
-	Category         Category  `json:"-" gorm:"foreignkey:CategoryID;constraint:OnDelete:CASCADE"`
-	Name             string    `json:"name" gorm:"default:Ahava Product"`
-	DefaultImage     string    `json:"default_image" gorm:"not null"`
-	Images           string    `json:"images"`
-	Size             string    `json:"size"`
-	Stock            uint      `json:"stock" gorm:"default:100"`
-	Price            uint64    `json:"price" gorm:"default:0"`
-	ShortDescription string    `json:"short_description"`
-	Description      string    `json:"description"`
-	HowToUse         string    `json:"how_to_use"`
-	IsFeatured       bool      `json:"is_featured" gorm:"default:false"`
-	CreateAt         time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdateAt         time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
+	ID               uint           `json:"id" gorm:"primarykey"`
+	CategoryID       uint           `json:"category_id" gorm:"not null"`
+	Category         Category       `json:"-" gorm:"foreignkey:CategoryID;constraint:OnDelete:CASCADE"`
+	Name             string         `json:"name" gorm:"default:Ahava Product"`
+	DefaultImage     string         `json:"default_image" gorm:"not null"`
+	Images           pq.StringArray `json:"images" gorm:"type:varchar[]"`
+	Size             string         `json:"size"`
+	Stock            uint           `json:"stock" gorm:"default:100"`
+	Price            uint64         `json:"price" gorm:"default:0"`
+	ShortDescription string         `json:"short_description"`
+	Description      string         `json:"description"`
+	HowToUse         string         `json:"how_to_use"`
+	IsFeatured       bool           `json:"is_featured" gorm:"default:false"`
+	CreateAt         time.Time      `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
+	UpdateAt         time.Time      `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
 type Category struct {

@@ -53,13 +53,14 @@ func (h *wishlistHandler) RemoveFromWishlist(ctx *gin.Context) {
 
 	user_id := ctx.MustGet("id").(int)
 
-	product_id, err := strconv.Atoi(ctx.Query("product_id"))
+	wishlist_id, err := strconv.Atoi(ctx.Param("wishlist_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "check parameters properly", nil, err.Error())
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-	if err := h.service.RemoveFromWishlist(uint(user_id), uint(product_id)); err != nil {
+
+	if err := h.service.RemoveFromWishlist(uint(user_id), uint(wishlist_id)); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not remove from wishlist", nil, err.Error())
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return

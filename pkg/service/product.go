@@ -5,6 +5,8 @@ import (
 	repository "ahava/pkg/repository"
 	"ahava/pkg/utils/models"
 	"mime/multipart"
+
+	"github.com/lib/pq"
 )
 
 type ProductService interface {
@@ -49,22 +51,33 @@ func (i *productService) AddProduct(product models.Products, default_image *mult
 		return models.Products{}, err
 	}
 
-	var urls string
+	// var urls string
 
-	for idx, image := range images {
+	// for idx, image := range images {
+	// 	url, err := i.helper.AddImageToS3(image, "ahava")
+	// 	if err != nil {
+	// 		return models.Products{}, err
+	// 	}
+
+	// 	if idx > 0 {
+	// 		urls += "," // Add a comma before every subsequent URL (except the first one)
+	// 	}
+	// 	urls += url // Append the URL
+	// }
+
+	var urls []string
+
+	for _, image := range images {
 		url, err := i.helper.AddImageToS3(image, "ahava")
 		if err != nil {
 			return models.Products{}, err
 		}
 
-		if idx > 0 {
-			urls += "," // Add a comma before every subsequent URL (except the first one)
-		}
-		urls += url // Append the URL
+		urls = append(urls, url)
 	}
 
 	product.DefaultImage = default_image_url
-	product.Images = urls
+	product.Images = pq.StringArray(urls)
 	result, err := i.repository.AddProduct(product)
 	if err != nil {
 		return models.Products{}, err

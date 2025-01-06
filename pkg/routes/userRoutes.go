@@ -39,30 +39,27 @@ func UserRoutes(
 		payment.POST("/webhook", paymentHandler.Webhook)
 	}
 
+	home := engine.Group("/home")
+	{
+		home.POST("/search", productHandler.SearchProducts)
+		home.GET("/category", categoryHandler.GetCategory)
+		// home.GET("/search", productHandler.GetSearchHistory)
+	}
+
+	product := engine.Group("/product")
+	{
+		product.GET("/detail", productHandler.GetProductDetails)
+		product.GET("", productHandler.ListCategoryProducts)
+		product.GET("/featured", productHandler.ListFeaturedProducts)
+	}
+
+	categorymanagement := engine.Group("/category")
+	{
+		categorymanagement.GET("", categoryHandler.GetCategory)
+	}
+
 	engine.Use(middleware.UserAuthMiddleware)
 	{
-
-		// engine.GET("/banners", categoryHandler.GetBannersForUsers)
-
-		home := engine.Group("/home")
-		{
-			home.POST("/search", productHandler.SearchProducts)
-			home.GET("/category", categoryHandler.GetCategory)
-			// home.GET("/search", productHandler.GetSearchHistory)
-		}
-
-		product := engine.Group("/product")
-		{
-			product.GET("/detail", productHandler.GetProductDetails)
-			product.GET("", productHandler.ListCategoryProducts)
-			product.GET("/featured", productHandler.ListFeaturedProducts)
-		}
-
-		categorymanagement := engine.Group("/category")
-		{
-			categorymanagement.GET("", categoryHandler.GetCategory)
-		}
-
 		profile := engine.Group("/profile")
 		{
 			profile.GET("/detail", userHandler.GetUserDetails)
@@ -97,7 +94,7 @@ func UserRoutes(
 		{
 			wishlist.POST("", wishlisthandler.AddToWishlist)
 			wishlist.GET("", wishlisthandler.GetWishList)
-			wishlist.DELETE("/:product_id", wishlisthandler.RemoveFromWishlist)
+			wishlist.DELETE("/:wishlist_id", wishlisthandler.RemoveFromWishlist)
 		}
 
 		order := engine.Group("/order")
