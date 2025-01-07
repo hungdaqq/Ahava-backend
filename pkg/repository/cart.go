@@ -50,7 +50,7 @@ func NewCartRepository(db *gorm.DB) CartRepository {
 // }
 
 func (r *cartRepository) GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error) {
-	
+
 	var cart []models.CartItem
 
 	query := `
@@ -130,14 +130,16 @@ func (r *cartRepository) CheckIfItemIsAlreadyAdded(user_id, product_id uint) (ui
 
 func (r *cartRepository) RemoveFromCart(user_id, cart_id uint) error {
 
-	err := r.DB.Exec(`DELETE FROM cart_items WHERE id=$1 AND user_id=$2`,
-		cart_id, user_id).Error
-	if err != nil {
-		return err
+	result := r.DB.Exec(`DELETE FROM cart_items WHERE id=$1 AND user_id=$2`,
+		cart_id, user_id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.ErrEntityNotFound
 	}
 
 	return nil
-
 }
 
 func (r *cartRepository) UpdateQuantityAdd(user_id, cart_id, quantity uint) (models.CartDetails, error) {

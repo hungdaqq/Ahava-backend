@@ -157,10 +157,13 @@ func (r *userDatabase) UpdateAddress(user_id, address_id uint, address models.Ad
 
 func (r *userDatabase) DeleteAddress(address_id, user_id uint) error {
 
-	err := r.DB.Exec(`DELETE FROM addresses WHERE id=? AND user_id=?`,
-		address_id, user_id).Error
-	if err != nil {
-		return err
+	result := r.DB.Exec(`DELETE FROM addresses WHERE id=? AND user_id=?`,
+		address_id, user_id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.ErrEntityNotFound
 	}
 
 	return nil

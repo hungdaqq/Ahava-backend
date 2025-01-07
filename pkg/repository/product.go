@@ -72,8 +72,10 @@ func (r *productRepository) AddProduct(product models.Products) (models.Products
 func (r *productRepository) DeleteProduct(product_id uint) error {
 
 	result := r.DB.Exec("DELETE FROM products WHERE id = ?", product_id)
-
-	if result.RowsAffected < 1 {
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
 		return errors.ErrEntityNotFound
 	}
 
