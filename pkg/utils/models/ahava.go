@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type AdminLogin struct {
@@ -34,19 +36,19 @@ type ListProducts struct {
 }
 
 type Products struct {
-	ID               uint     `json:"id"`
-	CategoryID       uint     `json:"category_id"`
-	Name             string   `json:"name"`
-	Size             string   `json:"size"`
-	Stock            uint     `json:"stock"`
-	DefaultImage     string   `json:"default_image"`
-	Images           []string `json:"images"`
-	Price            uint64   `json:"price"`
-	DiscountedPrice  uint64   `json:"discounted_price"`
-	ShortDescription string   `json:"short_description"`
-	Description      string   `json:"description"`
-	HowToUse         string   `json:"how_to_use"`
-	IsFeatured       bool     `json:"is_featured"`
+	ID               uint           `json:"id"`
+	CategoryID       uint           `json:"category_id"`
+	Name             string         `json:"name"`
+	Size             string         `json:"size"`
+	Stock            uint           `json:"stock"`
+	DefaultImage     string         `json:"default_image"`
+	Images           pq.StringArray `json:"images"`
+	Price            uint64         `json:"price"`
+	DiscountedPrice  uint64         `json:"discounted_price"`
+	ShortDescription string         `json:"short_description"`
+	Description      string         `json:"description"`
+	HowToUse         string         `json:"how_to_use"`
+	IsFeatured       bool           `json:"is_featured"`
 }
 
 type ChangePassword struct {

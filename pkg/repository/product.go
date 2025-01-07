@@ -82,7 +82,7 @@ func (r *productRepository) DeleteProduct(product_id uint) error {
 
 func (r *productRepository) GetProductDetails(product_id uint) (models.Products, error) {
 
-	var product models.Products
+	var product domain.Products
 
 	err := r.DB.Raw(`SELECT * FROM products WHERE products.id = ?`,
 		product_id).Scan(&product).Error
@@ -90,7 +90,20 @@ func (r *productRepository) GetProductDetails(product_id uint) (models.Products,
 		return models.Products{}, errors.ErrEntityNotFound
 	}
 
-	return product, nil
+	return models.Products{
+		ID:               product.ID,
+		Name:             product.Name,
+		CategoryID:       product.CategoryID,
+		Price:            product.Price,
+		Size:             product.Size,
+		Stock:            product.Stock,
+		DefaultImage:     product.DefaultImage,
+		Images:           product.Images,
+		ShortDescription: product.ShortDescription,
+		Description:      product.Description,
+		HowToUse:         product.HowToUse,
+		IsFeatured:       product.IsFeatured,
+	}, nil
 }
 
 func (r *productRepository) ListProducts(limit, offset int) (models.ListProducts, error) {
@@ -127,8 +140,8 @@ func (r *productRepository) ListCategoryProducts(category_id uint) ([]models.Pro
 	}
 
 	return products, nil
-}
 
+}
 func (r *productRepository) ListFeaturedProducts() ([]models.Products, error) {
 
 	var products []models.Products
