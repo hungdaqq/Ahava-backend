@@ -82,20 +82,19 @@ func (r *wishlistRepository) UpdateRemoveFromWishlist(user_id, wishlist_id uint)
 func (r *wishlistRepository) GetWishList(user_id uint) ([]models.Products, error) {
 	var productDetails []models.Products
 
-	query := `
-        SELECT products.id,
+	if err := r.DB.Raw(`
+        SELECT products.id AS product_id,
                products.category_id,
                products.name,
                products.default_image,
                products.size,
                products.stock,
-               products.price
+               products.price,
+			   wishlists.id
         FROM products
         JOIN wishlists ON wishlists.product_id = products.id
-        WHERE wishlists.user_id = ? AND wishlists.is_deleted = false
-    `
-
-	if err := r.DB.Raw(query, user_id).Scan(&productDetails).Error; err != nil {
+        WHERE wishlists.user_id = ? AND wishlists.is_deleted = false`,
+		user_id).Scan(&productDetails).Error; err != nil {
 		// Log or handle the error appropriately.
 		return nil, err
 	}
