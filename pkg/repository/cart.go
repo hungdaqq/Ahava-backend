@@ -5,8 +5,6 @@ import (
 	errors "ahava/pkg/utils/errors"
 	"ahava/pkg/utils/models"
 
-	"github.com/lib/pq"
-
 	"gorm.io/gorm"
 )
 
@@ -50,27 +48,22 @@ func NewCartRepository(db *gorm.DB) CartRepository {
 // }
 
 func (r *cartRepository) GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error) {
-
 	var cart []models.CartItem
 
-	query := `
-        SELECT ci.id AS cart_id, p.id as product_id, p.name, p.default_image, p.price, ci.quantity, 
-               (ci.quantity * p.price) AS item_price 
-        FROM cart_items ci JOIN products p ON ci.product_id = p.id WHERE ci.user_id = $1`
+	// Build the query in GORM style
+	query := r.DB.Model(&models.CartItem{}).
+		Joins("JOIN products p ON cart_items.product_id = p.id").
+		Select("cart_items.id AS cart_id, p.id as product_id, p.name, p.default_image, p.price, cart_items.quantity, (cart_items.quantity * p.price) AS item_price").
+		Where("cart_items.user_id = ?", user_id)
 
+	// Apply cart_ids filter if provided
 	if len(cart_ids) > 0 {
-		query += " AND ci.id = ANY($2)"
+		query = query.Where("cart_items.id IN ?", cart_ids)
 	}
 
-	var err error
-	if len(cart_ids) > 0 {
-		err = r.DB.Raw(query, user_id, pq.Array(cart_ids)).Scan(&cart).Error
-	} else {
-		err = r.DB.Raw(query, user_id).Scan(&cart).Error
-	}
-
-	if err != nil {
-		return []models.CartItem{}, err
+	// Execute the query and scan the result into the cart slice
+	if err := query.Find(&cart).Error; err != nil {
+		return nil, err
 	}
 
 	return cart, nil

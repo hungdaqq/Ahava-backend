@@ -123,7 +123,7 @@ type EditProfile struct {
 type CartItem struct {
 	CartID              uint   `json:"cart_id"`
 	ProductID           uint   `json:"product_id"`
-	ProductName         string `json:"name"`
+	Name                string `json:"name"`
 	DefaultImage        string `json:"default_image"`
 	Quantity            uint   `json:"quantity"`
 	ItemPrice           uint64 `json:"item_price"`
