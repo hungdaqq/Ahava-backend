@@ -12,7 +12,7 @@ type WishlistRepository interface {
 	AddToWishlist(user_id, product_id uint) (models.Wishlist, error)
 	UpdateWishlist(user_id, product_id uint, is_deleted bool) (models.Wishlist, error)
 	UpdateRemoveFromWishlist(user_id, wishlist_id uint) error
-	GetWishList(user_id uint) ([]models.Products, error)
+	GetWishList(user_id uint) ([]models.WishlistProduct, error)
 	CheckIfTheItemIsPresentAtWishlist(user_id, product_id uint) (bool, error)
 	// CheckIfTheItemIsPresentAtCart(user_id, product_id uint) (bool, error)
 }
@@ -79,12 +79,12 @@ func (r *wishlistRepository) UpdateRemoveFromWishlist(user_id, wishlist_id uint)
 	return nil
 }
 
-func (r *wishlistRepository) GetWishList(user_id uint) ([]models.Products, error) {
-	var productDetails []models.Products
+func (r *wishlistRepository) GetWishList(user_id uint) ([]models.WishlistProduct, error) {
 
-	if err := r.DB.Raw(`
+	var wishlistProducts []models.WishlistProduct
+
+	err := r.DB.Raw(`
         SELECT products.id AS product_id,
-               products.category_id,
                products.name,
                products.default_image,
                products.size,
@@ -94,12 +94,12 @@ func (r *wishlistRepository) GetWishList(user_id uint) ([]models.Products, error
         FROM products
         JOIN wishlists ON wishlists.product_id = products.id
         WHERE wishlists.user_id = ? AND wishlists.is_deleted = false`,
-		user_id).Scan(&productDetails).Error; err != nil {
-		// Log or handle the error appropriately.
+		user_id).Scan(&wishlistProducts).Error
+	if err != nil {
 		return nil, err
 	}
 
-	return productDetails, nil
+	return wishlistProducts, nil
 }
 
 // func (r *wishlistRepository) CheckIfTheItemIsPresentAtCart(user_id, product_id uint) (bool, error) {

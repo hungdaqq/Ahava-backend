@@ -37,7 +37,7 @@ func NewProductHandler(service services.ProductService) ProductHandler {
 
 func (h *productHandler) AddProduct(ctx *gin.Context) {
 
-	var product models.Products
+	var product models.Product
 	category_id, err := strconv.Atoi(ctx.Request.FormValue("category_id"))
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "form file error", nil, err.Error())
@@ -258,7 +258,7 @@ func (h *productHandler) UpdateProduct(ctx *gin.Context) {
 		return
 	}
 
-	var model models.Products
+	var model models.Product
 	err = ctx.BindJSON(&model)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())

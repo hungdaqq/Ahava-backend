@@ -35,6 +35,7 @@ func NewServerHTTP(
 	engine.Use(gin.Logger())
 	//Swagger docs
 	// engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	gin.SetMode(gin.ReleaseMode)
 
 	engine.GET("/validate-token", adminHandler.ValidateRefreshTokenAndCreateNewAccess)
 

@@ -58,7 +58,7 @@ func (r *userDatabase) UserSignUp(user models.UserDetails, referral string) (mod
 	var userDetails models.UserDetailsResponse
 
 	err := r.DB.
-		Create(&domain.Users{
+		Create(&domain.User{
 			Name:         user.Name,
 			Username:     user.Username,
 			Gender:       user.Gender,
@@ -208,7 +208,7 @@ func (ad *userDatabase) GetUserDetails(user_id uint) (models.UserDetailsResponse
 
 func (r *userDatabase) ChangePassword(id uint, password string) error {
 
-	result := r.DB.Model(&domain.Users{}).Where("id = ?", id).Update("password", password)
+	result := r.DB.Model(&domain.User{}).Where("id = ?", id).Update("password", password)
 
 	if result.Error != nil {
 		return result.Error
@@ -248,7 +248,7 @@ func (r *userDatabase) EditProfile(userID uint, profile models.EditProfile) (mod
 
 	var user models.UserDetailsResponse
 
-	result := r.DB.Model(&domain.Users{}).Where("id = ?", userID).Updates(domain.Users{
+	result := r.DB.Model(&domain.User{}).Where("id = ?", userID).Updates(domain.User{
 		Name:      profile.Name,
 		Phone:     profile.Phone,
 		BirthDate: profile.BirthDate,

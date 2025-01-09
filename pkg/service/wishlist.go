@@ -8,21 +8,22 @@ import (
 type WishlistService interface {
 	AddToWishlist(user_id, product_id uint) (models.Wishlist, error)
 	RemoveFromWishlist(user_id, wishlist_id uint) error
-	GetWishList(user_id uint) ([]models.Products, error)
+	GetWishList(user_id uint) ([]models.WishlistProduct, error)
 }
 
 type wishlistService struct {
-	repository repository.WishlistRepository
+	repository      repository.WishlistRepository
+	offerRepository repository.OfferRepository
 	// offerRepo  repository.OfferRepository
 }
 
 func NewWishlistService(
 	repo repository.WishlistRepository,
-	// offer repository.OfferRepository,
+	offer repository.OfferRepository,
 ) WishlistService {
 	return &wishlistService{
-		repository: repo,
-		// offerRepo:  offer,
+		repository:      repo,
+		offerRepository: offer,
 	}
 }
 
@@ -57,18 +58,30 @@ func (w *wishlistService) RemoveFromWishlist(user_id, wishlist_id uint) error {
 	return nil
 }
 
-func (w *wishlistService) GetWishList(user_id uint) ([]models.Products, error) {
+func (w *wishlistService) GetWishList(user_id uint) ([]models.WishlistProduct, error) {
 
-	productDetails, err := w.repository.GetWishList(user_id)
+	products, err := w.repository.GetWishList(user_id)
 	if err != nil {
-		return []models.Products{}, err
+		return []models.WishlistProduct{}, err
+	}
+
+	for idx := range products {
+		offerPercentage, err := w.offerRepository.FindOfferRate(products[idx].ProductID)
+		if err != nil {
+			return nil, err
+		}
+		if offerPercentage > 0 {
+			products[idx].DiscountedPrice = products[idx].Price - (products[idx].Price*uint64(offerPercentage))/100
+		} else {
+			products[idx].DiscountedPrice = products[idx].Price
+		}
 	}
 
 	// //loop inside products and then calculate discounted price of each then return
 	// for j := range productDetails {
 	// 	discount_percentage, err := w.offerRepo.FindDiscountPercentage(productDetails[j].CategoryID)
 	// 	if err != nil {
-	// 		return []models.Products{}, errors.New("there was some error in finding the discounted prices")
+	// 		return []models.Product{}, errors.New("there was some error in finding the discounted prices")
 	// 	}
 	// 	var discount float64
 
@@ -90,5 +103,5 @@ func (w *wishlistService) GetWishList(user_id uint) ([]models.Products, error) {
 
 	// }
 
-	return productDetails, nil
+	return products, nil
 }

@@ -10,16 +10,16 @@ import (
 )
 
 type ProductService interface {
-	AddProduct(product models.Products, default_image *multipart.FileHeader, images []*multipart.FileHeader) (models.Products, error)
-	UpdateProduct(uint, models.Products) (models.Products, error)
-	UpdateProductImage(product_id uint, file *multipart.FileHeader) (models.Products, error)
+	AddProduct(product models.Product, default_image *multipart.FileHeader, images []*multipart.FileHeader) (models.Product, error)
+	UpdateProduct(uint, models.Product) (models.Product, error)
+	UpdateProductImage(product_id uint, file *multipart.FileHeader) (models.Product, error)
 	DeleteProduct(product_id uint) error
-	GetProductDetails(product_id uint) (models.Products, error)
-	ListCategoryProducts(category_id uint) ([]models.Products, error)
+	GetProductDetails(product_id uint) (models.Product, error)
+	ListCategoryProducts(category_id uint) ([]models.Product, error)
 	ListProductsForAdmin(limit, offest int) (models.ListProducts, error)
-	ListFeaturedProducts() ([]models.Products, error)
+	ListFeaturedProducts() ([]models.Product, error)
 
-	SearchProducts(key string) ([]models.Products, error)
+	SearchProducts(key string) ([]models.Product, error)
 	// GetSearchHistory(user_id uint) ([]models.SearchHistory, error)
 }
 
@@ -44,11 +44,11 @@ func NewProductService(
 	}
 }
 
-func (i *productService) AddProduct(product models.Products, default_image *multipart.FileHeader, images []*multipart.FileHeader) (models.Products, error) {
+func (i *productService) AddProduct(product models.Product, default_image *multipart.FileHeader, images []*multipart.FileHeader) (models.Product, error) {
 
 	default_image_url, err := i.helper.AddImageToS3(default_image, "ahava")
 	if err != nil {
-		return models.Products{}, err
+		return models.Product{}, err
 	}
 
 	// var urls string
@@ -56,7 +56,7 @@ func (i *productService) AddProduct(product models.Products, default_image *mult
 	// for idx, image := range images {
 	// 	url, err := i.helper.AddImageToS3(image, "ahava")
 	// 	if err != nil {
-	// 		return models.Products{}, err
+	// 		return models.Product{}, err
 	// 	}
 
 	// 	if idx > 0 {
@@ -70,7 +70,7 @@ func (i *productService) AddProduct(product models.Products, default_image *mult
 	for _, image := range images {
 		url, err := i.helper.AddImageToS3(image, "ahava")
 		if err != nil {
-			return models.Products{}, err
+			return models.Product{}, err
 		}
 
 		urls = append(urls, url)
@@ -80,35 +80,35 @@ func (i *productService) AddProduct(product models.Products, default_image *mult
 	product.Images = pq.StringArray(urls)
 	result, err := i.repository.AddProduct(product)
 	if err != nil {
-		return models.Products{}, err
+		return models.Product{}, err
 	}
 
 	return result, nil
 }
 
-func (i *productService) UpdateProductImage(id uint, file *multipart.FileHeader) (models.Products, error) {
+func (i *productService) UpdateProductImage(id uint, file *multipart.FileHeader) (models.Product, error) {
 
 	url, err := i.helper.AddImageToS3(file, "ahava")
 	if err != nil {
-		return models.Products{}, err
+		return models.Product{}, err
 	}
 
 	//send the url and save it in database
 	result, err := i.repository.UpdateProductImage(id, url)
 	if err != nil {
-		return models.Products{}, err
+		return models.Product{}, err
 	}
 
 	return result, nil
 
 }
 
-func (i *productService) UpdateProduct(id uint, model models.Products) (models.Products, error) {
+func (i *productService) UpdateProduct(id uint, model models.Product) (models.Product, error) {
 
 	//send the url and save it in database
 	result, err := i.repository.UpdateProduct(id, model)
 	if err != nil {
-		return models.Products{}, err
+		return models.Product{}, err
 	}
 
 	return result, nil
@@ -123,16 +123,16 @@ func (i *productService) DeleteProduct(product_id uint) error {
 	return nil
 }
 
-func (i *productService) GetProductDetails(product_id uint) (models.Products, error) {
+func (i *productService) GetProductDetails(product_id uint) (models.Product, error) {
 
 	product, err := i.repository.GetProductDetails(product_id)
 	if err != nil {
-		return models.Products{}, err
+		return models.Product{}, err
 	}
 
 	offerPercentage, err := i.offerRepository.FindOfferRate(product.ID)
 	if err != nil {
-		return models.Products{}, err
+		return models.Product{}, err
 	}
 
 	if offerPercentage > 0 {
@@ -144,33 +144,21 @@ func (i *productService) GetProductDetails(product_id uint) (models.Products, er
 	return product, nil
 }
 
-func (i *productService) ListCategoryProducts(category_id uint) ([]models.Products, error) {
+func (i *productService) ListCategoryProducts(category_id uint) ([]models.Product, error) {
 
 	products, err := i.repository.ListCategoryProducts(category_id)
 	if err != nil {
 		return nil, err
 	}
 
-	for idx := range products {
-		offerPercentage, err := i.offerRepository.FindOfferRate(products[idx].CategoryID)
-		if err != nil {
-			return nil, err
-		}
-		if offerPercentage > 0 {
-			products[idx].DiscountedPrice = products[idx].Price - (products[idx].Price*uint64(offerPercentage))/100
-		} else {
-			products[idx].DiscountedPrice = products[idx].Price
-		}
-	}
-
 	return products, nil
 }
 
-func (i *productService) ListFeaturedProducts() ([]models.Products, error) {
+func (i *productService) ListFeaturedProducts() ([]models.Product, error) {
 
 	products, err := i.repository.ListFeaturedProducts()
 	if err != nil {
-		return []models.Products{}, err
+		return []models.Product{}, err
 	}
 
 	for idx := range products {
@@ -188,11 +176,11 @@ func (i *productService) ListFeaturedProducts() ([]models.Products, error) {
 	return products, nil
 }
 
-// func (i *productService) ListProductsForUser(page, userID uint) ([]models.Products, error) {
+// func (i *productService) ListProductsForUser(page, userID uint) ([]models.Product, error) {
 
 // 	productDetails, err := i.repository.ListProducts(page)
 // 	if err != nil {
-// 		return []models.Products{}, err
+// 		return []models.Product{}, err
 // 	}
 
 // 	fmt.Println("product details is:", productDetails)
@@ -201,7 +189,7 @@ func (i *productService) ListFeaturedProducts() ([]models.Products, error) {
 // 	for j := range productDetails {
 // 		discount_percentage, err := i.offerRepository.FindDiscountPercentage(productDetails[j].CategoryID)
 // 		if err != nil {
-// 			return []models.Products{}, errors.New("there was some error in finding the discounted prices")
+// 			return []models.Product{}, errors.New("there was some error in finding the discounted prices")
 // 		}
 // 		var discount float64
 
@@ -213,12 +201,12 @@ func (i *productService) ListFeaturedProducts() ([]models.Products, error) {
 
 // 		productDetails[j].IfPresentAtWishlist, err = i.wishlistRepository.CheckIfTheItemIsPresentAtWishlist(userID, int(productDetails[j].ID))
 // 		if err != nil {
-// 			return []models.Products{}, errors.New("error while checking ")
+// 			return []models.Product{}, errors.New("error while checking ")
 // 		}
 
 // 		productDetails[j].IfPresentAtCart, err = i.wishlistRepository.CheckIfTheItemIsPresentAtCart(userID, int(productDetails[j].ID))
 // 		if err != nil {
-// 			return []models.Products{}, errors.New("error while checking ")
+// 			return []models.Product{}, errors.New("error while checking ")
 // 		}
 
 // 	}
@@ -248,11 +236,11 @@ func (i *productService) ListProductsForAdmin(limit, offset int) (models.ListPro
 	return listProducts, nil
 }
 
-func (i *productService) SearchProducts(key string) ([]models.Products, error) {
+func (i *productService) SearchProducts(key string) ([]models.Product, error) {
 
 	products, err := i.repository.SearchProducts(key)
 	if err != nil {
-		return []models.Products{}, err
+		return []models.Product{}, err
 	}
 
 	for idx := range products {

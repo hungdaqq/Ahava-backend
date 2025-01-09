@@ -29,13 +29,13 @@ type UpdateCategory struct {
 }
 
 type ListProducts struct {
-	Total    int64      `json:"total"`
-	Limit    int        `json:"limit"`
-	Offset   int        `json:"offset"`
-	Products []Products `json:"products"`
+	Total    int64     `json:"total"`
+	Limit    int       `json:"limit"`
+	Offset   int       `json:"offset"`
+	Products []Product `json:"products"`
 }
 
-type Products struct {
+type Product struct {
 	ID               uint           `json:"id"`
 	CategoryID       uint           `json:"category_id"`
 	Name             string         `json:"name"`
@@ -49,6 +49,17 @@ type Products struct {
 	Description      string         `json:"description"`
 	HowToUse         string         `json:"how_to_use"`
 	IsFeatured       bool           `json:"is_featured"`
+}
+
+type WishlistProduct struct {
+	ID              uint   `json:"id"`
+	ProductID       uint   `json:"product_id"`
+	Name            string `json:"name"`
+	Size            string `json:"size"`
+	Stock           uint   `json:"stock"`
+	DefaultImage    string `json:"default_image"`
+	Price           uint64 `json:"price"`
+	DiscountedPrice uint64 `json:"discounted_price"`
 }
 
 type ChangePassword struct {

@@ -12,8 +12,8 @@ import (
 
 type AdminRepository interface {
 	LoginHandler(adminDetails models.AdminLogin) (domain.Admin, error)
-	GetUserByID(user_id uint) (domain.Users, error)
-	UpdateBlockUserByID(user domain.Users) error
+	GetUserByID(user_id uint) (domain.User, error)
+	UpdateBlockUserByID(user domain.User) error
 	GetUsers(page int) ([]models.UserDetailsAtAdmin, error)
 	NewPaymentMethod(string) error
 	ListPaymentMethods() ([]domain.PaymentMethod, error)
@@ -41,27 +41,27 @@ func (r *adminRepository) LoginHandler(adminDetails models.AdminLogin) (domain.A
 	return adminCompareDetails, nil
 }
 
-func (r *adminRepository) GetUserByID(user_id uint) (domain.Users, error) {
+func (r *adminRepository) GetUserByID(user_id uint) (domain.User, error) {
 	var count int
 	if err := r.DB.Raw("select count(*) from users where id = ?", user_id).Scan(&count).Error; err != nil {
-		return domain.Users{}, err
+		return domain.User{}, err
 	}
 	if count < 1 {
-		return domain.Users{}, errors.ErrEntityNotFound
+		return domain.User{}, errors.ErrEntityNotFound
 	}
 
 	query := fmt.Sprintf("select * from users where id = '%d'", user_id)
-	var userDetails domain.Users
+	var userDetails domain.User
 
 	if err := r.DB.Raw(query).Scan(&userDetails).Error; err != nil {
-		return domain.Users{}, err
+		return domain.User{}, err
 	}
 
 	return userDetails, nil
 }
 
 // function which will both block and unblock a user
-func (r *adminRepository) UpdateBlockUserByID(user domain.Users) error {
+func (r *adminRepository) UpdateBlockUserByID(user domain.User) error {
 
 	err := r.DB.Exec("update users set is_blocked = ? where id = ?", user.IsBlocked, user.ID).Error
 	if err != nil {

@@ -40,7 +40,7 @@ type IndividualOrderDetails struct {
 	OrderID       int
 	Address       string
 	Phone         string
-	Products      []Products `gorm:"-"`
+	Products      []Product `gorm:"-"`
 	TotalAmount   uint64
 	CouponUsed    string
 	OrderStatus   string

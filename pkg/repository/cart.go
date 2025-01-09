@@ -140,7 +140,7 @@ func (r *cartRepository) UpdateQuantityAdd(user_id, cart_id, quantity uint) (mod
 	var cartDetails models.CartDetails
 
 	result := r.DB.
-		Model(&domain.CartItems{}).
+		Model(&domain.CartItem{}).
 		Where("id=? AND user_id=?", cart_id, user_id).
 		Update("quantity", gorm.Expr("quantity + ?", quantity)).
 		Scan(&cartDetails)
@@ -161,7 +161,7 @@ func (r *cartRepository) UpdateQuantityLess(user_id, cart_id, quantity uint) (mo
 	var cartDetails models.CartDetails
 
 	result := r.DB.
-		Model(&domain.CartItems{}).
+		Model(&domain.CartItem{}).
 		Where("id=? AND user_id=?", cart_id, user_id).
 		Update("quantity", gorm.Expr("quantity - ?", quantity)).
 		Scan(&cartDetails)
@@ -182,7 +182,7 @@ func (r *cartRepository) UpdateQuantity(user_id, cart_id, quantity uint) (models
 	var cartDetails models.CartDetails
 
 	result := r.DB.
-		Model(&domain.CartItems{}).
+		Model(&domain.CartItem{}).
 		Where("id=? AND user_id=?", cart_id, user_id).
 		Update("quantity", quantity).
 		Scan(&cartDetails)
