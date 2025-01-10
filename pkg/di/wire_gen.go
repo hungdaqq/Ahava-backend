@@ -52,6 +52,6 @@ func InitializeAPI(cfg config.Config) (*http.ServerHTTP, error) {
 	wishlistRepository := repository.NewWishlistRepository(gormDB)
 	wishlistService := service.NewWishlistService(wishlistRepository, offerRepository)
 	wishlistHandler := handler.NewWishlistHandler(wishlistService)
-	serverHTTP := http.NewServerHTTP(userHandler, adminHandler, categoryHandler, productHandler, orderHandler, cartHandler, paymentHandler, offerHandler, wishlistHandler)
+	serverHTTP := http.NewServerHTTP(userHandler, adminHandler, categoryHandler, productHandler, orderHandler, cartHandler, paymentHandler, offerHandler, wishlistHandler, gormDB)
 	return serverHTTP, nil
 }

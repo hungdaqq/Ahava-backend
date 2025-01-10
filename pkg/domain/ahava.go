@@ -203,3 +203,15 @@ type Transaction struct {
 	CreateAt        time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateAt        time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
+
+type RequestTransaction struct {
+	ID           uint      `json:"id" gorm:"unique;not null"`
+	Method       string    `json:"method"`
+	Path         string    `json:"path"`
+	StatusCode   int       `json:"status_code"`
+	ClientIP     string    `json:"client_ip"`
+	Latency      string    `json:"latency"`
+	BodySize     int       `json:"body_size"`
+	ErrorMessage string    `json:"error_message"`
+	CreatedAt    time.Time `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`
+}

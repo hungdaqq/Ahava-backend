@@ -21,14 +21,6 @@ func main() {
 		log.Fatal("cannot load config: ", configErr)
 	}
 
-	// Swagger configuration
-	// docs.SwaggerInfo.Title = "Ahava"
-	// docs.SwaggerInfo.Description = "An online store for purchasing high-quality jerseys of your favorite clubs."
-	// docs.SwaggerInfo.Version = "1.0"
-	// docs.SwaggerInfo.Host = config.BASE_URL
-	// docs.SwaggerInfo.BasePath = ""
-	// docs.SwaggerInfo.Schemes = []string{"http"}
-
 	// Initialize DI and start the server
 	server, diErr := di.InitializeAPI(config)
 	if diErr != nil {

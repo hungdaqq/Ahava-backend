@@ -8,7 +8,7 @@ import (
 type WishlistService interface {
 	AddToWishlist(user_id, product_id uint) (models.Wishlist, error)
 	RemoveFromWishlist(user_id, wishlist_id uint) error
-	GetWishList(user_id uint) ([]models.WishlistProduct, error)
+	GetWishList(user_id uint, order_by string) ([]models.WishlistProduct, error)
 }
 
 type wishlistService struct {
@@ -58,9 +58,9 @@ func (w *wishlistService) RemoveFromWishlist(user_id, wishlist_id uint) error {
 	return nil
 }
 
-func (w *wishlistService) GetWishList(user_id uint) ([]models.WishlistProduct, error) {
+func (w *wishlistService) GetWishList(user_id uint, order_by string) ([]models.WishlistProduct, error) {
 
-	products, err := w.repository.GetWishList(user_id)
+	products, err := w.repository.GetWishList(user_id, order_by)
 	if err != nil {
 		return []models.WishlistProduct{}, err
 	}

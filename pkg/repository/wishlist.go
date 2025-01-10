@@ -12,7 +12,7 @@ type WishlistRepository interface {
 	AddToWishlist(user_id, product_id uint) (models.Wishlist, error)
 	UpdateWishlist(user_id, product_id uint, is_deleted bool) (models.Wishlist, error)
 	UpdateRemoveFromWishlist(user_id, wishlist_id uint) error
-	GetWishList(user_id uint) ([]models.WishlistProduct, error)
+	GetWishList(user_id uint, order_by string) ([]models.WishlistProduct, error)
 	CheckIfTheItemIsPresentAtWishlist(user_id, product_id uint) (bool, error)
 	// CheckIfTheItemIsPresentAtCart(user_id, product_id uint) (bool, error)
 }
@@ -79,23 +79,45 @@ func (r *wishlistRepository) UpdateRemoveFromWishlist(user_id, wishlist_id uint)
 	return nil
 }
 
-func (r *wishlistRepository) GetWishList(user_id uint) ([]models.WishlistProduct, error) {
-
+func (r *wishlistRepository) GetWishList(user_id uint, order_by string) ([]models.WishlistProduct, error) {
 	var wishlistProducts []models.WishlistProduct
 
-	err := r.DB.Raw(`
-        SELECT products.id AS product_id,
-               products.name,
-               products.default_image,
-               products.size,
-               products.stock,
-               products.price,
-			   wishlists.id
-        FROM products
-        JOIN wishlists ON wishlists.product_id = products.id
-        WHERE wishlists.user_id = ? AND wishlists.is_deleted = false`,
-		user_id).Scan(&wishlistProducts).Error
-	if err != nil {
+	// Start building the query
+	query := r.DB.Model(&domain.Product{}).
+		Select(`
+            products.id AS product_id,
+            products.name,
+            products.default_image,
+            products.size,
+            products.stock,
+            products.price,
+            wishlists.id,
+            COUNT(wishlists.product_id) AS total_count`).
+		Joins("JOIN wishlists ON wishlists.product_id = products.id").
+		Where("wishlists.is_deleted = false").
+		Group("products.id, wishlists.id, products.name, products.default_image, products.size, products.stock, products.price")
+
+	// Add filtering for specific user
+	query = query.Where("wishlists.user_id = ?", user_id)
+
+	// Add dynamic ordering based on the order_by parameter
+	switch order_by {
+	case "price_asc":
+		query = query.Order("products.price ASC")
+	case "price_desc":
+		query = query.Order("products.price DESC")
+	case "latest":
+		query = query.Order("wishlists.created_at DESC")
+	case "most_favorite":
+		query = query.Order("total_count DESC")
+	case "most_viewed":
+		query = query.Order("wishlists.created_at DESC")
+	default:
+		query = query.Order("wishlists.created_at DESC")
+	}
+
+	// Execute the query and scan results into the custom struct
+	if err := query.Scan(&wishlistProducts).Error; err != nil {
 		return nil, err
 	}
 

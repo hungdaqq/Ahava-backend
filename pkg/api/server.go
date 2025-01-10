@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	handler "ahava/pkg/api/handler"
 	"ahava/pkg/api/middleware"
@@ -26,16 +27,15 @@ func NewServerHTTP(
 	paymentHandler handler.PaymentHandler,
 	offerhandler handler.OfferHandler,
 	wishlistHandler handler.WishlistHandler,
+	db *gorm.DB,
 ) *ServerHTTP {
 
+	gin.SetMode(gin.ReleaseMode)
 	engine := gin.New()
 	engine.Use(middleware.CORSMiddleware())
-	// engine.LoadHTMLGlob("templates/*.html")
-	// Use logger from Gin
-	engine.Use(gin.Logger())
-	//Swagger docs
-	// engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	gin.SetMode(gin.ReleaseMode)
+	engine.Use(middleware.DefaultStructuredLogger())
+	// engine.Use(gin.Logger())
+	go middleware.SaveRequestTransaction(db)
 
 	engine.GET("/validate-token", adminHandler.ValidateRefreshTokenAndCreateNewAccess)
 
