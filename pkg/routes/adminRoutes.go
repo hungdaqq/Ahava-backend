@@ -12,10 +12,9 @@ func AdminRoutes(
 	adminHandler handler.AdminHandler,
 	productHandler handler.ProductHandler,
 	userHandler handler.UserHandler,
-	categoryHandler handler.CategoryHandler,
 	// orderHandler handler.OrderHandler,
 	// couponHandler handler.CouponHandler,
-	offerHandler handler.OfferHandler,
+	// offerHandler handler.OfferHandler,
 ) {
 
 	engine.POST("/login", adminHandler.LoginHandler)
@@ -28,17 +27,9 @@ func AdminRoutes(
 			usermanagement.PUT("/unblock/:id", adminHandler.UnBlockUser)
 		}
 
-		categorymanagement := engine.Group("/category")
-		{
-			categorymanagement.GET("", categoryHandler.GetCategory)
-			categorymanagement.POST("", categoryHandler.AddCategory)
-			categorymanagement.PUT("/:category_id", categoryHandler.UpdateCategory)
-			categorymanagement.DELETE("/:category_id", categoryHandler.DeleteCategory)
-		}
-
 		productmanagement := engine.Group("/product")
 		{
-			productmanagement.GET("", productHandler.ListProductsForAdmin)
+			productmanagement.GET("", productHandler.ListAllProducts)
 			productmanagement.GET("/detail", productHandler.GetProductDetails)
 			productmanagement.POST("", productHandler.AddProduct)
 			productmanagement.DELETE("/:product_id", productHandler.DeleteProduct)
@@ -70,13 +61,13 @@ func AdminRoutes(
 		// 	coupons.PUT("", couponHandler.ReActivateCoupon)
 		// }
 
-		offers := engine.Group("/offer")
-		{
-			offers.GET("", offerHandler.GetOffers)
-			offers.POST("", offerHandler.AddNewOffer)
-			offers.DELETE("/:product_id", offerHandler.ExpireOffer)
-			offers.PUT("/:product_id", offerHandler.UpdateOffer)
-		}
+		// offers := engine.Group("/offer")
+		// {
+		// 	offers.GET("", offerHandler.GetOffers)
+		// 	offers.POST("", offerHandler.AddNewOffer)
+		// 	offers.DELETE("/:product_id", offerHandler.ExpireOffer)
+		// 	offers.PUT("/:product_id", offerHandler.UpdateOffer)
+		// }
 	}
 
 }

@@ -35,16 +35,20 @@ type ListProducts struct {
 	Products []Product `json:"products"`
 }
 
+type Price struct {
+	Size          string `json:"size"`
+	OriginalPrice uint64 `json:"original_price" gorm:"default:1"`
+	DiscountPrice uint64 `json:"discount_price"`
+}
+
 type Product struct {
 	ID               uint           `json:"id"`
-	CategoryID       uint           `json:"category_id"`
+	Category         string         `json:"category"`
 	Name             string         `json:"name"`
-	Size             string         `json:"size"`
-	Stock            uint           `json:"stock"`
 	DefaultImage     string         `json:"default_image"`
 	Images           pq.StringArray `json:"images"`
-	Price            uint64         `json:"price"`
-	DiscountedPrice  uint64         `json:"discounted_price"`
+	Stock            uint           `json:"stock"`
+	Price            []Price        `json:"price"`
 	ShortDescription string         `json:"short_description"`
 	Description      string         `json:"description"`
 	HowToUse         string         `json:"how_to_use"`
@@ -52,14 +56,12 @@ type Product struct {
 }
 
 type WishlistProduct struct {
-	ID              uint   `json:"id"`
-	ProductID       uint   `json:"product_id"`
-	Name            string `json:"name"`
-	Size            string `json:"size"`
-	Stock           uint   `json:"stock"`
-	DefaultImage    string `json:"default_image"`
-	Price           uint64 `json:"price"`
-	DiscountedPrice uint64 `json:"discounted_price"`
+	ID           uint   `json:"id"`
+	ProductID    uint   `json:"product_id"`
+	Name         string `json:"name"`
+	Stock        uint   `json:"stock"`
+	DefaultImage string `json:"default_image"`
+	Price        Price  `json:"price"`
 }
 
 type ChangePassword struct {
@@ -132,18 +134,20 @@ type EditProfile struct {
 }
 
 type CartItem struct {
-	CartID              uint   `json:"cart_id"`
-	ProductID           uint   `json:"product_id"`
-	Name                string `json:"name"`
-	DefaultImage        string `json:"default_image"`
-	Quantity            uint   `json:"quantity"`
-	ItemPrice           uint64 `json:"item_price"`
-	ItemDiscountedPrice uint64 `json:"item_discounted_price"`
+	CartID            uint   `json:"cart_id"`
+	ProductID         uint   `json:"product_id"`
+	Name              string `json:"name"`
+	DefaultImage      string `json:"default_image"`
+	Size              string `json:"size"`
+	Quantity          uint   `json:"quantity"`
+	ItemPrice         uint64 `json:"item_price"`
+	ItemDiscountPrice uint64 `json:"item_discount_price"`
 }
 
 type UpdateCartItem struct {
-	ProductID uint `json:"product_id"`
-	Quantity  uint `json:"quantity"`
+	ProductID uint   `json:"product_id"`
+	Quantity  uint   `json:"quantity"`
+	Size      string `json:"size"`
 }
 
 type CartDetails struct {
@@ -151,8 +155,6 @@ type CartDetails struct {
 	UserID    uint `json:"user_id"`
 	ProductID uint `json:"product_id"`
 	Quantity  uint `json:"quantity"`
-	// CreateAt  time.Time `json:"create_at"`
-	// UpdateAt  time.Time `json:"update_at"`
 }
 
 type SearchHistory struct {

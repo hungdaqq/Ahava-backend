@@ -34,6 +34,7 @@ type CartItem struct {
 	User      User      `json:"-" gorm:"foreignkey:UserID;constraint:OnDelete:CASCADE"`
 	ProductID uint      `json:"product_id" gorm:"not null"`
 	Product   Product   `json:"-" gorm:"foreignkey:ProductID;constraint:OnDelete:CASCADE"`
+	Size      string    `json:"size" gorm:"not null"`
 	Quantity  uint      `json:"quantity" gorm:"default:1;check:quantity > 0"`
 	CreatedAt time.Time `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateAt  time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
@@ -76,14 +77,14 @@ type Order struct {
 }
 
 type OrderItem struct {
-	ID                  uint    `json:"id" gorm:"primaryKey;autoIncrement"`
-	OrderID             uint    `json:"order_id" gorm:"not null"`
-	Order               Order   `json:"-" gorm:"foreignkey:OrderID;constraint:OnDelete:CASCADE"`
-	ProductID           uint    `json:"product_id" gorm:"not null"`
-	Product             Product `json:"-" gorm:"foreignkey:ProductID"`
-	Quantity            uint    `json:"quantity" gorm:"not null"`
-	ItemPrice           uint64  `json:"item_price" gorm:"not null"`
-	ItemDiscountedPrice uint64  `json:"item_discounted_price" gorm:"not null"`
+	ID                uint    `json:"id" gorm:"primaryKey;autoIncrement"`
+	OrderID           uint    `json:"order_id" gorm:"not null"`
+	Order             Order   `json:"-" gorm:"foreignkey:OrderID;constraint:OnDelete:CASCADE"`
+	ProductID         uint    `json:"product_id" gorm:"not null"`
+	Product           Product `json:"-" gorm:"foreignkey:ProductID"`
+	Quantity          uint    `json:"quantity" gorm:"not null"`
+	ItemPrice         uint64  `json:"item_price" gorm:"not null"`
+	ItemDiscountPrice uint64  `json:"item_discounted_price" gorm:"not null"`
 }
 
 type AdminOrdersResponse struct {
@@ -108,30 +109,28 @@ type OrderDetailsWithImages struct {
 	PaymentMethod string
 }
 
+type Price struct {
+	ID            uint    `json:"id" gorm:"primarykey"`
+	ProductID     uint    `json:"product_id"`
+	Product       Product `json:"-" gorm:"foreignkey:ProductID;constraint:OnDelete:CASCADE"`
+	Size          string  `json:"size"`
+	OriginalPrice uint64  `json:"original_price" gorm:"default:1"`
+	DiscountPrice uint64  `json:"discount_price"`
+}
+
 type Product struct {
 	ID               uint           `json:"id" gorm:"primarykey"`
-	CategoryID       uint           `json:"category_id" gorm:"not null"`
-	Category         Category       `json:"-" gorm:"foreignkey:CategoryID;constraint:OnDelete:CASCADE"`
+	Category         string         `json:"category" gorm:"not null"`
 	Name             string         `json:"name" gorm:"default:Ahava Product"`
 	DefaultImage     string         `json:"default_image" gorm:"not null"`
 	Images           pq.StringArray `json:"images" gorm:"type:varchar[]"`
-	Size             string         `json:"size"`
 	Stock            uint           `json:"stock" gorm:"default:100"`
-	Price            uint64         `json:"price" gorm:"default:0"`
 	ShortDescription string         `json:"short_description"`
 	Description      string         `json:"description"`
 	HowToUse         string         `json:"how_to_use"`
 	IsFeatured       bool           `json:"is_featured" gorm:"default:false"`
 	CreateAt         time.Time      `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateAt         time.Time      `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
-}
-
-type Category struct {
-	ID          uint      `json:"id" gorm:"primarykey"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	CreateAt    time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdateAt    time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
 type User struct {

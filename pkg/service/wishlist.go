@@ -13,17 +13,13 @@ type WishlistService interface {
 
 type wishlistService struct {
 	repository      repository.WishlistRepository
-	offerRepository repository.OfferRepository
-	// offerRepo  repository.OfferRepository
 }
 
 func NewWishlistService(
 	repo repository.WishlistRepository,
-	offer repository.OfferRepository,
 ) WishlistService {
 	return &wishlistService{
 		repository:      repo,
-		offerRepository: offer,
 	}
 }
 
@@ -65,17 +61,17 @@ func (w *wishlistService) GetWishList(user_id uint, order_by string) ([]models.W
 		return []models.WishlistProduct{}, err
 	}
 
-	for idx := range products {
-		offerPercentage, err := w.offerRepository.FindOfferRate(products[idx].ProductID)
-		if err != nil {
-			return nil, err
-		}
-		if offerPercentage > 0 {
-			products[idx].DiscountedPrice = products[idx].Price - (products[idx].Price*uint64(offerPercentage))/100
-		} else {
-			products[idx].DiscountedPrice = products[idx].Price
-		}
-	}
+	// for idx := range products {
+	// 	offerPercentage, err := w.offerRepository.FindOfferRate(products[idx].ProductID)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	if offerPercentage > 0 {
+	// 		products[idx].DiscountedPrice = products[idx].Price - (products[idx].Price*uint64(offerPercentage))/100
+	// 	} else {
+	// 		products[idx].DiscountedPrice = products[idx].Price
+	// 	}
+	// }
 
 	// //loop inside products and then calculate discounted price of each then return
 	// for j := range productDetails {

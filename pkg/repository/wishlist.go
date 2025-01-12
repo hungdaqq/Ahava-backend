@@ -21,10 +21,8 @@ type wishlistRepository struct {
 	DB *gorm.DB
 }
 
-func NewWishlistRepository(db *gorm.DB) WishlistRepository {
-	return &wishlistRepository{
-		DB: db,
-	}
+func NewWishlistRepository(DB *gorm.DB) WishlistRepository {
+	return &wishlistRepository{DB}
 }
 
 func (r *wishlistRepository) AddToWishlist(user_id, product_id uint) (models.Wishlist, error) {
@@ -88,14 +86,12 @@ func (r *wishlistRepository) GetWishList(user_id uint, order_by string) ([]model
             products.id AS product_id,
             products.name,
             products.default_image,
-            products.size,
             products.stock,
-            products.price,
             wishlists.id,
             COUNT(wishlists.product_id) AS total_count`).
 		Joins("JOIN wishlists ON wishlists.product_id = products.id").
 		Where("wishlists.is_deleted = false").
-		Group("products.id, wishlists.id, products.name, products.default_image, products.size, products.stock, products.price")
+		Group("products.id, wishlists.id, products.name, products.default_image, products.stock")
 
 	// Add filtering for specific user
 	query = query.Where("wishlists.user_id = ?", user_id)
@@ -116,7 +112,6 @@ func (r *wishlistRepository) GetWishList(user_id uint, order_by string) ([]model
 		query = query.Order("wishlists.created_at DESC")
 	}
 
-	// Execute the query and scan results into the custom struct
 	if err := query.Scan(&wishlistProducts).Error; err != nil {
 		return nil, err
 	}

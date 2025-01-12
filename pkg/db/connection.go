@@ -17,10 +17,10 @@ func ConnectDatabase(cfg config.Config) (*gorm.DB, error) {
 
 	db = db.Debug()
 
-	if err := db.AutoMigrate(domain.Category{}); err != nil {
+	if err := db.AutoMigrate(domain.Product{}); err != nil {
 		return db, err
 	}
-	if err := db.AutoMigrate(domain.Product{}); err != nil {
+	if err := db.AutoMigrate(domain.Price{}); err != nil {
 		return db, err
 	}
 	if err := db.AutoMigrate(domain.User{}); err != nil {

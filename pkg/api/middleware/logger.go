@@ -68,7 +68,6 @@ func StructuredLogger(logger *zerolog.Logger) gin.HandlerFunc {
 				Latency:      param.Latency.String(),
 				BodySize:     param.BodySize,
 				ErrorMessage: param.ErrorMessage,
-				CreatedAt:    param.TimeStamp,
 			}
 		}()
 	}

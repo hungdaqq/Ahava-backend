@@ -40,7 +40,7 @@ func (r *orderRepository) PlaceOrder(order models.PlaceOrder, final_price uint64
 func (r *orderRepository) PlaceOrderItem(order_id uint, item models.CartItem) error {
 
 	err := r.DB.Exec(`INSERT INTO order_items (order_id, product_id, quantity, item_price, item_discounted_price) VALUES (?,?,?,?,?)`,
-		order_id, item.ProductID, item.Quantity, item.ItemPrice, item.ItemDiscountedPrice).Error
+		order_id, item.ProductID, item.Quantity, item.ItemPrice, item.ItemDiscountPrice).Error
 	if err != nil {
 		return err
 	}

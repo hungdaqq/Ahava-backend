@@ -10,8 +10,9 @@ import (
 
 type CartRepository interface {
 	GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error)
-	AddToCart(user_id, product_id uint, quantity uint) (models.CartDetails, error)
-	CheckIfItemIsAlreadyAdded(user_id, product_id uint) (uint, error)
+	AddToCart(user_id uint, cart_item models.UpdateCartItem) (models.CartDetails, error)
+
+	CheckIfItemIsAlreadyAdded(user_id, product_id uint, size string) (uint, error)
 	UpdateQuantityAdd(user_id, cart_id, quantity uint) (models.CartDetails, error)
 	UpdateQuantityLess(user_id, cart_id, quantity uint) (models.CartDetails, error)
 	UpdateQuantity(user_id, cart_id, quantity uint) (models.CartDetails, error)
@@ -35,28 +36,15 @@ func NewCartRepository(db *gorm.DB) CartRepository {
 	}
 }
 
-// func (r *cartRepository) GetAddresses(id uint) ([]models.Address, error) {
-
-// 	var addresses []models.Address
-
-// 	if err := r.DB.Raw("SELECT * FROM addresses WHERE user_id=$1", id).Scan(&addresses).Error; err != nil {
-// 		return []models.Address{}, err
-// 	}
-
-// 	return addresses, nil
-
-// }
-
 func (r *cartRepository) GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error) {
+
 	var cart []models.CartItem
 
-	// Build the query in GORM style
 	query := r.DB.Model(&models.CartItem{}).
 		Joins("JOIN products p ON cart_items.product_id = p.id").
-		Select("cart_items.id AS cart_id, p.id as product_id, p.name, p.default_image, p.price, cart_items.quantity, (cart_items.quantity * p.price) AS item_price").
+		Select("cart_items.id AS cart_id, p.id as product_id, p.name, p.default_image, cart_items.quantity, (cart_items.quantity * p.price) AS item_price").
 		Where("cart_items.user_id = ?", user_id)
 
-	// Apply cart_ids filter if provided
 	if len(cart_ids) > 0 {
 		query = query.Where("cart_items.id IN ?", cart_ids)
 	}
@@ -69,56 +57,20 @@ func (r *cartRepository) GetCart(user_id uint, cart_ids []uint) ([]models.CartIt
 	return cart, nil
 }
 
-// func (r *cartRepository) GetCartId(user_id uint) (int, error) {
+func (r *cartRepository) CheckIfItemIsAlreadyAdded(user_id, product_id uint, size string) (uint, error) {
 
-// 	var id uint
+	var cart_id uint
 
-// 	if err := r.DB.Raw("SELECT id FROM carts WHERE user_id=?", user_id).Scan(&id).Error; err != nil {
-// 		return 0, err
-// 	}
+	err := r.DB.Model(&domain.CartItem{}).
+		Select("id").
+		Where("user_id = ? AND product_id = ? AND size = ?", user_id, product_id, size).
+		Scan(&cart_id).Error
 
-// 	return id, nil
-
-// }
-
-// func (i *cartRepository) CreateNewCart(user_id uint) (int, error) {
-// 	var id uint
-// 	err := i.DB.Exec(`
-// 		INSERT INTO carts (user_id)
-// 		VALUES ($1)`, user_id).Error
-// 	if err != nil {
-// 		return 0, err
-// 	}
-
-// 	if err := i.DB.Raw("select id from carts where user_id=?", user_id).Scan(&id).Error; err != nil {
-// 		return 0, err
-// 	}
-
-// 	return id, nil
-// }
-
-// func (i *cartRepository) AddLineItems(cart_id, product_id uint) error {
-
-// 	err := i.DB.Exec(`
-// 		INSERT INTO line_items (cart_id,product_id)
-// 		VALUES ($1,$2)`, cart_id, product_id).Error
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
-func (r *cartRepository) CheckIfItemIsAlreadyAdded(user_id, product_id uint) (uint, error) {
-
-	var count uint
-
-	if err := r.DB.Raw("SELECT id FROM cart_items WHERE user_id = $1 AND product_id=$2",
-		user_id, product_id).Scan(&count).Error; err != nil {
+	if err != nil {
 		return 0, err
 	}
 
-	return count, nil
+	return cart_id, nil
 }
 
 func (r *cartRepository) RemoveFromCart(user_id, cart_id uint) error {
@@ -198,15 +150,23 @@ func (r *cartRepository) UpdateQuantity(user_id, cart_id, quantity uint) (models
 	return cartDetails, nil
 }
 
-func (r *cartRepository) AddToCart(user_id, product_id, quantity uint) (models.CartDetails, error) {
+func (r *cartRepository) AddToCart(user_id uint, cart_item models.UpdateCartItem) (models.CartDetails, error) {
 
-	var cartDetails models.CartDetails
+	newCartItem := domain.CartItem{
+		UserID:    user_id,
+		ProductID: cart_item.ProductID,
+		Quantity:  cart_item.Quantity,
+		Size:      cart_item.Size,
+	}
 
-	err := r.DB.Raw(`INSERT INTO cart_items (user_id,product_id,quantity) VALUES ($1,$2,$3) RETURNING id, user_id, product_id, quantity`,
-		user_id, product_id, quantity).Scan(&cartDetails).Error
-	if err != nil {
+	if err := r.DB.Create(&newCartItem).Error; err != nil {
 		return models.CartDetails{}, err
 	}
 
-	return cartDetails, nil
+	return models.CartDetails{
+		ID:        newCartItem.ID,
+		UserID:    newCartItem.UserID,
+		ProductID: newCartItem.ProductID,
+		Quantity:  newCartItem.Quantity,
+	}, nil
 }

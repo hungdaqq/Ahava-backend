@@ -7,7 +7,7 @@ import (
 
 type CartService interface {
 	GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error)
-	AddToCart(user_id, product_id uint, quantity uint) (models.CartDetails, error)
+	AddToCart(user_id uint, cart_item models.UpdateCartItem) (models.CartDetails, error)
 	UpdateQuantityAdd(user_id, cart_id uint, quantity uint) (models.CartDetails, error)
 	UpdateQuantityLess(user_id, cart_id uint, quantity uint) (models.CartDetails, error)
 	UpdateQuantity(user_id, cart_id uint, quantity uint) (models.CartDetails, error)
@@ -16,38 +16,35 @@ type CartService interface {
 }
 
 type cartService struct {
-	repo            repository.CartRepository
-	userRepository  repository.UserRepository
-	offerRepository repository.OfferRepository
+	repo           repository.CartRepository
+	userRepository repository.UserRepository
 }
 
 func NewCartService(
 	repo repository.CartRepository,
 	userRepository repository.UserRepository,
-	offerRepository repository.OfferRepository,
 ) CartService {
 	return &cartService{
-		repo:            repo,
-		userRepository:  userRepository,
-		offerRepository: offerRepository,
+		repo:           repo,
+		userRepository: userRepository,
 	}
 }
 
-func (i *cartService) AddToCart(user_id, product_id uint, quantity uint) (models.CartDetails, error) {
+func (i *cartService) AddToCart(user_id uint, cart_item models.UpdateCartItem) (models.CartDetails, error) {
 
-	cart_id, err := i.repo.CheckIfItemIsAlreadyAdded(user_id, product_id)
+	cart_id, err := i.repo.CheckIfItemIsAlreadyAdded(user_id, cart_item.ProductID, cart_item.Size)
 	if err != nil {
 		return models.CartDetails{}, err
 	}
 
 	if cart_id != 0 {
-		result, err := i.repo.UpdateQuantityAdd(user_id, cart_id, quantity)
+		result, err := i.repo.UpdateQuantityAdd(user_id, cart_id, cart_item.Quantity)
 		if err != nil {
 			return models.CartDetails{}, err
 		}
 		return result, nil
 	} else {
-		result, err := i.repo.AddToCart(user_id, product_id, quantity)
+		result, err := i.repo.AddToCart(user_id, cart_item)
 		if err != nil {
 			return models.CartDetails{}, err
 		}
@@ -58,26 +55,15 @@ func (i *cartService) AddToCart(user_id, product_id uint, quantity uint) (models
 func (i *cartService) CheckOut(user_id uint, cart_ids []uint) (models.CheckOut, error) {
 
 	cartItems, err := i.repo.GetCart(user_id, cart_ids)
+	if err != nil {
+		return models.CheckOut{}, err
+	}
 
 	var discountedPrice, totalPrice uint64
 
-	for idx := range cartItems {
-		offerPercentage, err := i.offerRepository.FindOfferRate(cartItems[idx].ProductID)
-		if err != nil {
-			return models.CheckOut{}, err
-		}
-		if offerPercentage > 0 {
-			cartItems[idx].ItemDiscountedPrice = cartItems[idx].ItemPrice - (cartItems[idx].ItemPrice*uint64(offerPercentage))/100
-		} else {
-			cartItems[idx].ItemDiscountedPrice = cartItems[idx].ItemPrice
-		}
-
-		totalPrice += cartItems[idx].ItemPrice
-		discountedPrice += cartItems[idx].ItemDiscountedPrice
-	}
-
-	if err != nil {
-		return models.CheckOut{}, err
+	for _, v := range cartItems {
+		totalPrice += v.ItemPrice
+		discountedPrice += v.ItemDiscountPrice
 	}
 
 	var checkout models.CheckOut
@@ -94,18 +80,6 @@ func (i *cartService) GetCart(user_id uint, cart_ids []uint) ([]models.CartItem,
 	cartItems, err := i.repo.GetCart(user_id, cart_ids)
 	if err != nil {
 		return []models.CartItem{}, err
-	}
-
-	for idx := range cartItems {
-		offerPercentage, err := i.offerRepository.FindOfferRate(cartItems[idx].ProductID)
-		if err != nil {
-			return []models.CartItem{}, err
-		}
-		if offerPercentage > 0 {
-			cartItems[idx].ItemDiscountedPrice = cartItems[idx].ItemPrice - (cartItems[idx].ItemPrice*uint64(offerPercentage))/100
-		} else {
-			cartItems[idx].ItemDiscountedPrice = cartItems[idx].ItemPrice
-		}
 	}
 
 	return cartItems, nil
@@ -164,111 +138,3 @@ func (i *cartService) UpdateQuantity(user_id, cart_id uint, quantity uint) (mode
 
 	return result, nil
 }
-
-// func (u *cartService) GetCart(id uint) (models.GetCartResponse, error) {
-
-// 	//find cart id
-// 	cart_id, err := u.repo.GetCartID(id)
-// 	if err != nil {
-// 		return models.GetCartResponse{}, errors.New(InternalError)
-// 	}
-// 	//find products inide cart
-// 	products, err := u.repo.GetProductsInCart(cart_id)
-// 	if err != nil {
-// 		return models.GetCartResponse{}, errors.New(InternalError)
-// 	}
-// 	//find product names
-// 	var names []string
-// 	for i := range products {
-// 		name, err := u.repo.FindProductNames(products[i])
-// 		if err != nil {
-// 			return models.GetCartResponse{}, errors.New(InternalError)
-// 		}
-// 		names = append(names, name)
-// 	}
-
-// 	//find quantity
-// 	var quantity []int
-// 	for i := range products {
-// 		q, err := u.repo.FindCartQuantity(cart_id, products[i])
-// 		if err != nil {
-// 			return models.GetCartResponse{}, errors.New(InternalError)
-// 		}
-// 		quantity = append(quantity, q)
-// 	}
-
-// 	var price []float64
-// 	for i := range products {
-// 		q, err := u.repo.FindPrice(products[i])
-// 		if err != nil {
-// 			return models.GetCartResponse{}, errors.New(InternalError)
-// 		}
-// 		price = append(price, q)
-// 	}
-
-// 	var images []string
-// 	var stocks []int
-
-// 	for _, v := range products {
-// 		image, err := u.repo.FindProductImage(v)
-// 		if err != nil {
-// 			return models.GetCartResponse{}, errors.New(InternalError)
-// 		}
-
-// 		stock, err := u.repo.FindStock(v)
-// 		if err != nil {
-// 			return models.GetCartResponse{}, errors.New(InternalError)
-// 		}
-
-// 		images = append(images, image)
-// 		stocks = append(stocks, stock)
-// 	}
-
-// 	var categories []int
-// 	for i := range products {
-// 		c, err := u.repo.FindCategory(products[i])
-// 		if err != nil {
-// 			return models.GetCartResponse{}, errors.New(InternalError)
-// 		}
-// 		categories = append(categories, c)
-// 	}
-
-// 	var getcart []models.GetCart
-// 	for i := range names {
-// 		var get models.GetCart
-// 		get.ID = products[i]
-// 		get.ProductName = names[i]
-// 		get.Image = images[i]
-// 		get.Category_id = categories[i]
-// 		get.Quantity = quantity[i]
-// 		get.Total = price[i]
-// 		get.StockAvailable = stocks[i]
-// 		get.DiscountedPrice = 0
-
-// 		getcart = append(getcart, get)
-// 	}
-
-// 	//find offers
-// 	var offers []int
-// 	for i := range categories {
-// 		c, err := u.repo.FindofferPercentage(categories[i])
-// 		if err != nil {
-// 			return models.GetCartResponse{}, errors.New(InternalError)
-// 		}
-// 		offers = append(offers, c)
-// 	}
-
-// 	//find discounted price
-// 	for i := range getcart {
-// 		getcart[i].DiscountedPrice = (getcart[i].Total) - (getcart[i].Total * float64(offers[i]) / 100)
-// 	}
-
-// 	var response models.GetCartResponse
-// 	response.ID = cart_id
-// 	response.Data = getcart
-
-// 	//then return in appropriate format
-
-// 	return response, nil
-
-// }

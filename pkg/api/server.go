@@ -18,14 +18,13 @@ type ServerHTTP struct {
 func NewServerHTTP(
 	userHandler handler.UserHandler,
 	adminHandler handler.AdminHandler,
-	categoryHandler handler.CategoryHandler,
 	productHandler handler.ProductHandler,
 	// otpHandler handler.OtpHandler,
 	orderHandler handler.OrderHandler,
 	cartHandler handler.CartHandler,
 	// couponHandler handler.CouponHandler,
 	paymentHandler handler.PaymentHandler,
-	offerhandler handler.OfferHandler,
+	// offerhandler handler.OfferHandler,
 	wishlistHandler handler.WishlistHandler,
 	db *gorm.DB,
 ) *ServerHTTP {
@@ -47,7 +46,6 @@ func NewServerHTTP(
 		cartHandler,
 		paymentHandler,
 		wishlistHandler,
-		categoryHandler,
 		// couponHandler,
 	)
 	routes.AdminRoutes(
@@ -55,10 +53,9 @@ func NewServerHTTP(
 		adminHandler,
 		productHandler,
 		userHandler,
-		categoryHandler,
 		// orderHandler,
 		// couponHandler,
-		offerhandler,
+		// offerhandler,
 	)
 
 	return &ServerHTTP{engine: engine}

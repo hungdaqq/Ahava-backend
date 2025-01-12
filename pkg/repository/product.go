@@ -5,23 +5,30 @@ import (
 	"ahava/pkg/utils/errors"
 	"ahava/pkg/utils/models"
 
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
 type ProductRepository interface {
 	AddProduct(product models.Product) (models.Product, error)
+	AddProductImages(product_id uint, defaul_image string, images pq.StringArray) (models.Product, error)
 
-	UpdateProduct(uint, models.Product) (models.Product, error)
-	UpdateProductImage(uint, string) (models.Product, error)
+	UpdateProduct(product_id uint, product models.Product) (models.Product, error)
+	UpdateProductImage(product_id uint, defaul_image string) (models.Product, error)
 
 	DeleteProduct(product_id uint) error
 
 	GetProductDetails(product_id uint) (models.Product, error)
-	ListProducts(limit, offset int) (models.ListProducts, error)
-	ListCategoryProducts(category_id uint) ([]models.Product, error)
+	ListAllProducts(limit, offset int) (models.ListProducts, error)
+	ListCategoryProducts(category string) ([]models.Product, error)
 	ListFeaturedProducts() ([]models.Product, error)
 
 	SearchProducts(key string) ([]models.Product, error)
+
+	GetProductPrice(product_id uint) ([]models.Price, error)
+
+	AddProductPrice(product_id uint, price []models.Price) ([]models.Price, error)
+	UpdateProductPrice(product_id uint, price []models.Price) ([]models.Price, error)
 }
 
 type productRepository struct {
@@ -29,49 +36,66 @@ type productRepository struct {
 }
 
 func NewProductRepository(DB *gorm.DB) ProductRepository {
-	return &productRepository{
-		DB: DB,
-	}
+	return &productRepository{DB}
 }
 
 func (r *productRepository) AddProduct(product models.Product) (models.Product, error) {
 
-	var addProduct domain.Product
-
-	err := r.DB.Create(&domain.Product{
+	addProduct := domain.Product{
 		Name:             product.Name,
-		CategoryID:       product.CategoryID,
-		Price:            product.Price,
-		Size:             product.Size,
+		Category:         product.Category,
 		Stock:            product.Stock,
-		DefaultImage:     product.DefaultImage,
-		Images:           product.Images,
 		ShortDescription: product.ShortDescription,
 		Description:      product.Description,
 		HowToUse:         product.HowToUse,
-	}).Scan(&addProduct).Error
-	if err != nil {
+		IsFeatured:       product.IsFeatured,
+	}
+
+	if err := r.DB.Create(&addProduct).Error; err != nil {
 		return models.Product{}, err
 	}
 
 	return models.Product{
 		ID:               addProduct.ID,
 		Name:             addProduct.Name,
-		CategoryID:       addProduct.CategoryID,
-		Price:            addProduct.Price,
-		Size:             addProduct.Size,
+		Category:         addProduct.Category,
 		Stock:            addProduct.Stock,
-		DefaultImage:     addProduct.DefaultImage,
-		Images:           addProduct.Images,
 		ShortDescription: addProduct.ShortDescription,
 		Description:      addProduct.Description,
 		HowToUse:         addProduct.HowToUse,
+		IsFeatured:       addProduct.IsFeatured,
+	}, nil
+}
+
+func (r *productRepository) AddProductImages(product_id uint, default_image string, images pq.StringArray) (models.Product, error) {
+
+	var addProduct domain.Product
+
+	result := r.DB.Model(&domain.Product{}).
+		Where("id = ?", product_id).
+		Updates(
+			domain.Product{
+				DefaultImage: default_image,
+				Images:       images,
+			}).
+		Scan(&addProduct)
+	if result.Error != nil {
+		return models.Product{}, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return models.Product{}, errors.ErrEntityNotFound
+	}
+
+	return models.Product{
+		ID:           addProduct.ID,
+		DefaultImage: addProduct.DefaultImage,
+		Images:       addProduct.Images,
 	}, nil
 }
 
 func (r *productRepository) DeleteProduct(product_id uint) error {
 
-	result := r.DB.Exec("DELETE FROM products WHERE id = ?", product_id)
+	result := r.DB.Delete(&domain.Product{}, product_id)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -86,18 +110,15 @@ func (r *productRepository) GetProductDetails(product_id uint) (models.Product, 
 
 	var product domain.Product
 
-	err := r.DB.Raw(`SELECT * FROM products WHERE products.id = ?`,
-		product_id).Scan(&product).Error
+	err := r.DB.First(&product, product_id).Error
 	if err != nil {
-		return models.Product{}, errors.ErrEntityNotFound
+		return models.Product{}, err
 	}
 
 	return models.Product{
 		ID:               product.ID,
 		Name:             product.Name,
-		CategoryID:       product.CategoryID,
-		Price:            product.Price,
-		Size:             product.Size,
+		Category:         product.Category,
 		Stock:            product.Stock,
 		DefaultImage:     product.DefaultImage,
 		Images:           product.Images,
@@ -108,14 +129,14 @@ func (r *productRepository) GetProductDetails(product_id uint) (models.Product, 
 	}, nil
 }
 
-func (r *productRepository) ListProducts(limit, offset int) (models.ListProducts, error) {
+func (r *productRepository) ListAllProducts(limit, offset int) (models.ListProducts, error) {
 
 	var listProducts models.ListProducts
 	var productDetails []models.Product
 	var total int64
 
-	query := r.DB.Model(&models.Product{})
-	// Get the total count of records
+	query := r.DB.Model(&domain.Product{})
+
 	if err := query.Count(&total).Error; err != nil {
 		return models.ListProducts{}, err
 	}
@@ -132,87 +153,56 @@ func (r *productRepository) ListProducts(limit, offset int) (models.ListProducts
 	return listProducts, nil
 }
 
-func (r *productRepository) ListCategoryProducts(category_id uint) ([]models.Product, error) {
+func (r *productRepository) ListCategoryProducts(category string) ([]models.Product, error) {
 
 	var products []models.Product
-	err := r.DB.Raw("SELECT * FROM products WHERE category_id=$1", category_id).
-		Scan(&products).Error
+
+	err := r.DB.Where("category = ?", category).Find(&products).Error
 	if err != nil {
 		return nil, err
 	}
 
 	return products, nil
-
 }
+
 func (r *productRepository) ListFeaturedProducts() ([]models.Product, error) {
 
 	var products []models.Product
-	err := r.DB.Raw("SELECT * FROM products WHERE is_featured=true").Scan(&products).Error
+
+	err := r.DB.Where("is_featured = true").Find(&products).Error
 	if err != nil {
-		return []models.Product{}, err
+		return nil, err
 	}
 
 	return products, nil
 }
 
-// func (r *productRepository) CheckStock(product_id uint) (int, error) {
-// 	var stock int
-// 	if err := r.DB.Raw("SELECT stock FROM products WHERE id=$1", product_id).Scan(&stock).Error; err != nil {
-// 		return 0, err
-// 	}
-// 	return stock, nil
-// }
-
 func (r *productRepository) SearchProducts(key string) ([]models.Product, error) {
 
-	var productDetails []models.Product
+	var products []models.Product
 
-	query := `SELECT i.* FROM products i LEFT JOIN categories c ON i.category_id = c.id 
-          WHERE i.name ILIKE '%' || ? || '%' OR c.name ILIKE '%' || ? || '%'`
-	if err := r.DB.Raw(query, key, key).Scan(&productDetails).Error; err != nil {
-		return []models.Product{}, err
+	err := r.DB.Where("name ILIKE ? OR category ILIKE ?", "%"+key+"%", "%"+key+"%").
+		Find(&products).Error
+	if err != nil {
+		return nil, err
 	}
 
-	return productDetails, nil
+	return products, nil
 }
-
-// func (r *productRepository) SaveSearchHistory(user_id uint, key string) error {
-
-// 	err := r.DB.Exec(`INSERT INTO search_histories (user_id,search_key) VALUES (?,?)`,
-// 		user_id, key).Error
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
-// func (r *productRepository) GetSearchHistory(user_id uint) ([]models.SearchHistory, error) {
-
-// 	var searchHistory []models.SearchHistory
-
-// 	err := r.DB.Raw(`SELECT * FROM search_histories WHERE user_id=$1 ORDER BY created_at DESC`,
-// 		user_id).Scan(&searchHistory).Error
-// 	if err != nil {
-// 		return []models.SearchHistory{}, err
-// 	}
-
-// 	return searchHistory, nil
-// }
 
 func (r *productRepository) UpdateProductImage(product_id uint, url string) (models.Product, error) {
 
 	var updateProduct models.Product
 
 	// Use GORM's Update method to update the product image
-	result := r.DB.Model(&domain.Product{}).Where("id = ?", product_id).Update("image", url).Scan(&updateProduct)
+	result := r.DB.Model(&domain.Product{}).
+		Where("id = ?", product_id).
+		Update("image", url).
+		Scan(&updateProduct)
 
-	// Check for errors in the update process
 	if result.Error != nil {
 		return models.Product{}, result.Error
 	}
-
-	// Check if any row was affected (to handle case where no rows matched)
 	if result.RowsAffected == 0 {
 		return models.Product{}, errors.ErrEntityNotFound
 	}
@@ -224,26 +214,91 @@ func (r *productRepository) UpdateProduct(product_id uint, model models.Product)
 
 	var updateProduct models.Product
 
-	result := r.DB.Model(&domain.Product{}).Where("id = ?", product_id).Updates(
-		domain.Product{
-			Name:             model.Name,
-			CategoryID:       model.CategoryID,
-			Price:            model.Price,
-			Size:             model.Size,
-			Stock:            model.Stock,
-			Description:      model.Description,
-			ShortDescription: model.ShortDescription,
-			IsFeatured:       model.IsFeatured,
-			HowToUse:         model.HowToUse,
-		}).Scan(&updateProduct)
-
+	result := r.DB.Model(&domain.Product{}).
+		Where("id = ?", product_id).
+		Updates(
+			domain.Product{
+				Name:             model.Name,
+				Category:         model.Category,
+				Stock:            model.Stock,
+				Description:      model.Description,
+				ShortDescription: model.ShortDescription,
+				IsFeatured:       model.IsFeatured,
+				HowToUse:         model.HowToUse,
+			}).
+		Scan(&updateProduct)
 	if result.Error != nil {
 		return models.Product{}, result.Error
 	}
-
 	if result.RowsAffected == 0 {
 		return models.Product{}, errors.ErrEntityNotFound
 	}
 
 	return updateProduct, nil
+}
+
+func (r *productRepository) UpdateProductPrice(product_id uint, price []models.Price) ([]models.Price, error) {
+
+	var updatePrice []models.Price
+	for _, p := range price {
+		result := r.DB.Model(&domain.Price{}).
+			Where("product_id = ? AND size = ?", product_id, p.Size).
+			Updates(
+				domain.Price{
+					OriginalPrice: p.OriginalPrice,
+					DiscountPrice: p.DiscountPrice,
+				}).
+			Scan(&p)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+		if result.RowsAffected == 0 {
+			return nil, errors.ErrEntityNotFound
+		}
+
+		updatePrice = append(updatePrice, models.Price{
+			Size:          p.Size,
+			OriginalPrice: p.OriginalPrice,
+			DiscountPrice: p.DiscountPrice,
+		})
+	}
+
+	return updatePrice, nil
+}
+
+func (r *productRepository) AddProductPrice(product_id uint, price []models.Price) ([]models.Price, error) {
+
+	var updatePrice []models.Price
+
+	for _, p := range price {
+		price := domain.Price{
+			ProductID:     product_id,
+			Size:          p.Size,
+			OriginalPrice: p.OriginalPrice,
+			DiscountPrice: p.DiscountPrice,
+		}
+		if err := r.DB.Create(&price).Error; err != nil {
+			return nil, err
+		}
+		updatePrice = append(updatePrice, models.Price{
+			Size:          price.Size,
+			OriginalPrice: price.OriginalPrice,
+			DiscountPrice: price.DiscountPrice,
+		})
+	}
+
+	return updatePrice, nil
+}
+func (r *productRepository) GetProductPrice(product_id uint) ([]models.Price, error) {
+
+	var prices []models.Price
+
+	err := r.DB.Model(&domain.Price{}).
+		Where("product_id = ?", product_id).
+		Scan(&prices).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return prices, nil
 }
