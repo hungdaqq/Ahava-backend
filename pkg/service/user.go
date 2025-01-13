@@ -28,7 +28,7 @@ type UserService interface {
 	// GetMyReferenceLink(id uint) (string, error)
 }
 
-type USERUSECASE struct {
+type userUsecase struct {
 	userRepo repository.UserRepository
 	cfg      config.Config
 	// otpRepository     repository.OtpRepository
@@ -44,7 +44,7 @@ func NewUserService(repo repository.UserRepository,
 	// order repository.OrderRepository,
 	h helper.Helper) UserService {
 
-	return &USERUSECASE{
+	return &userUsecase{
 		userRepo: repo,
 		cfg:      cfg,
 		// otpRepository:     otp,
@@ -57,14 +57,14 @@ func NewUserService(repo repository.UserRepository,
 var InternalError = "Internal Server Error"
 var ErrorHashingPassword = "Error In Hashing Password"
 
-func (u *USERUSECASE) UserSignUp(user models.UserDetails, ref string) (models.TokenUsers, error) {
+func (u *userUsecase) UserSignUp(user models.UserDetails, ref string) (models.TokenUsers, error) {
 	// Check whether the user already exist. If yes, show the error message, since this is signUp
 	userExist := u.userRepo.CheckUserAvailability(user.Email, user.Phone)
 	if userExist {
-		return models.TokenUsers{}, errors.New("user already exist, sign in")
+		return models.TokenUsers{}, models.ErrAlreadyExists
 	}
 	if user.Password != user.ConfirmPassword {
-		return models.TokenUsers{}, errors.New("password does not match")
+		return models.TokenUsers{}, models.ErrEntityNotFound
 	}
 
 	// referenceUser, err := u.userRepo.FindUserFromReference(ref)
@@ -122,21 +122,21 @@ func (u *USERUSECASE) UserSignUp(user models.UserDetails, ref string) (models.To
 	}, nil
 }
 
-func (u *USERUSECASE) LoginHandler(user models.UserLogin) (models.TokenUsers, error) {
+func (u *userUsecase) LoginHandler(user models.UserLogin) (models.TokenUsers, error) {
 
 	// checking if a username exist with this email address
 	ok := u.userRepo.CheckUserAvailability(user.Email, user.Username)
 	if !ok {
-		return models.TokenUsers{}, errors.New("the user does not exist")
+		return models.TokenUsers{}, errors.ErrUnsupported
 	}
 
 	isBlocked, err := u.userRepo.UserBlockStatus(user.Email, user.Username)
 	if err != nil {
-		return models.TokenUsers{}, errors.New(InternalError)
+		return models.TokenUsers{}, err
 	}
 
 	if isBlocked {
-		return models.TokenUsers{}, errors.New("user is blocked by admin")
+		return models.TokenUsers{}, models.ErrForbidden
 	}
 
 	// Get the user details in order to check the password, in this case ( The same function can be reused in future )
@@ -147,7 +147,7 @@ func (u *USERUSECASE) LoginHandler(user models.UserLogin) (models.TokenUsers, er
 
 	err = u.helper.CompareHashAndPassword(details.Password, user.Password)
 	if err != nil {
-		return models.TokenUsers{}, errors.New("password incorrect")
+		return models.TokenUsers{}, models.ErrInvalidPassword
 	}
 
 	var userDetails models.UserDetailsResponse
@@ -172,7 +172,7 @@ func (u *USERUSECASE) LoginHandler(user models.UserLogin) (models.TokenUsers, er
 
 }
 
-func (i *USERUSECASE) AddAddress(user_id uint, address models.Address) (models.Address, error) {
+func (i *userUsecase) AddAddress(user_id uint, address models.Address) (models.Address, error) {
 
 	addAddress, err := i.userRepo.AddAddress(user_id, address)
 	if err != nil {
@@ -183,7 +183,7 @@ func (i *USERUSECASE) AddAddress(user_id uint, address models.Address) (models.A
 
 }
 
-func (i *USERUSECASE) UpdateAddress(user_id, address_id uint, address models.Address) (models.Address, error) {
+func (i *userUsecase) UpdateAddress(user_id, address_id uint, address models.Address) (models.Address, error) {
 
 	updateAddress, err := i.userRepo.UpdateAddress(user_id, address_id, address)
 	if err != nil {
@@ -194,7 +194,7 @@ func (i *USERUSECASE) UpdateAddress(user_id, address_id uint, address models.Add
 
 }
 
-func (i *USERUSECASE) DeleteAddress(user_id, address_id uint) error {
+func (i *userUsecase) DeleteAddress(user_id, address_id uint) error {
 
 	err := i.userRepo.DeleteAddress(user_id, address_id)
 	if err != nil {
@@ -205,7 +205,7 @@ func (i *USERUSECASE) DeleteAddress(user_id, address_id uint) error {
 
 }
 
-func (i *USERUSECASE) GetAddresses(user_id uint) ([]models.Address, error) {
+func (i *userUsecase) GetAddresses(user_id uint) ([]models.Address, error) {
 
 	addresses, err := i.userRepo.GetAddresses(user_id)
 	if err != nil {
@@ -216,7 +216,7 @@ func (i *USERUSECASE) GetAddresses(user_id uint) ([]models.Address, error) {
 
 }
 
-func (u *USERUSECASE) GetUserDetails(id uint) (models.UserDetailsResponse, error) {
+func (u *userUsecase) GetUserDetails(id uint) (models.UserDetailsResponse, error) {
 
 	details, err := u.userRepo.GetUserDetails(id)
 	if err != nil {
@@ -227,7 +227,7 @@ func (u *USERUSECASE) GetUserDetails(id uint) (models.UserDetailsResponse, error
 
 }
 
-func (u *USERUSECASE) ChangePassword(id uint, old string, password string, repassword string) error {
+func (u *userUsecase) ChangePassword(id uint, old string, password string, repassword string) error {
 
 	userPassword, err := u.userRepo.GetPassword(id)
 	if err != nil {
@@ -252,7 +252,7 @@ func (u *USERUSECASE) ChangePassword(id uint, old string, password string, repas
 
 }
 
-// func (u *USERUSECASE) ForgotPasswordSend(phone string) error {
+// func (u *userUsecase) ForgotPasswordSend(phone string) error {
 
 // 	ok := u.otpRepository.FindUserByMobileNumber(phone)
 // 	if !ok {
@@ -294,7 +294,7 @@ func (u *USERUSECASE) ChangePassword(id uint, old string, password string, repas
 // 	return nil
 // }
 
-func (u *USERUSECASE) EditProfile(user_id uint, profile models.EditProfile) (models.UserDetailsResponse, error) {
+func (u *userUsecase) EditProfile(user_id uint, profile models.EditProfile) (models.UserDetailsResponse, error) {
 
 	result, err := u.userRepo.EditProfile(user_id, profile)
 	if err != nil {

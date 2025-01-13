@@ -2,7 +2,6 @@ package repository
 
 import (
 	"ahava/pkg/domain"
-	errors "ahava/pkg/utils/errors"
 	"ahava/pkg/utils/models"
 
 	"gorm.io/gorm"
@@ -59,7 +58,7 @@ func (r *paymentRepository) SaveTransaction(t models.Transaction) (models.Transa
 
 	// Check if any rows were affected (to handle case where no transaction with the given code exists)
 	if result.RowsAffected == 0 {
-		return models.Transaction{}, errors.ErrEntityNotFound
+		return models.Transaction{}, models.ErrEntityNotFound
 	}
 
 	return transaction, nil

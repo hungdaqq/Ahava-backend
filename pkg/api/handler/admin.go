@@ -7,7 +7,6 @@ import (
 
 	"ahava/pkg/helper"
 	services "ahava/pkg/service"
-	errors "ahava/pkg/utils/errors"
 	models "ahava/pkg/utils/models"
 
 	response "ahava/pkg/utils/response"
@@ -191,7 +190,7 @@ func (a *adminHandler) ValidateRefreshTokenAndCreateNewAccess(ctx *gin.Context) 
 	})
 	if err != nil {
 		// The refresh token is invalid.
-		ctx.AbortWithError(401, errors.ErrInvalidToken)
+		ctx.AbortWithError(401, models.ErrInvalidToken)
 		return
 	}
 
@@ -206,7 +205,7 @@ func (a *adminHandler) ValidateRefreshTokenAndCreateNewAccess(ctx *gin.Context) 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	newAccessToken, err := token.SignedString([]byte("accesssecret"))
 	if err != nil {
-		ctx.AbortWithError(500, errors.ErrCreateToken)
+		ctx.AbortWithError(500, models.ErrCreateToken)
 	}
 
 	ctx.JSON(200, newAccessToken)

@@ -1,8 +1,6 @@
 package repository
 
 import (
-	errors "ahava/pkg/utils/errors"
-
 	"ahava/pkg/domain"
 	"ahava/pkg/utils/models"
 
@@ -100,59 +98,74 @@ func (r *userDatabase) FindUser(login models.UserLogin) (models.UserSignInRespon
 
 }
 
-func (r *userDatabase) AddAddress(user_id uint, address models.Address) (models.Address, error) {
+func (r *userDatabase) AddAddress(user_id uint, a models.Address) (models.Address, error) {
 
-	var addAddress models.Address
+	address := domain.Address{
+		UserID:       user_id,
+		Name:         a.Name,
+		Street:       a.Street,
+		Ward:         a.Ward,
+		WardCode:     a.WardCode,
+		District:     a.District,
+		DistrictCode: a.DistrictCode,
+		Province:     a.Province,
+		ProvinceCode: a.ProvinceCode,
+		Phone:        a.Phone,
+		Type:         a.Type,
+		Default:      a.Default,
+	}
 
-	err := r.DB.
-		Model(&domain.Address{}).
-		Create(&domain.Address{
-			UserID:   user_id,
-			Name:     address.Name,
-			Street:   address.Street,
-			Ward:     address.Ward,
-			District: address.District,
-			Province: address.Province,
-			Phone:    address.Phone,
-			Type:     address.Type,
-			Default:  address.Default,
-		}).
-		Scan(&addAddress).Error
+	err := r.DB.Create(&address).Error
 	if err != nil {
 		return models.Address{}, err
 	}
 
-	return addAddress, nil
+	return models.Address{
+		ID:           address.ID,
+		Name:         address.Name,
+		Street:       address.Street,
+		Ward:         address.Ward,
+		WardCode:     address.WardCode,
+		District:     address.District,
+		DistrictCode: address.DistrictCode,
+		Province:     address.Province,
+		ProvinceCode: address.ProvinceCode,
+		Phone:        address.Phone,
+		Type:         address.Type,
+		Default:      address.Default,
+	}, nil
 }
 
-func (r *userDatabase) UpdateAddress(user_id, address_id uint, address models.Address) (models.Address, error) {
+func (r *userDatabase) UpdateAddress(user_id, address_id uint, a models.Address) (models.Address, error) {
 
-	var updateAddress models.Address
+	var address models.Address
 
 	result := r.DB.
 		Model(&domain.Address{}).
 		Where("id = ? AND user_id =?", address_id, user_id).
 		Updates(domain.Address{
-			Name:     address.Name,
-			Street:   address.Street,
-			Ward:     address.Ward,
-			District: address.District,
-			Province: address.Province,
-			Phone:    address.Phone,
-			Type:     address.Type,
-			Default:  address.Default,
+			Name:         a.Name,
+			Street:       a.Street,
+			Ward:         a.Ward,
+			WardCode:     a.WardCode,
+			District:     a.District,
+			DistrictCode: a.DistrictCode,
+			Province:     a.Province,
+			ProvinceCode: a.ProvinceCode,
+			Phone:        a.Phone,
+			Type:         a.Type,
+			Default:      a.Default,
 		}).
-		Scan(&updateAddress)
+		Scan(&address)
 
 	if result.Error != nil {
 		return models.Address{}, result.Error
 	}
-
 	if result.RowsAffected == 0 {
-		return models.Address{}, errors.ErrEntityNotFound
+		return models.Address{}, models.ErrEntityNotFound
 	}
 
-	return updateAddress, nil
+	return address, nil
 }
 
 func (r *userDatabase) DeleteAddress(address_id, user_id uint) error {
@@ -163,35 +176,24 @@ func (r *userDatabase) DeleteAddress(address_id, user_id uint) error {
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return errors.ErrEntityNotFound
+		return models.ErrEntityNotFound
 	}
 
 	return nil
 }
 
-// func (r *userDatabase) CheckIfFirstAddress(user_id uint) bool {
-
-// 	var count int
-// 	// query := fmt.Sprintf("select count(*) from addresses where user_id='%s'", id)
-// 	if err := r.DB.Raw("SELECT COUNT(*) FROM addresses WHERE user_id=$1", user_id).Scan(&count).Error; err != nil {
-// 		return false
-// 	}
-// 	// if count is greater than 0 that means the user already exist
-// 	return count > 0
-
-// }
-
 func (ad *userDatabase) GetAddresses(user_id uint) ([]models.Address, error) {
 
-	var addresses []models.Address
+	var adresses []models.Address
 
-	if err := ad.DB.Raw("SELECT * FROM addresses WHERE user_id=?",
-		user_id).Scan(&addresses).Error; err != nil {
+	err := ad.DB.Model(&domain.Address{}).
+		Where("user_id = ?", user_id).
+		Find(&adresses).Error
+	if err != nil {
 		return []models.Address{}, err
 	}
 
-	return addresses, nil
-
+	return adresses, nil
 }
 
 func (ad *userDatabase) GetUserDetails(user_id uint) (models.UserDetailsResponse, error) {
@@ -215,7 +217,7 @@ func (r *userDatabase) ChangePassword(id uint, password string) error {
 	}
 
 	if result.RowsAffected == 0 {
-		return errors.ErrEntityNotFound
+		return models.ErrEntityNotFound
 	}
 
 	return nil
@@ -228,8 +230,8 @@ func (r *userDatabase) GetPassword(id uint) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return userPassword, nil
 
+	return userPassword, nil
 }
 
 // func (ad *userDatabase) FindIdFromPhone(phone string) (uint, error) {
@@ -248,34 +250,24 @@ func (r *userDatabase) EditProfile(userID uint, profile models.EditProfile) (mod
 
 	var user models.UserDetailsResponse
 
-	result := r.DB.Model(&domain.User{}).Where("id = ?", userID).Updates(domain.User{
-		Name:      profile.Name,
-		Phone:     profile.Phone,
-		BirthDate: profile.BirthDate,
-		Gender:    profile.Gender,
-	}).Scan(&user)
+	result := r.DB.Model(&domain.User{}).
+		Where("id = ?", userID).
+		Updates(domain.User{
+			Name:      profile.Name,
+			Phone:     profile.Phone,
+			BirthDate: profile.BirthDate,
+			Gender:    profile.Gender,
+		}).
+		Scan(&user)
 
 	if result.Error != nil {
 		return models.UserDetailsResponse{}, result.Error
 	}
-
 	if result.RowsAffected == 0 {
-		return models.UserDetailsResponse{}, errors.ErrEntityNotFound
+		return models.UserDetailsResponse{}, models.ErrEntityNotFound
 	}
 
 	return user, nil
-}
-
-func (ad *userDatabase) GetCartID(id uint) (uint, error) {
-
-	var cart_id uint
-
-	if err := ad.DB.Raw("select id from carts where user_id=?", id).Scan(&cart_id).Error; err != nil {
-		return 0, err
-	}
-
-	return cart_id, nil
-
 }
 
 // func (ad *userDatabase) FindUserFromReference(ref string) (uint, error) {
@@ -305,24 +297,4 @@ func (r *userDatabase) GetReferralCodeFromID(id uint) (string, error) {
 	}
 
 	return referral, nil
-}
-
-func (r *userDatabase) FindProductImage(id uint) (string, error) {
-	var image string
-	err := r.DB.Raw("SELECT default_image FROM products WHERE id = ?", id).Scan(&image).Error
-	if err != nil {
-		return "", err
-	}
-
-	return image, nil
-}
-
-func (r *userDatabase) FindStock(id uint) (int, error) {
-	var stock int
-	err := r.DB.Raw("SELECT stock FROM products WHERE id = ?", id).Scan(&stock).Error
-	if err != nil {
-		return 0, err
-	}
-
-	return stock, nil
 }

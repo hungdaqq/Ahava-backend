@@ -1,7 +1,6 @@
 package repository
 
 import (
-	errors "ahava/pkg/utils/errors"
 	"fmt"
 
 	"ahava/pkg/domain"
@@ -47,7 +46,7 @@ func (r *adminRepository) GetUserByID(user_id uint) (domain.User, error) {
 		return domain.User{}, err
 	}
 	if count < 1 {
-		return domain.User{}, errors.ErrEntityNotFound
+		return domain.User{}, models.ErrEntityNotFound
 	}
 
 	query := fmt.Sprintf("select * from users where id = '%d'", user_id)

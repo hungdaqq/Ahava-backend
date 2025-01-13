@@ -2,7 +2,6 @@ package repository
 
 import (
 	"ahava/pkg/domain"
-	errors "ahava/pkg/utils/errors"
 	"ahava/pkg/utils/models"
 
 	"gorm.io/gorm"
@@ -75,7 +74,7 @@ func (r *cartRepository) RemoveFromCart(user_id, cart_id uint) error {
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return errors.ErrEntityNotFound
+		return models.ErrEntityNotFound
 	}
 
 	return nil
@@ -94,7 +93,7 @@ func (r *cartRepository) UpdateQuantityAdd(user_id, cart_id, quantity uint) (mod
 		return models.CartDetails{}, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return models.CartDetails{}, errors.ErrEntityNotFound
+		return models.CartDetails{}, models.ErrEntityNotFound
 	}
 
 	return cartDetails, nil
@@ -114,7 +113,7 @@ func (r *cartRepository) UpdateQuantityLess(user_id, cart_id, quantity uint) (mo
 		return models.CartDetails{}, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return models.CartDetails{}, errors.ErrEntityNotFound
+		return models.CartDetails{}, models.ErrEntityNotFound
 	}
 
 	return cartDetails, nil
@@ -134,7 +133,7 @@ func (r *cartRepository) UpdateQuantity(user_id, cart_id, quantity uint) (models
 		return models.CartDetails{}, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return models.CartDetails{}, errors.ErrEntityNotFound
+		return models.CartDetails{}, models.ErrEntityNotFound
 	}
 
 	return cartDetails, nil

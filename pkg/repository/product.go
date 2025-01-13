@@ -2,7 +2,6 @@ package repository
 
 import (
 	"ahava/pkg/domain"
-	"ahava/pkg/utils/errors"
 	"ahava/pkg/utils/models"
 
 	"github.com/lib/pq"
@@ -83,7 +82,7 @@ func (r *productRepository) AddProductImages(product_id uint, default_image stri
 		return models.Product{}, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return models.Product{}, errors.ErrEntityNotFound
+		return models.Product{}, models.ErrEntityNotFound
 	}
 
 	return models.Product{
@@ -100,7 +99,7 @@ func (r *productRepository) DeleteProduct(product_id uint) error {
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return errors.ErrEntityNotFound
+		return models.ErrEntityNotFound
 	}
 
 	return nil
@@ -197,7 +196,7 @@ func (r *productRepository) UpdateProductImage(product_id uint, url string) (mod
 		return models.Product{}, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return models.Product{}, errors.ErrEntityNotFound
+		return models.Product{}, models.ErrEntityNotFound
 	}
 
 	return updateProduct, nil
@@ -224,7 +223,7 @@ func (r *productRepository) UpdateProduct(product_id uint, model models.Product)
 		return models.Product{}, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return models.Product{}, errors.ErrEntityNotFound
+		return models.Product{}, models.ErrEntityNotFound
 	}
 
 	return updateProduct, nil
@@ -246,7 +245,7 @@ func (r *productRepository) UpdateProductPrice(product_id uint, price []models.P
 			return nil, result.Error
 		}
 		if result.RowsAffected == 0 {
-			return nil, errors.ErrEntityNotFound
+			return nil, models.ErrEntityNotFound
 		}
 
 		updatePrice = append(updatePrice, models.Price{

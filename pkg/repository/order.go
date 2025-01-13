@@ -2,7 +2,6 @@ package repository
 
 import (
 	"ahava/pkg/domain"
-	errors "ahava/pkg/utils/errors"
 	"ahava/pkg/utils/models"
 
 	"gorm.io/gorm"
@@ -92,7 +91,7 @@ func (r *orderRepository) UpdateOrder(order_id uint, updateOrder models.Order) (
 	}
 
 	if result.RowsAffected == 0 {
-		return models.Order{}, errors.ErrEntityNotFound
+		return models.Order{}, models.ErrEntityNotFound
 	}
 
 	return order, nil

@@ -2,7 +2,6 @@ package repository
 
 import (
 	"ahava/pkg/domain"
-	errors "ahava/pkg/utils/errors"
 	"ahava/pkg/utils/models"
 
 	"gorm.io/gorm"
@@ -59,7 +58,7 @@ func (r *wishlistRepository) UpdateWishlist(user_id, product_id uint, size strin
 		return models.Wishlist{}, result.Error
 	}
 	if result.RowsAffected == 0 {
-		return models.Wishlist{}, errors.ErrEntityNotFound
+		return models.Wishlist{}, models.ErrEntityNotFound
 	}
 
 	return updateWishlist, nil
@@ -77,7 +76,7 @@ func (r *wishlistRepository) UpdateRemoveFromWishlist(user_id, wishlist_id uint)
 	}
 
 	if result.RowsAffected == 0 {
-		return errors.ErrEntityNotFound
+		return models.ErrEntityNotFound
 	}
 
 	return nil

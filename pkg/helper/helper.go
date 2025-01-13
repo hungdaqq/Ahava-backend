@@ -17,8 +17,6 @@ import (
 	"github.com/jinzhu/copier"
 	"golang.org/x/crypto/bcrypt"
 
-	errors "ahava/pkg/utils/errors"
-
 	"github.com/twilio/twilio-go"
 	twilioApi "github.com/twilio/twilio-go/rest/verify/v2"
 
@@ -209,7 +207,7 @@ func (h *helper) TwilioVerifyOTP(serviceID string, code string, phone string) er
 		return nil
 	}
 
-	return errors.ErrValidateOTP
+	return models.ErrValidateOTP
 }
 
 func (h *helper) GenerateTokenClients(user models.UserDetailsResponse) (string, error) {
@@ -258,7 +256,7 @@ func (h *helper) PasswordHashing(password string) (string, error) {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
-		return "", errors.ErrInternalServer
+		return "", models.ErrInternalServer
 	}
 
 	hash := string(hashedPassword)

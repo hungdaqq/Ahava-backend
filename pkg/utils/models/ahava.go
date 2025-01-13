@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"github.com/lib/pq"
@@ -176,21 +177,19 @@ type CheckOut struct {
 }
 
 type Address struct {
-	ID           uint      `json:"id"`
-	UserID       uint      `json:"user_id"`
-	Name         string    `json:"name"`
-	Street       string    `json:"street"`
-	Ward         string    `json:"ward"`
-	WardCode     string    `json:"ward_code"`
-	District     string    `json:"district"`
-	DistrictCode string    `json:"district_code"`
-	Province     string    `json:"province"`
-	ProvinceCode string    `json:"province_code"`
-	Phone        string    `json:"phone"`
-	Default      bool      `json:"default"`
-	Type         string    `json:"type"`
-	CreateAt     time.Time `json:"create_at"`
-	UpdateAt     time.Time `json:"update_at"`
+	ID           uint   `json:"id"`
+	UserID       uint   `json:"user_id"`
+	Name         string `json:"name"`
+	Street       string `json:"street"`
+	Ward         string `json:"ward"`
+	WardCode     string `json:"ward_code"`
+	District     string `json:"district"`
+	DistrictCode string `json:"district_code"`
+	Province     string `json:"province"`
+	ProvinceCode string `json:"province_code"`
+	Phone        string `json:"phone"`
+	Default      bool   `json:"default"`
+	Type         string `json:"type"`
 }
 
 type Wishlist struct {
@@ -277,3 +276,17 @@ type Provinces struct {
 	Total     int        `json:"total"`
 	Provinces []Province `json:"data"`
 }
+
+var (
+	ErrEntityNotFound  = errors.New("entity not found")
+	ErrInternalServer  = errors.New("internal server error")
+	ErrBadRequest      = errors.New("bad request")
+	ErrUnauthorized    = errors.New("unauthorized")
+	ErrForbidden       = errors.New("forbidden")
+	ErrConflict        = errors.New("conflict")
+	ErrInvalidToken    = errors.New("invalid token")
+	ErrCreateToken     = errors.New("error in creating token")
+	ErrValidateOTP     = errors.New("failed to validate otp")
+	ErrAlreadyExists   = errors.New("entity already exists")
+	ErrInvalidPassword = errors.New("invalid password")
+)
