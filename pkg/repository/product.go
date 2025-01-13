@@ -108,25 +108,15 @@ func (r *productRepository) DeleteProduct(product_id uint) error {
 
 func (r *productRepository) GetProductDetails(product_id uint) (models.Product, error) {
 
-	var product domain.Product
+	var product models.Product
 
-	err := r.DB.First(&product, product_id).Error
+	err := r.DB.Model(&domain.Product{}).
+		First(&product, product_id).Error
 	if err != nil {
 		return models.Product{}, err
 	}
 
-	return models.Product{
-		ID:               product.ID,
-		Name:             product.Name,
-		Category:         product.Category,
-		Stock:            product.Stock,
-		DefaultImage:     product.DefaultImage,
-		Images:           product.Images,
-		ShortDescription: product.ShortDescription,
-		Description:      product.Description,
-		HowToUse:         product.HowToUse,
-		IsFeatured:       product.IsFeatured,
-	}, nil
+	return product, nil
 }
 
 func (r *productRepository) ListAllProducts(limit, offset int) (models.ListProducts, error) {
@@ -136,11 +126,9 @@ func (r *productRepository) ListAllProducts(limit, offset int) (models.ListProdu
 	var total int64
 
 	query := r.DB.Model(&domain.Product{})
-
 	if err := query.Count(&total).Error; err != nil {
 		return models.ListProducts{}, err
 	}
-
 	if err := query.Offset(offset).Limit(limit).Find(&productDetails).Error; err != nil {
 		return models.ListProducts{}, err
 	}
@@ -157,7 +145,9 @@ func (r *productRepository) ListCategoryProducts(category string) ([]models.Prod
 
 	var products []models.Product
 
-	err := r.DB.Where("category = ?", category).Find(&products).Error
+	err := r.DB.Model(&domain.Product{}).
+		Where("category = ?", category).
+		Find(&products).Error
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +159,9 @@ func (r *productRepository) ListFeaturedProducts() ([]models.Product, error) {
 
 	var products []models.Product
 
-	err := r.DB.Where("is_featured = true").Find(&products).Error
+	err := r.DB.Model(&domain.Product{}).
+		Where("is_featured = true").
+		Find(&products).Error
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +173,8 @@ func (r *productRepository) SearchProducts(key string) ([]models.Product, error)
 
 	var products []models.Product
 
-	err := r.DB.Where("name ILIKE ? OR category ILIKE ?", "%"+key+"%", "%"+key+"%").
+	err := r.DB.Model(&domain.Product{}).
+		Where("name ILIKE ? OR category ILIKE ?", "%"+key+"%", "%"+key+"%").
 		Find(&products).Error
 	if err != nil {
 		return nil, err

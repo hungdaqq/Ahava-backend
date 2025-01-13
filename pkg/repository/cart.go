@@ -17,13 +17,6 @@ type CartRepository interface {
 	UpdateQuantityLess(user_id, cart_id, quantity uint) (models.CartDetails, error)
 	UpdateQuantity(user_id, cart_id, quantity uint) (models.CartDetails, error)
 	RemoveFromCart(user_id, cart_id uint) error
-
-	// GetAddresses(id uint) ([]models.Address, error)
-	// GetPaymentOptions() ([]models.PaymentMethod, error)
-	// GetCartId(user_id uint) (int, error)
-	// CreateNewCart(user_id uint) (int, error)
-
-	// AddLineItems(cart_id, product_id uint) error
 }
 
 type cartRepository struct {
@@ -40,9 +33,10 @@ func (r *cartRepository) GetCart(user_id uint, cart_ids []uint) ([]models.CartIt
 
 	var cart []models.CartItem
 
-	query := r.DB.Model(&models.CartItem{}).
+	query := r.DB.Model(&domain.CartItem{}).
 		Joins("JOIN products p ON cart_items.product_id = p.id").
-		Select("cart_items.id AS cart_id, p.id as product_id, p.name, p.default_image, cart_items.quantity, (cart_items.quantity * p.price) AS item_price").
+		Joins("JOIN prices pr ON pr.product_id = p.id AND pr.size = cart_items.size").                                                                                                                                                         // Join with prices table on product_id and size
+		Select("cart_items.id, p.id as product_id, p.name, p.default_image, cart_items.quantity, cart_items.size, (cart_items.quantity * pr.original_price) AS item_price, (cart_items.quantity * pr.discount_price) AS item_discount_price"). // Calculate item_price using the price from the prices table
 		Where("cart_items.user_id = ?", user_id)
 
 	if len(cart_ids) > 0 {
@@ -91,8 +85,7 @@ func (r *cartRepository) UpdateQuantityAdd(user_id, cart_id, quantity uint) (mod
 
 	var cartDetails models.CartDetails
 
-	result := r.DB.
-		Model(&domain.CartItem{}).
+	result := r.DB.Model(&domain.CartItem{}).
 		Where("id=? AND user_id=?", cart_id, user_id).
 		Update("quantity", gorm.Expr("quantity + ?", quantity)).
 		Scan(&cartDetails)
@@ -100,7 +93,6 @@ func (r *cartRepository) UpdateQuantityAdd(user_id, cart_id, quantity uint) (mod
 	if result.Error != nil {
 		return models.CartDetails{}, result.Error
 	}
-
 	if result.RowsAffected == 0 {
 		return models.CartDetails{}, errors.ErrEntityNotFound
 	}
@@ -121,7 +113,6 @@ func (r *cartRepository) UpdateQuantityLess(user_id, cart_id, quantity uint) (mo
 	if result.Error != nil {
 		return models.CartDetails{}, result.Error
 	}
-
 	if result.RowsAffected == 0 {
 		return models.CartDetails{}, errors.ErrEntityNotFound
 	}
@@ -142,7 +133,6 @@ func (r *cartRepository) UpdateQuantity(user_id, cart_id, quantity uint) (models
 	if result.Error != nil {
 		return models.CartDetails{}, result.Error
 	}
-
 	if result.RowsAffected == 0 {
 		return models.CartDetails{}, errors.ErrEntityNotFound
 	}

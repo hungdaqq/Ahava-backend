@@ -28,7 +28,7 @@ func NewWishlistHandler(service services.WishlistService) WishlistHandler {
 
 func (h *wishlistHandler) AddToWishlist(ctx *gin.Context) {
 
-	user_id := ctx.MustGet("id").(uint)
+	user_id := ctx.MustGet("id").(int)
 
 	var model models.AddToWishlist
 	if err := ctx.BindJSON(&model); err != nil {
@@ -37,7 +37,7 @@ func (h *wishlistHandler) AddToWishlist(ctx *gin.Context) {
 		return
 	}
 
-	result, err := h.service.AddToWishlist(user_id, model.ProductID)
+	result, err := h.service.AddToWishlist(uint(user_id), model)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add to Wishlist", nil, err.Error())
 		ctx.JSON(http.StatusBadRequest, errorRes)
@@ -51,7 +51,7 @@ func (h *wishlistHandler) AddToWishlist(ctx *gin.Context) {
 
 func (h *wishlistHandler) RemoveFromWishlist(ctx *gin.Context) {
 
-	user_id := ctx.MustGet("id").(uint)
+	user_id := ctx.MustGet("id").(int)
 
 	wishlist_id, err := strconv.Atoi(ctx.Param("wishlist_id"))
 	if err != nil {
@@ -60,7 +60,7 @@ func (h *wishlistHandler) RemoveFromWishlist(ctx *gin.Context) {
 		return
 	}
 
-	if err := h.service.RemoveFromWishlist(user_id, uint(wishlist_id)); err != nil {
+	if err := h.service.RemoveFromWishlist(uint(user_id), uint(wishlist_id)); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not remove from wishlist", nil, err.Error())
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
@@ -72,11 +72,11 @@ func (h *wishlistHandler) RemoveFromWishlist(ctx *gin.Context) {
 
 func (h *wishlistHandler) GetWishList(ctx *gin.Context) {
 
-	user_id := ctx.MustGet("id").(uint)
+	user_id := ctx.MustGet("id").(int)
 
 	order_by := ctx.DefaultQuery("order_by", "default") // Replace "default" with your
 
-	products, err := h.service.GetWishList(user_id, order_by)
+	products, err := h.service.GetWishList(uint(user_id), order_by)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
 		ctx.JSON(http.StatusBadRequest, errorRes)

@@ -36,7 +36,7 @@ type CartItem struct {
 	Product   Product   `json:"-" gorm:"foreignkey:ProductID;constraint:OnDelete:CASCADE"`
 	Size      string    `json:"size" gorm:"not null"`
 	Quantity  uint      `json:"quantity" gorm:"default:1;check:quantity > 0"`
-	CreatedAt time.Time `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`
+	CreateAt  time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateAt  time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
@@ -140,7 +140,7 @@ type User struct {
 	Email        string    `json:"email" validate:"email" gorm:"unique;not null"`
 	Gender       string    `json:"gender" gorm:"gender:2;default:'MALE';check:gender IN ('MALE', 'FEMALE', 'OTHER')"`
 	Password     string    `json:"password" validate:"min=8,max=20"`
-	Phone        string    `json:"phone" gorm:"not null"`
+	Phone        string    `json:"phone"`
 	BirthDate    time.Time `json:"birth_date"`
 	IsBlocked    bool      `json:"is_blocked" gorm:"default:false"`
 	IsAdmin      bool      `json:"is_admin" gorm:"default:false"`
@@ -150,26 +150,22 @@ type User struct {
 }
 
 type Address struct {
-	ID       uint      `json:"id" gorm:"unique;not null"`
-	UserID   uint      `json:"user_id" gorm:"not null"`
-	User     User      `json:"-" gorm:"foreignkey:UserID;constraint:OnDelete:CASCADE"`
-	Name     string    `json:"name" gorm:"not null"`
-	Street   string    `json:"street" gorm:"not null"`
-	Ward     string    `json:"ward" gorm:"not null"`
-	District string    `json:"district" gorm:"not null"`
-	Province string    `json:"province" gorm:"not null"`
-	Phone    string    `json:"phone" gorm:"not null"`
-	Default  bool      `json:"default" gorm:"default:false"`
-	Type     string    `json:"type" gorm:"default:'HOME';check:type IN ('HOME', 'WORK')"`
-	CreateAt time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdateAt time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
-}
-
-type Wallet struct {
-	ID     int    `json:"id" gorm:"unique;not null"`
-	Userid uint   `json:"user_id"`
-	User   User   `json:"-" gorm:"foreignkey:UserID"`
-	Amount uint64 `json:"amount" gorm:"default:0"`
+	ID           uint      `json:"id" gorm:"unique;not null"`
+	UserID       uint      `json:"user_id" gorm:"not null"`
+	User         User      `json:"-" gorm:"foreignkey:UserID;constraint:OnDelete:CASCADE"`
+	Name         string    `json:"name" gorm:"not null"`
+	Street       string    `json:"street" gorm:"not null"`
+	Ward         string    `json:"ward" gorm:"not null"`
+	WardCode     string    `json:"ward_code" gorm:"not null"`
+	District     string    `json:"district" gorm:"not null"`
+	DistrictCode string    `json:"district_code" gorm:"not null"`
+	Province     string    `json:"province" gorm:"not null"`
+	ProvinceCode string    `json:"province_code" gorm:"not null"`
+	Phone        string    `json:"phone" gorm:"not null"`
+	Default      bool      `json:"default" gorm:"default:false"`
+	Type         string    `json:"type" gorm:"default:'HOME';check:type IN ('HOME', 'WORK')"`
+	CreateAt     time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
+	UpdateAt     time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
 type Wishlist struct {
@@ -178,6 +174,7 @@ type Wishlist struct {
 	User      User      `json:"-" gorm:"foreignkey:UserID;constraint:OnDelete:CASCADE"`
 	ProductID uint      `json:"product_id" gorm:"not null"`
 	Product   Product   `json:"-" gorm:"foreignkey:ProductID;constraint:OnDelete:CASCADE"`
+	Size      string    `json:"size" gorm:"not null"`
 	IsDeleted bool      `json:"is_deleted" gorm:"default:false"`
 	CreateAt  time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateAt  time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
@@ -212,5 +209,5 @@ type RequestTransaction struct {
 	Latency      string    `json:"latency"`
 	BodySize     int       `json:"body_size"`
 	ErrorMessage string    `json:"error_message"`
-	CreatedAt    time.Time `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`
+	CreateAt     time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 }

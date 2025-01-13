@@ -33,7 +33,7 @@ func NewCartHandler(service services.CartService) CartHandler {
 
 func (i *cartHandler) AddToCart(ctx *gin.Context) {
 
-	user_id := ctx.MustGet("id").(uint)
+	user_id := ctx.MustGet("id").(int)
 	var model models.UpdateCartItem
 	if err := ctx.BindJSON(&model); err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
@@ -41,7 +41,7 @@ func (i *cartHandler) AddToCart(ctx *gin.Context) {
 		return
 	}
 
-	result, err := i.service.AddToCart(user_id, model)
+	result, err := i.service.AddToCart(uint(user_id), model)
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add the Cart", nil, err.Error())
 		ctx.JSON(http.StatusBadRequest, errorRes)
@@ -54,9 +54,9 @@ func (i *cartHandler) AddToCart(ctx *gin.Context) {
 
 func (i *cartHandler) GetCart(ctx *gin.Context) {
 
-	user_id := ctx.MustGet("id").(uint)
+	user_id := ctx.MustGet("id").(int)
 
-	products, err := i.service.GetCart(user_id, []uint{})
+	products, err := i.service.GetCart(uint(user_id), []uint{})
 	if err != nil {
 		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve cart", nil, err.Error())
 		ctx.JSON(http.StatusBadRequest, errorRes)

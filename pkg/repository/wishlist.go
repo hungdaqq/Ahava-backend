@@ -9,11 +9,11 @@ import (
 )
 
 type WishlistRepository interface {
-	AddToWishlist(user_id, product_id uint) (models.Wishlist, error)
-	UpdateWishlist(user_id, product_id uint, is_deleted bool) (models.Wishlist, error)
+	AddToWishlist(user_id uint, product models.AddToWishlist) (models.Wishlist, error)
+	UpdateWishlist(user_id, product_id uint, size string, is_deleted bool) (models.Wishlist, error)
 	UpdateRemoveFromWishlist(user_id, wishlist_id uint) error
 	GetWishList(user_id uint, order_by string) ([]models.WishlistProduct, error)
-	CheckIfTheItemIsPresentAtWishlist(user_id, product_id uint) (bool, error)
+	CheckIfTheItemIsPresentAtWishlist(user_id, product_id uint, size string) (bool, error)
 	// CheckIfTheItemIsPresentAtCart(user_id, product_id uint) (bool, error)
 }
 
@@ -25,33 +25,39 @@ func NewWishlistRepository(DB *gorm.DB) WishlistRepository {
 	return &wishlistRepository{DB}
 }
 
-func (r *wishlistRepository) AddToWishlist(user_id, product_id uint) (models.Wishlist, error) {
+func (r *wishlistRepository) AddToWishlist(user_id uint, product models.AddToWishlist) (models.Wishlist, error) {
 
-	var addWishlist models.Wishlist
+	addWishlist := domain.Wishlist{
+		UserID:    user_id,
+		ProductID: product.ProductID,
+		Size:      product.Size,
+	}
 
-	err := r.DB.Raw(`INSERT INTO wishlists (user_id,product_id) VALUES ($1,$2)`,
-		user_id, product_id).Scan(&addWishlist).Error
-	if err != nil {
+	if err := r.DB.Create(&addWishlist).Error; err != nil {
 		return models.Wishlist{}, err
 	}
 
-	return addWishlist, nil
+	return models.Wishlist{
+		ID:        addWishlist.ID,
+		UserID:    addWishlist.UserID,
+		ProductID: addWishlist.ProductID,
+		Size:      addWishlist.Size,
+	}, nil
 }
 
-func (r *wishlistRepository) UpdateWishlist(user_id, product_id uint, is_deleted bool) (models.Wishlist, error) {
+func (r *wishlistRepository) UpdateWishlist(user_id, product_id uint, size string, is_deleted bool) (models.Wishlist, error) {
 
 	var updateWishlist models.Wishlist
 
 	result := r.DB.
 		Model(&domain.Wishlist{}).
-		Where("user_id = ? AND product_id = ?", user_id, product_id).
+		Where("user_id=? AND product_id=? AND size=?", user_id, product_id, size).
 		Update("is_deleted", is_deleted).
 		Scan(&updateWishlist)
 
 	if result.Error != nil {
 		return models.Wishlist{}, result.Error
 	}
-
 	if result.RowsAffected == 0 {
 		return models.Wishlist{}, errors.ErrEntityNotFound
 	}
@@ -78,38 +84,30 @@ func (r *wishlistRepository) UpdateRemoveFromWishlist(user_id, wishlist_id uint)
 }
 
 func (r *wishlistRepository) GetWishList(user_id uint, order_by string) ([]models.WishlistProduct, error) {
+
 	var wishlistProducts []models.WishlistProduct
 
-	// Start building the query
 	query := r.DB.Model(&domain.Product{}).
-		Select(`
-            products.id AS product_id,
-            products.name,
-            products.default_image,
-            products.stock,
-            wishlists.id,
-            COUNT(wishlists.product_id) AS total_count`).
+		Select(`products.id AS product_id, products.name, products.default_image, wishlists.id,
+				COUNT(wishlists.product_id) AS total_count, prices.original_price, prices.discount_price, wishlists.create_at`).
 		Joins("JOIN wishlists ON wishlists.product_id = products.id").
-		Where("wishlists.is_deleted = false").
-		Group("products.id, wishlists.id, products.name, products.default_image, products.stock")
+		Joins("JOIN prices ON prices.product_id = products.id AND prices.size = wishlists.size"). // Join prices table
+		Where("wishlists.is_deleted = false AND wishlists.user_id = ?", user_id).
+		Group("wishlists.id, products.id, products.name, products.default_image, prices.discount_price, prices.original_price") // Group by necessary fields
 
-	// Add filtering for specific user
-	query = query.Where("wishlists.user_id = ?", user_id)
-
-	// Add dynamic ordering based on the order_by parameter
 	switch order_by {
 	case "price_asc":
-		query = query.Order("products.price ASC")
+		query = query.Order("prices.discount_price ASC") // Ordering by the smallest discount price
 	case "price_desc":
-		query = query.Order("products.price DESC")
+		query = query.Order("prices.discount_price DESC") // Ordering by the smallest discount price in descending order
 	case "latest":
-		query = query.Order("wishlists.created_at DESC")
+		query = query.Order("products.create_at DESC")
 	case "most_favorite":
 		query = query.Order("total_count DESC")
 	case "most_viewed":
-		query = query.Order("wishlists.created_at DESC")
+		query = query.Order("products.create_at DESC")
 	default:
-		query = query.Order("wishlists.created_at DESC")
+		query = query.Order("products.create_at DESC")
 	}
 
 	if err := query.Scan(&wishlistProducts).Error; err != nil {
@@ -119,30 +117,12 @@ func (r *wishlistRepository) GetWishList(user_id uint, order_by string) ([]model
 	return wishlistProducts, nil
 }
 
-// func (r *wishlistRepository) CheckIfTheItemIsPresentAtCart(user_id, product_id uint) (bool, error) {
-
-// 	var result int64
-
-// 	if err := r.DB.Raw(`SELECT COUNT (*)
-// 	 FROM line_items
-// 	 JOIN carts ON carts.id = line_items.cart_id
-// 	 JOIN users ON users.id = carts.user_id
-// 	 WHERE users.id = $1
-// 	 AND
-// 	 line_items.product_id = $2`, user_id, product_id).Scan(&result).Error; err != nil {
-// 		return false, err
-// 	}
-
-// 	return result > 0, nil
-
-// }
-
-func (r *wishlistRepository) CheckIfTheItemIsPresentAtWishlist(user_id, product_id uint) (bool, error) {
+func (r *wishlistRepository) CheckIfTheItemIsPresentAtWishlist(user_id, product_id uint, size string) (bool, error) {
 
 	var result int64
 
-	if err := r.DB.Raw(`SELECT COUNT (*) FROM wishlists WHERE user_id=$1 AND product_id=$2`,
-		user_id, product_id).Scan(&result).Error; err != nil {
+	if err := r.DB.Raw(`SELECT COUNT (*) FROM wishlists WHERE user_id=$1 AND product_id=$2 AND size=$3`,
+		user_id, product_id, size).Scan(&result).Error; err != nil {
 		return false, err
 	}
 

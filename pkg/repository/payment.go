@@ -32,23 +32,23 @@ func (r *paymentRepository) CreateQR(qr models.CreateQR, user_id uint) error {
 	return nil
 }
 
-func (r *paymentRepository) SaveTransaction(saveTransaction models.Transaction) (models.Transaction, error) {
+func (r *paymentRepository) SaveTransaction(t models.Transaction) (models.Transaction, error) {
 
 	var transaction models.Transaction
 
 	result := r.DB.
 		Model(&domain.Transaction{}).
-		Where("code = ?", saveTransaction.Code).
+		Where("code = ?", t.Code).
 		Updates(domain.Transaction{
-			Gateway:         saveTransaction.Gateway,
-			TransactionDate: saveTransaction.TransactionDate,
-			AccountNumber:   saveTransaction.AccountNumber,
-			Content:         saveTransaction.Content,
-			TransferType:    saveTransaction.TransferType,
-			TransferAmount:  saveTransaction.TransferAmount,
-			Accumulated:     saveTransaction.Accumulated,
-			ReferenceCode:   saveTransaction.ReferenceCode,
-			Description:     saveTransaction.Description,
+			Gateway:         t.Gateway,
+			TransactionDate: t.TransactionDate,
+			AccountNumber:   t.AccountNumber,
+			Content:         t.Content,
+			TransferType:    t.TransferType,
+			TransferAmount:  t.TransferAmount,
+			Accumulated:     t.Accumulated,
+			ReferenceCode:   t.ReferenceCode,
+			Description:     t.Description,
 		}).
 		Scan(&transaction)
 

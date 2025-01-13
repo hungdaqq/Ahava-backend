@@ -56,12 +56,12 @@ type Product struct {
 }
 
 type WishlistProduct struct {
-	ID           uint   `json:"id"`
-	ProductID    uint   `json:"product_id"`
-	Name         string `json:"name"`
-	Stock        uint   `json:"stock"`
-	DefaultImage string `json:"default_image"`
-	Price        Price  `json:"price"`
+	ID            uint   `json:"id"`
+	ProductID     uint   `json:"product_id"`
+	Name          string `json:"name"`
+	DefaultImage  string `json:"default_image"`
+	OriginalPrice uint   `json:"original_price"`
+	DiscountPrice uint   `json:"discount_price"`
 }
 
 type ChangePassword struct {
@@ -134,7 +134,7 @@ type EditProfile struct {
 }
 
 type CartItem struct {
-	CartID            uint   `json:"cart_id"`
+	ID                uint   `json:"id"`
 	ProductID         uint   `json:"product_id"`
 	Name              string `json:"name"`
 	DefaultImage      string `json:"default_image"`
@@ -151,10 +151,11 @@ type UpdateCartItem struct {
 }
 
 type CartDetails struct {
-	ID        uint `json:"cart_id"`
-	UserID    uint `json:"user_id"`
-	ProductID uint `json:"product_id"`
-	Quantity  uint `json:"quantity"`
+	ID        uint   `json:"id"`
+	UserID    uint   `json:"user_id"`
+	ProductID uint   `json:"product_id"`
+	Size      string `json:"size"`
+	Quantity  uint   `json:"quantity"`
 }
 
 type SearchHistory struct {
@@ -175,28 +176,33 @@ type CheckOut struct {
 }
 
 type Address struct {
-	ID       uint      `json:"id"`
-	UserID   uint      `json:"user_id"`
-	Name     string    `json:"name"`
-	Street   string    `json:"street"`
-	Ward     string    `json:"ward"`
-	District string    `json:"district"`
-	Province string    `json:"province"`
-	Phone    string    `json:"phone"`
-	Default  bool      `json:"default"`
-	Type     string    `json:"type"`
-	CreateAt time.Time `json:"create_at"`
-	UpdateAt time.Time `json:"update_at"`
+	ID           uint      `json:"id"`
+	UserID       uint      `json:"user_id"`
+	Name         string    `json:"name"`
+	Street       string    `json:"street"`
+	Ward         string    `json:"ward"`
+	WardCode     string    `json:"ward_code"`
+	District     string    `json:"district"`
+	DistrictCode string    `json:"district_code"`
+	Province     string    `json:"province"`
+	ProvinceCode string    `json:"province_code"`
+	Phone        string    `json:"phone"`
+	Default      bool      `json:"default"`
+	Type         string    `json:"type"`
+	CreateAt     time.Time `json:"create_at"`
+	UpdateAt     time.Time `json:"update_at"`
 }
 
 type Wishlist struct {
-	ID        uint `json:"id"`
-	UserID    uint `json:"user_id"`
-	ProductID uint `json:"product_id"`
+	ID        uint   `json:"id"`
+	UserID    uint   `json:"user_id"`
+	ProductID uint   `json:"product_id"`
+	Size      string `json:"size"`
 }
 
 type AddToWishlist struct {
-	ProductID uint `json:"product_id"`
+	ProductID uint   `json:"product_id"`
+	Size      string `json:"size"`
 }
 
 type Order struct {
