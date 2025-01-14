@@ -38,11 +38,19 @@ func (r *orderRepository) PlaceOrder(order models.PlaceOrder, final_price uint64
 
 func (r *orderRepository) PlaceOrderItem(order_id uint, item models.CartItem) error {
 
-	err := r.DB.Exec(`INSERT INTO order_items (order_id, product_id, quantity, item_price, item_discounted_price) VALUES (?,?,?,?,?)`,
-		order_id, item.ProductID, item.Quantity, item.ItemPrice, item.ItemDiscountPrice).Error
+	err := r.DB.Create(&domain.OrderItem{
+		OrderID:           order_id,
+		ProductID:         item.ProductID,
+		Quantity:          item.Quantity,
+		Size:              item.Size,
+		ItemPrice:         item.ItemPrice,
+		ItemDiscountPrice: item.ItemDiscountPrice},
+	).Error
+
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -72,17 +80,16 @@ func (r *orderRepository) GetOrderDetails(user_id, order_id uint) (models.Order,
 	return orderDetails, nil
 }
 
-func (r *orderRepository) UpdateOrder(order_id uint, updateOrder models.Order) (models.Order, error) {
+func (r *orderRepository) UpdateOrder(order_id uint, o models.Order) (models.Order, error) {
 
 	var order models.Order
 
-	result := r.DB.
-		Model(&domain.Order{}).
+	result := r.DB.Model(&domain.Order{}).
 		Where("id = ?", order_id).
 		Updates(domain.Order{
-			PaymentMethod: updateOrder.PaymentMethod,
-			OrderStatus:   updateOrder.OrderStatus,
-			PaymentStatus: updateOrder.PaymentStatus,
+			PaymentMethod: o.PaymentMethod,
+			OrderStatus:   o.OrderStatus,
+			PaymentStatus: o.PaymentStatus,
 		}).
 		Scan(&order)
 
