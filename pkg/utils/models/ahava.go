@@ -46,6 +46,7 @@ type Product struct {
 	ID               uint           `json:"id"`
 	Category         string         `json:"category"`
 	Name             string         `json:"name"`
+	Code             string         `json:"code"`
 	DefaultImage     string         `json:"default_image"`
 	Images           pq.StringArray `json:"images"`
 	Stock            uint           `json:"stock"`
@@ -228,6 +229,7 @@ type PlaceOrder struct {
 type OrderItem struct {
 	OrderID         uint   `json:"order_id"`
 	ProductID       uint   `json:"product_id"`
+	Size            string `json:"size"`
 	Quantity        uint   `json:"quantity"`
 	ItemPrice       uint64 `json:"item_price"`
 	DiscountedPrice uint64 `json:"item_discounted_price"`

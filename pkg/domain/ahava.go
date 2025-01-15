@@ -123,6 +123,7 @@ type Product struct {
 	ID               uint           `json:"id" gorm:"primarykey"`
 	Category         string         `json:"category" gorm:"not null"`
 	Name             string         `json:"name" gorm:"default:Ahava Product"`
+	Code             string         `json:"code" gorm:"default:AVAHA"`
 	DefaultImage     string         `json:"default_image" gorm:"not null"`
 	Images           pq.StringArray `json:"images" gorm:"type:varchar[]"`
 	Stock            uint           `json:"stock" gorm:"default:100"`

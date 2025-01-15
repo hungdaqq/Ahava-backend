@@ -32,6 +32,7 @@ func AdminRoutes(
 			productmanagement.GET("", productHandler.ListAllProducts)
 			productmanagement.GET("/detail", productHandler.GetProductDetails)
 			productmanagement.POST("", productHandler.AddProduct)
+			productmanagement.POST("/:product_id", productHandler.AddProductImages)
 			productmanagement.DELETE("/:product_id", productHandler.DeleteProduct)
 			productmanagement.PUT("/:product_id", productHandler.UpdateProduct)
 			productmanagement.PUT("/:product_id/image", productHandler.UpdateProductImage)

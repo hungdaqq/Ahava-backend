@@ -42,6 +42,7 @@ func (r *productRepository) AddProduct(product models.Product) (models.Product, 
 
 	addProduct := domain.Product{
 		Name:             product.Name,
+		Code:             product.Code,
 		Category:         product.Category,
 		Stock:            product.Stock,
 		ShortDescription: product.ShortDescription,
@@ -57,6 +58,7 @@ func (r *productRepository) AddProduct(product models.Product) (models.Product, 
 	return models.Product{
 		ID:               addProduct.ID,
 		Name:             addProduct.Name,
+		Code:             addProduct.Code,
 		Category:         addProduct.Category,
 		Stock:            addProduct.Stock,
 		ShortDescription: addProduct.ShortDescription,
@@ -107,15 +109,29 @@ func (r *productRepository) DeleteProduct(product_id uint) error {
 
 func (r *productRepository) GetProductDetails(product_id uint) (models.Product, error) {
 
-	var product models.Product
+	var product domain.Product
 
-	err := r.DB.Model(&domain.Product{}).
-		First(&product, product_id).Error
+	err := r.DB.First(&product, product_id).Error
 	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return models.Product{}, models.ErrEntityNotFound
+		}
 		return models.Product{}, err
 	}
 
-	return product, nil
+	return models.Product{
+		ID:               product.ID,
+		Name:             product.Name,
+		Code:             product.Code,
+		Category:         product.Category,
+		DefaultImage:     product.DefaultImage,
+		Images:           product.Images,
+		Stock:            product.Stock,
+		ShortDescription: product.ShortDescription,
+		Description:      product.Description,
+		HowToUse:         product.HowToUse,
+		IsFeatured:       product.IsFeatured,
+	}, nil
 }
 
 func (r *productRepository) ListAllProducts(limit, offset int) (models.ListProducts, error) {
@@ -211,6 +227,7 @@ func (r *productRepository) UpdateProduct(product_id uint, model models.Product)
 		Updates(
 			domain.Product{
 				Name:             model.Name,
+				Code:             model.Code,
 				Category:         model.Category,
 				Stock:            model.Stock,
 				Description:      model.Description,
