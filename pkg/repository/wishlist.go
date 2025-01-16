@@ -92,7 +92,7 @@ func (r *wishlistRepository) GetWishList(user_id uint, order_by string) ([]model
 		Joins("JOIN wishlists ON wishlists.product_id = products.id").
 		Joins("JOIN prices ON prices.product_id = products.id AND prices.size = wishlists.size").
 		Where("wishlists.is_deleted = false AND wishlists.user_id = ?", user_id).
-		Group("wishlists.id, products.id, products.name, products.default_image, prices.discount_price, prices.original_price")
+		Group("wishlists.id, products.id, products.name, products.default_image, prices.discount_price, prices.original_price, prices.size")
 
 	switch order_by {
 	case "price_asc":
