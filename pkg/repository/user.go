@@ -8,9 +8,9 @@ import (
 )
 
 type UserRepository interface {
-	UserSignUp(user models.UserDetails, referal string) (models.UserDetailsResponse, error)
+	Register(user models.UserDetails, referal string) (models.UserDetailsResponse, error)
 	CheckUserAvailability(email, username string) bool
-	FindUser(user models.UserLogin) (models.UserSignInResponse, error)
+	FindUser(user models.UserLogin) (domain.User, error)
 	UserBlockStatus(email, username string) (bool, error)
 	AddAddress(user_id uint, address models.Address) (models.Address, error)
 	GetAddresses(user_id uint) ([]models.Address, error)
@@ -51,7 +51,7 @@ func (r *userDatabase) CheckUserAvailability(email, phone string) bool {
 	return count > 0
 }
 
-func (r *userDatabase) UserSignUp(user models.UserDetails, referral string) (models.UserDetailsResponse, error) {
+func (r *userDatabase) Register(user models.UserDetails, referral string) (models.UserDetailsResponse, error) {
 
 	var userDetails models.UserDetailsResponse
 
@@ -84,18 +84,22 @@ func (r *userDatabase) UserBlockStatus(email, username string) (bool, error) {
 	return isBlocked, nil
 }
 
-func (r *userDatabase) FindUser(login models.UserLogin) (models.UserSignInResponse, error) {
+func (r *userDatabase) FindUser(login models.UserLogin) (domain.User, error) {
 
-	var response models.UserSignInResponse
+	var user domain.User
 
-	err := r.DB.Raw(`SELECT * FROM users WHERE (email = ? OR username = ?) AND is_blocked = false`,
-		login.Email, login.Username).Scan(&response).Error
+	err := r.DB.First(&user, "email = ? OR username = ?", login.Email, login.Username).Error
 	if err != nil {
-		return models.UserSignInResponse{}, err
+		if err == gorm.ErrRecordNotFound {
+			return domain.User{}, models.ErrEntityNotFound
+		}
+		return domain.User{}, err
+	}
+	if user.IsBlocked {
+		return domain.User{}, models.ErrForbidden
 	}
 
-	return response, nil
-
+	return user, nil
 }
 
 func (r *userDatabase) AddAddress(user_id uint, a models.Address) (models.Address, error) {

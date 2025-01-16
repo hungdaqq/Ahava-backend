@@ -88,7 +88,6 @@ func (r *cartRepository) UpdateQuantityAdd(user_id, cart_id, quantity uint) (mod
 		Where("id=? AND user_id=?", cart_id, user_id).
 		Update("quantity", gorm.Expr("quantity + ?", quantity)).
 		Scan(&cartDetails)
-
 	if result.Error != nil {
 		return models.CartDetails{}, result.Error
 	}
@@ -108,7 +107,6 @@ func (r *cartRepository) UpdateQuantityLess(user_id, cart_id, quantity uint) (mo
 		Where("id=? AND user_id=?", cart_id, user_id).
 		Update("quantity", gorm.Expr("quantity - ?", quantity)).
 		Scan(&cartDetails)
-
 	if result.Error != nil {
 		return models.CartDetails{}, result.Error
 	}
@@ -128,7 +126,6 @@ func (r *cartRepository) UpdateQuantity(user_id, cart_id, quantity uint) (models
 		Where("id=? AND user_id=?", cart_id, user_id).
 		Update("quantity", quantity).
 		Scan(&cartDetails)
-
 	if result.Error != nil {
 		return models.CartDetails{}, result.Error
 	}

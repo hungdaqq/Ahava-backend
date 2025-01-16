@@ -17,7 +17,7 @@ func AdminRoutes(
 	// offerHandler handler.OfferHandler,
 ) {
 
-	engine.POST("/login", adminHandler.LoginHandler)
+	engine.POST("/login", adminHandler.Login)
 	engine.Use(middleware.AdminAuthMiddleware)
 	{
 		usermanagement := engine.Group("/users")

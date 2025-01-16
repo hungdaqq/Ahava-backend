@@ -88,17 +88,17 @@ func (r *wishlistRepository) GetWishList(user_id uint, order_by string) ([]model
 
 	query := r.DB.Model(&domain.Product{}).
 		Select(`products.id AS product_id, products.name, products.default_image, wishlists.id,
-				COUNT(wishlists.product_id) AS total_count, prices.original_price, prices.discount_price, wishlists.create_at`).
+				COUNT(wishlists.product_id) AS total_count, prices.original_price, prices.discount_price, wishlists.create_at, prices.size`).
 		Joins("JOIN wishlists ON wishlists.product_id = products.id").
-		Joins("JOIN prices ON prices.product_id = products.id AND prices.size = wishlists.size"). // Join prices table
+		Joins("JOIN prices ON prices.product_id = products.id AND prices.size = wishlists.size").
 		Where("wishlists.is_deleted = false AND wishlists.user_id = ?", user_id).
-		Group("wishlists.id, products.id, products.name, products.default_image, prices.discount_price, prices.original_price") // Group by necessary fields
+		Group("wishlists.id, products.id, products.name, products.default_image, prices.discount_price, prices.original_price")
 
 	switch order_by {
 	case "price_asc":
-		query = query.Order("prices.discount_price ASC") // Ordering by the smallest discount price
+		query = query.Order("prices.discount_price ASC")
 	case "price_desc":
-		query = query.Order("prices.discount_price DESC") // Ordering by the smallest discount price in descending order
+		query = query.Order("prices.discount_price DESC")
 	case "latest":
 		query = query.Order("products.create_at DESC")
 	case "most_favorite":

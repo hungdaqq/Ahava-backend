@@ -16,7 +16,7 @@ import (
 )
 
 type AdminHandler interface {
-	LoginHandler(ctx *gin.Context)
+	Login(ctx *gin.Context)
 	BlockUser(ctx *gin.Context)
 	UnBlockUser(ctx *gin.Context)
 	GetUsers(ctx *gin.Context)
@@ -36,69 +36,66 @@ func NewAdminHandler(service services.AdminService) AdminHandler {
 	}
 }
 
-func (ad *adminHandler) LoginHandler(ctx *gin.Context) { // login handler for the admin
-
-	// var adminDetails models.AdminLogin
+func (ad *adminHandler) Login(ctx *gin.Context) {
+	// Bind the request body to the model
 	var adminDetails models.AdminLogin
 	if err := ctx.BindJSON(&adminDetails); err != nil {
-		errRes := response.ClientResponse(http.StatusBadRequest, "details not in correct format", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errRes)
+		errorRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
-	admin, err := ad.adminService.LoginHandler(adminDetails)
+	// Perform login operation
+	admin, err := ad.adminService.Login(adminDetails)
 	if err != nil {
-		errRes := response.ClientResponse(http.StatusBadRequest, "cannot authenticate user", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errRes)
+		errorRes := response.ClientErrorResponse("Không thể đăng nhập admin", nil, err)
+		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
+	// Return the response
 	ctx.Set("Access", admin.AccessToken)
 	ctx.Set("Refresh", admin.RefreshToken)
-
-	successRes := response.ClientResponse(http.StatusOK, "Admin authenticated successfully", admin, nil)
+	successRes := response.ClientResponse(http.StatusOK, "Đặng nhập admin thành công", admin, nil)
 	ctx.JSON(http.StatusOK, successRes)
-
 }
 
 func (ad *adminHandler) BlockUser(ctx *gin.Context) {
-
+	// Get the user id from the context
 	user_id, err := strconv.Atoi(ctx.Param("user_id"))
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "user_id not in right format", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
+	// Perform block user operation
 	err = ad.adminService.BlockUser(uint(user_id))
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "user could not be blocked", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Không thể chặn người dùng", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
-	successRes := response.ClientResponse(http.StatusOK, "Successfully blocked the user", nil, nil)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusOK, "Chặn người dùng thành công", nil, nil)
 	ctx.JSON(http.StatusOK, successRes)
 
 }
 
 func (ad *adminHandler) UnBlockUser(ctx *gin.Context) {
-
+	// Get the user id from the context
 	user_id, err := strconv.Atoi(ctx.Param("user_id"))
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "user_id not in right format", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
+	// Perform unblock user operation
 	err = ad.adminService.UnBlockUser(uint(user_id))
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "user could not be unblocked", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Không bỏ thể chặn người dùng", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
-	successRes := response.ClientResponse(http.StatusOK, "Successfully unblocked the user", nil, nil)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusOK, "Bỏ chặn người dùng thành công", nil, nil)
 	ctx.JSON(http.StatusOK, successRes)
 }
 
@@ -128,7 +125,7 @@ func (i *adminHandler) NewPaymentMethod(ctx *gin.Context) {
 
 	var method models.NewPaymentMethod
 	if err := ctx.BindJSON(&method); err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
+		errorRes := response.ClientResponse(http.StatusBadRequest, "Fields provided are in wrong format", nil, err.Error())
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
@@ -149,7 +146,7 @@ func (a *adminHandler) ListPaymentMethods(ctx *gin.Context) {
 
 	categories, err := a.adminService.ListPaymentMethods()
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusInternalServerError, "fields provided are in wrong format", nil, err.Error())
+		errorRes := response.ClientResponse(http.StatusInternalServerError, "Fields provided are in wrong format", nil, err.Error())
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
@@ -163,7 +160,7 @@ func (a *adminHandler) DeletePaymentMethod(ctx *gin.Context) {
 
 	id, err := strconv.Atoi(ctx.Query("id"))
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
+		errorRes := response.ClientResponse(http.StatusBadRequest, "Fields provided are in wrong format", nil, err.Error())
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}

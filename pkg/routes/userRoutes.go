@@ -19,8 +19,8 @@ func UserRoutes(
 	// couponHandler handler.CouponHandler
 ) {
 
-	engine.POST("/signup", userHandler.UserSignUp)
-	engine.POST("/login", userHandler.LoginHandler)
+	engine.POST("/signup", userHandler.Register)
+	engine.POST("/login", userHandler.Login)
 	// engine.GET("/forgot-password", userHandler.ForgotPasswordSend)
 	// engine.POST("/forgot-password", userHandler.ForgotPasswordVerifyAndChange)
 
@@ -77,8 +77,6 @@ func UserRoutes(
 			cart.GET("", cartHandler.GetCart)
 			cart.POST("", cartHandler.AddToCart)
 			cart.DELETE("/:cart_id", cartHandler.RemoveFromCart)
-			cart.PUT("/:cart_id/plus", cartHandler.UpdateQuantityAdd)
-			cart.PUT("/:cart_id/minus", cartHandler.UpdateQuantityLess)
 			cart.PUT("/:cart_id", cartHandler.UpdateQuantity)
 			cart.POST("/check-out", cartHandler.CheckOut)
 		}

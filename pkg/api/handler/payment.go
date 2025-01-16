@@ -27,52 +27,52 @@ func NewPaymentHandler(service services.PaymentService) PaymentHandler {
 }
 
 func (h *paymentHandler) CreateQR(c *gin.Context) {
-
+	// Get the user id from the context
 	user_id := c.MustGet("id").(int)
-
+	// Bind the request body to the model
 	var model models.CreateQR
 	err := c.BindJSON(&model)
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
+	// Validate the model
 	err = validator.New().Struct(model)
 	if err != nil {
-		errRes := response.ClientResponse(http.StatusBadRequest, "Constraints not satisfied", nil, err.Error())
+		errRes := response.ClientErrorResponse("Constraints not satisfied", nil, err)
 		c.JSON(http.StatusBadRequest, errRes)
 		return
 	}
-
+	// Perform create QR operation
 	result, err := h.paymentService.CreateSePayQR(uint(user_id), model.OrderID, model.Amount)
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not create QR", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Không thể tạo QR", nil, err)
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
-	successRes := response.ClientResponse(http.StatusOK, "Successfully placed the order", result, nil)
-	c.JSON(http.StatusOK, successRes)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusCreated, "Tạo QR thành công", result, nil)
+	c.JSON(http.StatusCreated, successRes)
 }
 
 func (h *paymentHandler) Webhook(c *gin.Context) {
-
+	// Bind the request body to the model
 	var model models.Transaction
 	err := c.BindJSON(&model)
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
+	// Perform webhook operation
 	err = h.paymentService.Webhook(model)
 	if err != nil {
 		errorRes := response.ClientWebhookResponse(false)
 		c.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
+	// Return the response
 	successRes := response.ClientWebhookResponse(true)
 	c.JSON(http.StatusCreated, successRes)
 }

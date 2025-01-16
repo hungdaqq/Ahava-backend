@@ -27,46 +27,46 @@ func NewOrderHandler(service services.OrderService) OrderHandler {
 }
 
 func (h *orderHandler) PlaceOrder(ctx *gin.Context) {
-
+	// Get the user id from the context
 	user_id := ctx.MustGet("id").(int)
-
+	// Bind the request body to the model
 	var orderDetails models.PlaceOrder
 	if err := ctx.BindJSON(&orderDetails); err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
+	// Perform place order operation
 	orderDetails.UserID = uint(user_id)
-
 	order, err := h.orderService.PlaceOrder(orderDetails)
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not place the order", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Đặt hàng thất bại", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
-	successRes := response.ClientResponse(http.StatusOK, "Successfully placed the order", order, nil)
-	ctx.JSON(http.StatusOK, successRes)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusCreated, "Đặt hàng thành công", order, nil)
+	ctx.JSON(http.StatusCreated, successRes)
 }
 
 func (h *orderHandler) GetOrderDetails(ctx *gin.Context) {
-
+	// Get the user id from the context
 	user_id := ctx.MustGet("id").(int)
-
+	// Get the order id from the query
 	order_id, err := strconv.Atoi(ctx.Query("order_id"))
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Request query problem", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
+	// Perform get order details operation
 	order, err := h.orderService.GetOrderDetails(uint(user_id), uint(order_id))
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not get the order details", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
+		errorRes := response.ClientErrorResponse("Không thể lấy thông tin đơn hàng", nil, err)
+		ctx.JSON(errorRes.StatusCode, errorRes)
 		return
 	}
-
-	successRes := response.ClientResponse(http.StatusOK, "Successfully fetched the order details", order, nil)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusOK, "Lấy thông tin đơn hàng thành công", order, nil)
 	ctx.JSON(http.StatusOK, successRes)
 }

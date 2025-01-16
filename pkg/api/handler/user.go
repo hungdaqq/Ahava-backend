@@ -1,9 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 
@@ -16,8 +13,8 @@ import (
 )
 
 type UserHandler interface {
-	UserSignUp(ctx *gin.Context)
-	LoginHandler(ctx *gin.Context)
+	Register(ctx *gin.Context)
+	Login(ctx *gin.Context)
 	AddAddress(ctx *gin.Context)
 	UpdateAddress(ctx *gin.Context)
 	DeleteAddress(ctx *gin.Context)
@@ -40,184 +37,197 @@ func NewUserHandler(service services.UserService) UserHandler {
 	}
 }
 
-func (h *userHandler) UserSignUp(ctx *gin.Context) {
-
+func (h *userHandler) Register(ctx *gin.Context) {
+	// Bind the request body to the model
 	var user models.UserDetails
 	if err := ctx.BindJSON(&user); err != nil {
-		errRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errRes)
+		errRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
 		return
 	}
-
+	// Validate the model
 	err := validator.New().Struct(user)
 	if err != nil {
-		errRes := response.ClientResponse(http.StatusBadRequest, "constraints not satisfied", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest,
-			errRes)
+		errRes := response.ClientErrorResponse("Constraints are not satisfied", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
 		return
 	}
-
+	// Get the reference from the query
 	ref := ctx.Query("reference")
-
-	userCreated, err := h.userService.UserSignUp(user, ref)
+	// Perform register operation
+	result, err := h.userService.Register(user, ref)
 	if err != nil {
-		errRes := response.ClientResponse(http.StatusBadRequest, "User could not signed up", nil, err.Error())
+		errRes := response.ClientErrorResponse("Không thể đăng ký tài khoản", nil, err)
 		ctx.JSON(http.StatusBadRequest, errRes)
 		return
 	}
-
-	successRes := response.ClientResponse(http.StatusCreated, "User successfully signed up", userCreated, nil)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusCreated, "Đăng ký tài khoản thành công", result, nil)
 	ctx.JSON(http.StatusCreated, successRes)
-
 }
 
-func (h *userHandler) LoginHandler(ctx *gin.Context) {
-
+func (h *userHandler) Login(ctx *gin.Context) {
+	// Bind the request body to the model
 	var user models.UserLogin
-
 	if err := ctx.BindJSON(&user); err != nil {
-		errRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errRes)
+		errRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
 		return
 	}
-
-	user_details, err := h.userService.LoginHandler(user)
+	// Validate the model
+	validator := validator.New()
+	if err := validator.Struct(user); err != nil {
+		errRes := response.ClientErrorResponse("Constraints are not satisfied", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
+		return
+	}
+	// Perform login operation
+	result, err := h.userService.Login(user)
 	if err != nil {
-		errRes := response.ClientResponse(http.StatusBadRequest, "User could not be logged in", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errRes)
+		errRes := response.ClientErrorResponse("Không thể đăng nhập", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
 		return
 	}
-
-	successRes := response.ClientResponse(http.StatusOK, "User successfully logged in", user_details, nil)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusOK, "Đăng nhập thành công", result, nil)
 	ctx.JSON(http.StatusOK, successRes)
-
 }
 
 func (i *userHandler) AddAddress(ctx *gin.Context) {
-
+	// Get the user id from the context
 	user_id := ctx.MustGet("id").(int)
+	// Bind the request body to the model
 	var address models.Address
 	if err := ctx.BindJSON(&address); err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
+		errRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
 		return
 	}
-
+	// Perform add operation
 	result, err := i.userService.AddAddress(uint(user_id), address)
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add the address", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
+		errRes := response.ClientErrorResponse("Không thể thêm địa chỉ", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
 		return
 	}
-
-	successRes := response.ClientResponse(http.StatusOK, "Successfully added address", result, nil)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusOK, "Thêm địa chỉ thành công", result, nil)
 	ctx.JSON(http.StatusOK, successRes)
-
 }
 
 func (i *userHandler) UpdateAddress(ctx *gin.Context) {
-
+	// Get the user id from the context
 	user_id := ctx.MustGet("id").(int)
-
+	// Get the address id from the url
 	address_id, err := strconv.Atoi(ctx.Param("address_id"))
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
+		errRes := response.ClientErrorResponse("Request parameter problem", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
 		return
 	}
-
+	// Bind the request body to the model
 	var model models.Address
 	if err := ctx.BindJSON(&model); err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
+		errRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
 		return
 	}
-
+	// Perform update operation
 	result, err := i.userService.UpdateAddress(uint(user_id), uint(address_id), model)
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not update the address", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
+		errRes := response.ClientErrorResponse("Không thể cập nhật địa chỉ", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
 		return
 	}
-
-	successRes := response.ClientResponse(http.StatusOK, "Successfully updated address", result, nil)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusOK, "Cập nhật địa chỉ thành công", result, nil)
 	ctx.JSON(http.StatusOK, successRes)
 }
 
 func (i *userHandler) DeleteAddress(ctx *gin.Context) {
-
+	// Get the user id from the context
 	user_id := ctx.MustGet("id").(int)
-
+	// Get the address id from the url
 	address_id, err := strconv.Atoi(ctx.Param("address_id"))
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "parameter problem", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
+		errRes := response.ClientErrorResponse("Request parameter problem", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
 		return
 	}
-
+	// Perform delete operation
 	err = i.userService.DeleteAddress(uint(user_id), uint(address_id))
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not delete the address", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
+		errRes := response.ClientErrorResponse("Không thể xoá địa chỉ", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
 		return
 	}
-
-	successRes := response.ClientResponse(http.StatusOK, "Successfully deleted address", nil, nil)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusOK, "Xoá địa chỉ thành công", nil, nil)
 	ctx.JSON(http.StatusOK, successRes)
 }
 
 func (i *userHandler) GetAddresses(ctx *gin.Context) {
-
+	// Get the user id from the context
 	user_id := ctx.MustGet("id").(int)
+	// Perform get operation
 	addresses, err := i.userService.GetAddresses(uint(user_id))
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Không thể lấy danh sách địa chỉ", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", addresses, nil)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusOK, "Lấy danh sách địa chỉ thành công", addresses, nil)
 	ctx.JSON(http.StatusOK, successRes)
 }
 
 func (i *userHandler) GetUserDetails(ctx *gin.Context) {
-
+	// Get the user id from the context
 	user_id := ctx.MustGet("id").(int)
+	// Perform get operation
 	details, err := i.userService.GetUserDetails(uint(user_id))
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Không thể lấy thông tin người dùng", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", details, nil)
+	successRes := response.ClientResponse(http.StatusOK, "Lấy thông tin người dùng thành công", details, nil)
 	ctx.JSON(http.StatusOK, successRes)
 }
 
 func (i *userHandler) ChangePassword(ctx *gin.Context) {
-
+	// Get the user id from the context
 	user_id := ctx.MustGet("id").(int)
-	var ChangePassword models.ChangePassword
-	if err := ctx.BindJSON(&ChangePassword); err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
+	// Bind the request body to the model
+	var model models.ChangePassword
+	if err := ctx.BindJSON(&model); err != nil {
+		errRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
+		return
+	}
+	// Validate the model
+	validator := validator.New()
+	if err := validator.Struct(model); err != nil {
+		errRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
+		return
+	}
+	// Perform change password operation
+	if err := i.userService.ChangePassword(uint(user_id), model.Oldpassword, model.Password, model.Repassword); err != nil {
+		errorRes := response.ClientErrorResponse("Không thể đổi mật khẩu", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
-	if err := i.userService.ChangePassword(uint(user_id), ChangePassword.Oldpassword, ChangePassword.Password, ChangePassword.Repassword); err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not change the password", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
-
-	successRes := response.ClientResponse(http.StatusOK, "password changed Successfully ", nil, nil)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusOK, "Đổi mật khẩu thành công", nil, nil)
 	ctx.JSON(http.StatusOK, successRes)
-
 }
 
 // func (i *userHandler) ForgotPasswordSend(ctx *gin.Context) {
 
 // 	var model models.ForgotPasswordSend
 // 	if err := ctx.BindJSON(&model); err != nil {
-// 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
+// 		errorRes := response.ClientResponse(http.StatusBadRequest, "Fields provided are in wrong format", nil, err.Error())
 // 		ctx.JSON(http.StatusBadRequest, errorRes)
 // 		return
 // 	}
@@ -237,7 +247,7 @@ func (i *userHandler) ChangePassword(ctx *gin.Context) {
 
 // 	var model models.ForgotVerify
 // 	if err := ctx.BindJSON(&model); err != nil {
-// 		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
+// 		errorRes := response.ClientResponse(http.StatusBadRequest, "Fields provided are in wrong format", nil, err.Error())
 // 		ctx.JSON(http.StatusBadRequest, errorRes)
 // 		return
 // 	}
@@ -255,25 +265,25 @@ func (i *userHandler) ChangePassword(ctx *gin.Context) {
 // }
 
 func (i *userHandler) EditProfile(ctx *gin.Context) {
-
+	// Get the user id from the context
 	user_id := ctx.MustGet("id").(int)
+	// Bind the request body to the model
 	var model models.EditProfile
 	if err := ctx.BindJSON(&model); err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
+		errRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
 		return
 	}
-
+	// Perform edit operation
 	result, err := i.userService.EditProfile(uint(user_id), model)
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not edit profile", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Không thể sửa thông tin người dùng thành công", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
-	successRes := response.ClientResponse(http.StatusOK, "Successfully edited profile", result, nil)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusOK, "Sửa thông tin người dùng thành công", result, nil)
 	ctx.JSON(http.StatusOK, successRes)
-
 }
 
 // func (i *userHandler) GetMyReferenceLink(ctx *gin.Context) {
@@ -293,37 +303,3 @@ func (i *userHandler) EditProfile(ctx *gin.Context) {
 // 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all products in cart", link, nil)
 // 	ctx.JSON(http.StatusOK, successRes)
 // }
-
-// FetchProvinces fetches the list of provinces from the API.
-func FetchProvinceAPI(baseURL string, model interface{}) (interface{}, error) {
-
-	req, err := http.NewRequest("GET", baseURL, nil)
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error making request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("request failed with status code: %d", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response body: %w", err)
-	}
-
-	err = json.Unmarshal(body, &model)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing JSON: %w", err)
-	}
-
-	return model, nil
-}

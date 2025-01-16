@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type WishlistHandler interface {
@@ -27,61 +28,68 @@ func NewWishlistHandler(service services.WishlistService) WishlistHandler {
 }
 
 func (h *wishlistHandler) AddToWishlist(ctx *gin.Context) {
-
+	// Get the user id from the context
 	user_id := ctx.MustGet("id").(int)
-
+	// Bind the request body to the model
 	var model models.AddToWishlist
 	if err := ctx.BindJSON(&model); err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "fields provided are in wrong format", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
+	// Validate the model
+	validator := validator.New()
+	if err := validator.Struct(model); err != nil {
+		errorRes := response.ClientErrorResponse("Constraints are not satisfied", nil, err)
+		ctx.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+	// Perform add to wishlist operation
 	result, err := h.service.AddToWishlist(uint(user_id), model)
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add to Wishlist", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Không thể thêm sản phẩm vào yêu thích", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
-	successRes := response.ClientResponse(http.StatusOK, "Successfully added To wishlist", result, nil)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusOK, "Thêm sản phẩm vào yêu thích thành công", result, nil)
 	ctx.JSON(http.StatusOK, successRes)
-
 }
 
 func (h *wishlistHandler) RemoveFromWishlist(ctx *gin.Context) {
-
+	// Get the user id from the context
 	user_id := ctx.MustGet("id").(int)
-
+	// Get the wishlist id from the context
 	wishlist_id, err := strconv.Atoi(ctx.Param("wishlist_id"))
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "check parameters properly", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
+		errRes := response.ClientErrorResponse("Request parameter problem", nil, err)
+		ctx.JSON(errRes.StatusCode, errRes)
 		return
 	}
-
+	// Perform remove from wishlist operation
 	if err := h.service.RemoveFromWishlist(uint(user_id), uint(wishlist_id)); err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "could not remove from wishlist", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Không thể bỏ yêu thích", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
-	successRes := response.ClientResponse(http.StatusOK, "Successfully Removed product from wishlist", nil, nil)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusOK, "Bỏ yêu thích thành công", nil, nil)
 	ctx.JSON(http.StatusOK, successRes)
 }
 
 func (h *wishlistHandler) GetWishList(ctx *gin.Context) {
-
+	// Get the user id from the context
 	user_id := ctx.MustGet("id").(int)
-
+	// Get the order_by query parameter
 	order_by := ctx.DefaultQuery("order_by", "default") // Replace "default" with your
-
+	// Perform get wishlist operation
 	products, err := h.service.GetWishList(uint(user_id), order_by)
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Không thể lấy danh sách yêu thích ", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-	successRes := response.ClientResponse(http.StatusOK, "Successfully got all records", products, nil)
+	// Return the response
+	successRes := response.ClientResponse(http.StatusOK, "Lấy danh sách yêu thích thành công", products, nil)
 	ctx.JSON(http.StatusOK, successRes)
 }

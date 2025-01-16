@@ -10,7 +10,7 @@ import (
 )
 
 type AdminRepository interface {
-	LoginHandler(adminDetails models.AdminLogin) (domain.Admin, error)
+	Login(adminDetails models.AdminLogin) (domain.Admin, error)
 	GetUserByID(user_id uint) (domain.User, error)
 	UpdateBlockUserByID(user domain.User) error
 	GetUsers(page int) ([]models.UserDetailsAtAdmin, error)
@@ -30,7 +30,7 @@ func NewAdminRepository(DB *gorm.DB) AdminRepository {
 	}
 }
 
-func (r *adminRepository) LoginHandler(adminDetails models.AdminLogin) (domain.Admin, error) {
+func (r *adminRepository) Login(adminDetails models.AdminLogin) (domain.Admin, error) {
 
 	var adminCompareDetails domain.Admin
 	if err := r.DB.Raw("SELECT * FROM admins WHERE email = ?", adminDetails.Email).Scan(&adminCompareDetails).Error; err != nil {

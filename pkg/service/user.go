@@ -10,8 +10,8 @@ import (
 )
 
 type UserService interface {
-	UserSignUp(user models.UserDetails, ref string) (models.TokenUsers, error)
-	LoginHandler(user models.UserLogin) (models.TokenUsers, error)
+	Register(user models.UserDetails, ref string) (models.TokenUsers, error)
+	Login(user models.UserLogin) (models.TokenUsers, error)
 	AddAddress(user_id uint, address models.Address) (models.Address, error)
 	GetAddresses(user_id uint) ([]models.Address, error)
 	UpdateAddress(user_id, address_id uint, address models.Address) (models.Address, error)
@@ -57,14 +57,14 @@ func NewUserService(repo repository.UserRepository,
 var InternalError = "Internal Server Error"
 var ErrorHashingPassword = "Error In Hashing Password"
 
-func (u *userUsecase) UserSignUp(user models.UserDetails, ref string) (models.TokenUsers, error) {
-	// Check whether the user already exist. If yes, show the error message, since this is signUp
+func (u *userUsecase) Register(user models.UserDetails, ref string) (models.TokenUsers, error) {
+
 	userExist := u.userRepo.CheckUserAvailability(user.Email, user.Phone)
 	if userExist {
 		return models.TokenUsers{}, models.ErrAlreadyExists
 	}
 	if user.Password != user.ConfirmPassword {
-		return models.TokenUsers{}, models.ErrEntityNotFound
+		return models.TokenUsers{}, models.ErrBadRequest
 	}
 
 	// referenceUser, err := u.userRepo.FindUserFromReference(ref)
@@ -87,7 +87,7 @@ func (u *userUsecase) UserSignUp(user models.UserDetails, ref string) (models.To
 	}
 
 	// add user details to the database
-	userData, err := u.userRepo.UserSignUp(user, referral)
+	userData, err := u.userRepo.Register(user, referral)
 	if err != nil {
 		return models.TokenUsers{}, err
 	}
@@ -122,24 +122,8 @@ func (u *userUsecase) UserSignUp(user models.UserDetails, ref string) (models.To
 	}, nil
 }
 
-func (u *userUsecase) LoginHandler(user models.UserLogin) (models.TokenUsers, error) {
+func (u *userUsecase) Login(user models.UserLogin) (models.TokenUsers, error) {
 
-	// checking if a username exist with this email address
-	ok := u.userRepo.CheckUserAvailability(user.Email, user.Username)
-	if !ok {
-		return models.TokenUsers{}, errors.ErrUnsupported
-	}
-
-	isBlocked, err := u.userRepo.UserBlockStatus(user.Email, user.Username)
-	if err != nil {
-		return models.TokenUsers{}, err
-	}
-
-	if isBlocked {
-		return models.TokenUsers{}, models.ErrForbidden
-	}
-
-	// Get the user details in order to check the password, in this case ( The same function can be reused in future )
 	details, err := u.userRepo.FindUser(user)
 	if err != nil {
 		return models.TokenUsers{}, err
@@ -150,15 +134,15 @@ func (u *userUsecase) LoginHandler(user models.UserLogin) (models.TokenUsers, er
 		return models.TokenUsers{}, models.ErrInvalidPassword
 	}
 
-	var userDetails models.UserDetailsResponse
-
-	userDetails.ID = details.ID
-	userDetails.Name = details.Name
-	userDetails.Email = details.Email
-	userDetails.Phone = details.Phone
-	userDetails.Username = details.Username
-	userDetails.Gender = details.Gender
-	userDetails.BirthDate = details.BirthDate
+	userDetails := models.UserDetailsResponse{
+		ID:        details.ID,
+		Name:      details.Name,
+		Email:     details.Email,
+		Phone:     details.Phone,
+		Username:  details.Username,
+		Gender:    details.Gender,
+		BirthDate: details.BirthDate,
+	}
 
 	tokenString, err := u.helper.GenerateTokenClients(userDetails)
 	if err != nil {

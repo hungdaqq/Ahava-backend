@@ -32,7 +32,7 @@ func StructuredLogger(logger *zerolog.Logger) gin.HandlerFunc {
 			param.Latency = param.Latency.Truncate(time.Second)
 		}
 
-		param.ClientIP = c.ClientIP()
+		param.ClientIP = c.Request.Header.Get("X-Forwarded-For")
 		param.Method = c.Request.Method
 		param.StatusCode = c.Writer.Status()
 		param.ErrorMessage = c.Errors.ByType(gin.ErrorTypePrivate).String()

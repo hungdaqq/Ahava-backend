@@ -62,14 +62,15 @@ type WishlistProduct struct {
 	ProductID     uint   `json:"product_id"`
 	Name          string `json:"name"`
 	DefaultImage  string `json:"default_image"`
+	Size          string `json:"size"`
 	OriginalPrice uint   `json:"original_price"`
 	DiscountPrice uint   `json:"discount_price"`
 }
 
 type ChangePassword struct {
-	Oldpassword string `json:"old_password"`
-	Password    string `json:"password"`
-	Repassword  string `json:"re_password"`
+	Oldpassword string `json:"old_password" validate:"required"`
+	Password    string `json:"password" validate:"required"`
+	Repassword  string `json:"re_password" validate:"required"`
 }
 
 type UserSignInResponse struct {
@@ -94,8 +95,8 @@ type UserDetailsResponse struct {
 }
 
 type UserLogin struct {
-	Username string `json:"username" validate:"required"`
-	Email    string `json:"email" validate:"required"`
+	Username string `json:"username" `
+	Email    string `json:"email" `
 	Password string `json:"password" validate:"required"`
 }
 
@@ -125,7 +126,7 @@ type UserDetailsAtAdmin struct {
 }
 
 type Search struct {
-	Key string `json:"searchkey"`
+	Key string `json:"searchkey" validate:"required"`
 }
 
 type EditProfile struct {
@@ -147,9 +148,9 @@ type CartItem struct {
 }
 
 type UpdateCartItem struct {
-	ProductID uint   `json:"product_id"`
-	Quantity  uint   `json:"quantity"`
-	Size      string `json:"size"`
+	ProductID uint   `json:"product_id" validate:"required"`
+	Quantity  uint   `json:"quantity" validate:"required"`
+	Size      string `json:"size" validate:"required"`
 }
 
 type CartDetails struct {
@@ -201,8 +202,8 @@ type Wishlist struct {
 }
 
 type AddToWishlist struct {
-	ProductID uint   `json:"product_id"`
-	Size      string `json:"size"`
+	ProductID uint   `json:"product_id" validate:"required"`
+	Size      string `json:"size" validate:"required"`
 }
 
 type Order struct {
@@ -266,19 +267,6 @@ type Offer struct {
 	ExpireAt  time.Time `json:"expire_at"`
 }
 
-type Province struct {
-	ID       uint   `json:"id"`
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	TypeText string `json:"typeText"`
-	Slug     string `json:"slug"`
-}
-
-type Provinces struct {
-	Total     int        `json:"total"`
-	Provinces []Province `json:"data"`
-}
-
 var (
 	ErrEntityNotFound  = errors.New("entity not found")
 	ErrInternalServer  = errors.New("internal server error")
@@ -291,4 +279,5 @@ var (
 	ErrValidateOTP     = errors.New("failed to validate otp")
 	ErrAlreadyExists   = errors.New("entity already exists")
 	ErrInvalidPassword = errors.New("invalid password")
+	ErrMalformedEntity = errors.New("malformed entiry")
 )

@@ -13,7 +13,7 @@ import (
 )
 
 type AdminService interface {
-	LoginHandler(adminDetails models.AdminLogin) (domain.TokenAdmin, error)
+	Login(adminDetails models.AdminLogin) (domain.TokenAdmin, error)
 	BlockUser(user_id uint) error
 	UnBlockUser(user_id uint) error
 	GetUsers(page int) ([]models.UserDetailsAtAdmin, error)
@@ -34,10 +34,9 @@ func NewAdminService(repo repository.AdminRepository, h helper.Helper) AdminServ
 	}
 }
 
-func (ad *adminService) LoginHandler(adminDetails models.AdminLogin) (domain.TokenAdmin, error) {
+func (ad *adminService) Login(adminDetails models.AdminLogin) (domain.TokenAdmin, error) {
 
-	// getting details of the admin based on the email provided
-	adminCompareDetails, err := ad.adminRepository.LoginHandler(adminDetails)
+	adminCompareDetails, err := ad.adminRepository.Login(adminDetails)
 	if err != nil {
 		return domain.TokenAdmin{}, err
 	}
@@ -67,7 +66,6 @@ func (ad *adminService) LoginHandler(adminDetails models.AdminLogin) (domain.Tok
 		AccessToken:  access,
 		RefreshToken: refresh,
 	}, nil
-
 }
 
 func (ad *adminService) BlockUser(user_id uint) error {

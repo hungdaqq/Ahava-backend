@@ -36,7 +36,6 @@ func (or *orderService) PlaceOrder(placeOrder models.PlaceOrder) (models.Order, 
 	}
 
 	for _, item := range checkout.CartItems {
-
 		err := or.repository.PlaceOrderItem(order.ID, item)
 		if err != nil {
 			return models.Order{}, err
