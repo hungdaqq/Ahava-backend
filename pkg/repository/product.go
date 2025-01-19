@@ -4,16 +4,13 @@ import (
 	"ahava/pkg/domain"
 	"ahava/pkg/utils/models"
 
-	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
 type ProductRepository interface {
 	AddProduct(product models.Product) (models.Product, error)
-	AddProductImages(product_id uint, defaul_image string, images pq.StringArray) (models.Product, error)
 
 	UpdateProduct(product_id uint, product models.Product) (models.Product, error)
-	UpdateProductImage(product_id uint, defaul_image string) (models.Product, error)
 
 	DeleteProduct(product_id uint) error
 
@@ -38,59 +35,37 @@ func NewProductRepository(DB *gorm.DB) ProductRepository {
 	return &productRepository{DB}
 }
 
-func (r *productRepository) AddProduct(product models.Product) (models.Product, error) {
+func (r *productRepository) AddProduct(p models.Product) (models.Product, error) {
 
-	addProduct := domain.Product{
+	product := domain.Product{
+		Name:             p.Name,
+		Code:             p.Code,
+		Category:         p.Category,
+		DefaultImage:     p.DefaultImage,
+		Images:           p.Images,
+		Stock:            p.Stock,
+		ShortDescription: p.ShortDescription,
+		Description:      p.Description,
+		HowToUse:         p.HowToUse,
+		IsFeatured:       p.IsFeatured,
+	}
+
+	if err := r.DB.Create(&product).Error; err != nil {
+		return models.Product{}, err
+	}
+
+	return models.Product{
+		ID:               product.ID,
 		Name:             product.Name,
 		Code:             product.Code,
 		Category:         product.Category,
+		DefaultImage:     product.DefaultImage,
+		Images:           product.Images,
 		Stock:            product.Stock,
 		ShortDescription: product.ShortDescription,
 		Description:      product.Description,
 		HowToUse:         product.HowToUse,
 		IsFeatured:       product.IsFeatured,
-	}
-
-	if err := r.DB.Create(&addProduct).Error; err != nil {
-		return models.Product{}, err
-	}
-
-	return models.Product{
-		ID:               addProduct.ID,
-		Name:             addProduct.Name,
-		Code:             addProduct.Code,
-		Category:         addProduct.Category,
-		Stock:            addProduct.Stock,
-		ShortDescription: addProduct.ShortDescription,
-		Description:      addProduct.Description,
-		HowToUse:         addProduct.HowToUse,
-		IsFeatured:       addProduct.IsFeatured,
-	}, nil
-}
-
-func (r *productRepository) AddProductImages(product_id uint, default_image string, images pq.StringArray) (models.Product, error) {
-
-	var addProduct domain.Product
-
-	result := r.DB.Model(&domain.Product{}).
-		Where("id = ?", product_id).
-		Updates(
-			domain.Product{
-				DefaultImage: default_image,
-				Images:       images,
-			}).
-		Scan(&addProduct)
-	if result.Error != nil {
-		return models.Product{}, result.Error
-	}
-	if result.RowsAffected == 0 {
-		return models.Product{}, models.ErrEntityNotFound
-	}
-
-	return models.Product{
-		ID:           addProduct.ID,
-		DefaultImage: addProduct.DefaultImage,
-		Images:       addProduct.Images,
 	}, nil
 }
 
@@ -198,44 +173,24 @@ func (r *productRepository) SearchProducts(key string) ([]models.Product, error)
 	return products, nil
 }
 
-func (r *productRepository) UpdateProductImage(product_id uint, url string) (models.Product, error) {
+func (r *productRepository) UpdateProduct(product_id uint, p models.Product) (models.Product, error) {
 
-	var updateProduct models.Product
-
-	// Use GORM's Update method to update the product image
-	result := r.DB.Model(&domain.Product{}).
-		Where("id = ?", product_id).
-		Update("image", url).
-		Scan(&updateProduct)
-
-	if result.Error != nil {
-		return models.Product{}, result.Error
-	}
-	if result.RowsAffected == 0 {
-		return models.Product{}, models.ErrEntityNotFound
-	}
-
-	return updateProduct, nil
-}
-
-func (r *productRepository) UpdateProduct(product_id uint, model models.Product) (models.Product, error) {
-
-	var updateProduct models.Product
+	var product models.Product
 
 	result := r.DB.Model(&domain.Product{}).
 		Where("id = ?", product_id).
 		Updates(
 			domain.Product{
-				Name:             model.Name,
-				Code:             model.Code,
-				Category:         model.Category,
-				Stock:            model.Stock,
-				Description:      model.Description,
-				ShortDescription: model.ShortDescription,
-				IsFeatured:       model.IsFeatured,
-				HowToUse:         model.HowToUse,
+				Name:             p.Name,
+				Code:             p.Code,
+				Category:         p.Category,
+				Stock:            p.Stock,
+				Description:      p.Description,
+				ShortDescription: p.ShortDescription,
+				IsFeatured:       p.IsFeatured,
+				HowToUse:         p.HowToUse,
 			}).
-		Scan(&updateProduct)
+		Scan(&product)
 	if result.Error != nil {
 		return models.Product{}, result.Error
 	}
@@ -243,7 +198,7 @@ func (r *productRepository) UpdateProduct(product_id uint, model models.Product)
 		return models.Product{}, models.ErrEntityNotFound
 	}
 
-	return updateProduct, nil
+	return product, nil
 }
 
 func (r *productRepository) UpdateProductPrice(product_id uint, price []models.Price) ([]models.Price, error) {

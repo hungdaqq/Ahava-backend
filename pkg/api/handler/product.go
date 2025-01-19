@@ -13,15 +13,13 @@ import (
 
 type ProductHandler interface {
 	AddProduct(ctx *gin.Context)
-	AddProductImages(ctx *gin.Context)
+	UpdateProduct(ctx *gin.Context)
 	DeleteProduct(ctx *gin.Context)
 	GetProductDetails(ctx *gin.Context)
 	ListCategoryProducts(ctx *gin.Context)
 	ListFeaturedProducts(ctx *gin.Context)
 	ListAllProducts(ctx *gin.Context)
 	SearchProducts(ctx *gin.Context)
-	UpdateProductImage(ctx *gin.Context)
-	UpdateProduct(ctx *gin.Context)
 }
 
 type productHandler struct {
@@ -45,41 +43,6 @@ func (h *productHandler) AddProduct(ctx *gin.Context) {
 	}
 	// Validate the model
 	result, err := h.ProductService.AddProduct(product)
-	if err != nil {
-		errorRes := response.ClientErrorResponse("Không thể thêm sản phẩm", nil, err)
-		ctx.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
-	// Return the response
-	successRes := response.ClientResponse(http.StatusCreated, "Thêm sản phẩm thành công", result, nil)
-	ctx.JSON(http.StatusCreated, successRes)
-}
-
-func (h *productHandler) AddProductImages(ctx *gin.Context) {
-	// Get the product id from the context
-	product_id, err := strconv.Atoi(ctx.Param("product_id"))
-	if err != nil {
-		errorRes := response.ClientErrorResponse("Request parameter problem", nil, err)
-		ctx.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
-	// Get the default image from the form
-	default_image, err := ctx.FormFile("default_image")
-	if err != nil {
-		errorRes := response.ClientErrorResponse("Tải hình ảnh không thành công", nil, err)
-		ctx.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
-	// Get the images from the form
-	form, err := ctx.MultipartForm()
-	if err != nil {
-		errorRes := response.ClientErrorResponse("Không thể tải hình ảnh", nil, err)
-		ctx.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
-	images := form.File["images"]
-	// Perform add product images operation
-	result, err := h.ProductService.AddProductImages(uint(product_id), default_image, images)
 	if err != nil {
 		errorRes := response.ClientErrorResponse("Không thể thêm sản phẩm", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
@@ -178,32 +141,32 @@ func (h *productHandler) SearchProducts(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, successRes)
 }
 
-func (h *productHandler) UpdateProductImage(ctx *gin.Context) {
-	// Get the product id from the context
-	product_id, err := strconv.Atoi(ctx.Param("product_id"))
-	if err != nil {
-		errorRes := response.ClientErrorResponse("Request parameter problem", nil, err)
-		ctx.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
-	// Get the image from the form
-	file, err := ctx.FormFile("default_image")
-	if err != nil {
-		errorRes := response.ClientErrorResponse("Tải hình ảnh không thành công", nil, err)
-		ctx.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
-	// Perform update product image operation
-	results, err := h.ProductService.UpdateProductImage(uint(product_id), file)
-	if err != nil {
-		errorRes := response.ClientErrorResponse("Không thể cập nhật ảnh sản phẩm", nil, err)
-		ctx.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
-	// Return the response
-	successRes := response.ClientResponse(http.StatusOK, "Cập nhật ảnh sản phẩm thành công", results, nil)
-	ctx.JSON(http.StatusOK, successRes)
-}
+// func (h *productHandler) UpdateProductImage(ctx *gin.Context) {
+// 	// Get the product id from the context
+// 	product_id, err := strconv.Atoi(ctx.Param("product_id"))
+// 	if err != nil {
+// 		errorRes := response.ClientErrorResponse("Request parameter problem", nil, err)
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
+// 		return
+// 	}
+// 	// Get the image from the form
+// 	file, err := ctx.FormFile("default_image")
+// 	if err != nil {
+// 		errorRes := response.ClientErrorResponse("Tải hình ảnh không thành công", nil, err)
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
+// 		return
+// 	}
+// 	// Perform update product image operation
+// 	results, err := h.ProductService.UpdateProductImage(uint(product_id), file)
+// 	if err != nil {
+// 		errorRes := response.ClientErrorResponse("Không thể cập nhật ảnh sản phẩm", nil, err)
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
+// 		return
+// 	}
+// 	// Return the response
+// 	successRes := response.ClientResponse(http.StatusOK, "Cập nhật ảnh sản phẩm thành công", results, nil)
+// 	ctx.JSON(http.StatusOK, successRes)
+// }
 
 func (h *productHandler) UpdateProduct(ctx *gin.Context) {
 	// Get the product id from the context

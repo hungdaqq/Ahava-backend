@@ -26,6 +26,7 @@ func NewServerHTTP(
 	paymentHandler handler.PaymentHandler,
 	// offerhandler handler.OfferHandler,
 	wishlistHandler handler.WishlistHandler,
+	uploadHandler handler.UploadHandler,
 	db *gorm.DB,
 ) *ServerHTTP {
 
@@ -48,11 +49,11 @@ func NewServerHTTP(
 		wishlistHandler,
 		// couponHandler,
 	)
-	routes.AdminRoutes(
-		engine.Group("/admin"),
+	routes.AdminRoutes(engine.Group("/admin"),
 		adminHandler,
 		productHandler,
 		userHandler,
+		uploadHandler,
 		// orderHandler,
 		// couponHandler,
 		// offerhandler,

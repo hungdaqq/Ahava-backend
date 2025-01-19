@@ -28,7 +28,7 @@ type UserService interface {
 	// GetMyReferenceLink(id uint) (string, error)
 }
 
-type userUsecase struct {
+type userService struct {
 	userRepo repository.UserRepository
 	cfg      config.Config
 	// otpRepository     repository.OtpRepository
@@ -44,7 +44,7 @@ func NewUserService(repo repository.UserRepository,
 	// order repository.OrderRepository,
 	h helper.Helper) UserService {
 
-	return &userUsecase{
+	return &userService{
 		userRepo: repo,
 		cfg:      cfg,
 		// otpRepository:     otp,
@@ -57,7 +57,7 @@ func NewUserService(repo repository.UserRepository,
 var InternalError = "Internal Server Error"
 var ErrorHashingPassword = "Error In Hashing Password"
 
-func (u *userUsecase) Register(user models.UserDetails, ref string) (models.TokenUsers, error) {
+func (u *userService) Register(user models.UserDetails, ref string) (models.TokenUsers, error) {
 
 	userExist := u.userRepo.CheckUserAvailability(user.Email, user.Phone)
 	if userExist {
@@ -122,7 +122,7 @@ func (u *userUsecase) Register(user models.UserDetails, ref string) (models.Toke
 	}, nil
 }
 
-func (u *userUsecase) Login(user models.UserLogin) (models.TokenUsers, error) {
+func (u *userService) Login(user models.UserLogin) (models.TokenUsers, error) {
 
 	details, err := u.userRepo.FindUser(user)
 	if err != nil {
@@ -156,7 +156,7 @@ func (u *userUsecase) Login(user models.UserLogin) (models.TokenUsers, error) {
 
 }
 
-func (i *userUsecase) AddAddress(user_id uint, address models.Address) (models.Address, error) {
+func (i *userService) AddAddress(user_id uint, address models.Address) (models.Address, error) {
 
 	addAddress, err := i.userRepo.AddAddress(user_id, address)
 	if err != nil {
@@ -167,7 +167,7 @@ func (i *userUsecase) AddAddress(user_id uint, address models.Address) (models.A
 
 }
 
-func (i *userUsecase) UpdateAddress(user_id, address_id uint, address models.Address) (models.Address, error) {
+func (i *userService) UpdateAddress(user_id, address_id uint, address models.Address) (models.Address, error) {
 
 	updateAddress, err := i.userRepo.UpdateAddress(user_id, address_id, address)
 	if err != nil {
@@ -178,7 +178,7 @@ func (i *userUsecase) UpdateAddress(user_id, address_id uint, address models.Add
 
 }
 
-func (i *userUsecase) DeleteAddress(user_id, address_id uint) error {
+func (i *userService) DeleteAddress(user_id, address_id uint) error {
 
 	err := i.userRepo.DeleteAddress(user_id, address_id)
 	if err != nil {
@@ -189,7 +189,7 @@ func (i *userUsecase) DeleteAddress(user_id, address_id uint) error {
 
 }
 
-func (i *userUsecase) GetAddresses(user_id uint) ([]models.Address, error) {
+func (i *userService) GetAddresses(user_id uint) ([]models.Address, error) {
 
 	addresses, err := i.userRepo.GetAddresses(user_id)
 	if err != nil {
@@ -200,7 +200,7 @@ func (i *userUsecase) GetAddresses(user_id uint) ([]models.Address, error) {
 
 }
 
-func (u *userUsecase) GetUserDetails(id uint) (models.UserDetailsResponse, error) {
+func (u *userService) GetUserDetails(id uint) (models.UserDetailsResponse, error) {
 
 	details, err := u.userRepo.GetUserDetails(id)
 	if err != nil {
@@ -211,7 +211,7 @@ func (u *userUsecase) GetUserDetails(id uint) (models.UserDetailsResponse, error
 
 }
 
-func (u *userUsecase) ChangePassword(id uint, old string, password string, repassword string) error {
+func (u *userService) ChangePassword(id uint, old string, password string, repassword string) error {
 
 	userPassword, err := u.userRepo.GetPassword(id)
 	if err != nil {
@@ -236,7 +236,7 @@ func (u *userUsecase) ChangePassword(id uint, old string, password string, repas
 
 }
 
-// func (u *userUsecase) ForgotPasswordSend(phone string) error {
+// func (u *userService) ForgotPasswordSend(phone string) error {
 
 // 	ok := u.otpRepository.FindUserByMobileNumber(phone)
 // 	if !ok {
@@ -278,7 +278,7 @@ func (u *userUsecase) ChangePassword(id uint, old string, password string, repas
 // 	return nil
 // }
 
-func (u *userUsecase) EditProfile(user_id uint, profile models.EditProfile) (models.UserDetailsResponse, error) {
+func (u *userService) EditProfile(user_id uint, profile models.EditProfile) (models.UserDetailsResponse, error) {
 
 	result, err := u.userRepo.EditProfile(user_id, profile)
 	if err != nil {

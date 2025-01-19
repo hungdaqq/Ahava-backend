@@ -172,10 +172,9 @@ func (r *userDatabase) UpdateAddress(user_id, address_id uint, a models.Address)
 	return address, nil
 }
 
-func (r *userDatabase) DeleteAddress(address_id, user_id uint) error {
+func (r *userDatabase) DeleteAddress(user_id, address_id uint) error {
 
-	result := r.DB.Exec(`DELETE FROM addresses WHERE id=? AND user_id=?`,
-		address_id, user_id)
+	result := r.DB.Where("user_id = ? AND id = ?", user_id, address_id).Delete(&domain.Address{})
 	if result.Error != nil {
 		return result.Error
 	}

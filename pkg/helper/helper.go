@@ -26,7 +26,7 @@ import (
 
 type Helper interface {
 	GenerateTokenAdmin(admin models.AdminDetailsResponse) (string, string, error)
-	AddImageToS3(file *multipart.FileHeader, bucketName string) (string, error)
+	AddFileToS3(file *multipart.FileHeader, bucketName string) (string, error)
 	TwilioSetup(username string, password string)
 	TwilioSendOTP(phone string, serviceID string) (string, error)
 	TwilioVerifyOTP(serviceID string, code string, phone string) error
@@ -92,7 +92,7 @@ func (h *helper) GenerateTokenAdmin(admin models.AdminDetailsResponse) (string, 
 	return accessTokenString, refreshTokenString, nil
 }
 
-func (h *helper) AddImageToS3(file *multipart.FileHeader, bucketName string) (string, error) {
+func (h *helper) AddFileToS3(file *multipart.FileHeader, bucketName string) (string, error) {
 	// Initialize MinIO client
 	minioClient, err := minio.New(h.cfg.MINIO_ENDPOINT, &minio.Options{
 		Creds:  credentials.NewStaticV4(h.cfg.MINIO_ACCESS_KEY_ID, h.cfg.MINIO_SECRET_ACCESS_KEY, ""),
