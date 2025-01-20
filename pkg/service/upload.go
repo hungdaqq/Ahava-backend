@@ -6,7 +6,7 @@ import (
 )
 
 type UploadService interface {
-	FileUpload(file *multipart.FileHeader) (string, error)
+	FileUpload(files []*multipart.FileHeader) ([]string, error)
 }
 
 type uploadService struct {
@@ -19,12 +19,15 @@ func NewUploadService(
 	return &uploadService{helper: h}
 }
 
-func (u *uploadService) FileUpload(file *multipart.FileHeader) (string, error) {
-	// Upload file to S3
-	file_name, err := u.helper.AddFileToS3(file, "ahava")
-	if err != nil {
-		return "", err
+func (s *uploadService) FileUpload(files []*multipart.FileHeader) ([]string, error) {
+	// Upload files to S3
+	var urls []string
+	for _, file := range files {
+		url, err := s.helper.AddFileToS3(file, "ahava")
+		if err != nil {
+			return nil, err
+		}
+		urls = append(urls, url)
 	}
-
-	return file_name, nil
+	return urls, nil
 }

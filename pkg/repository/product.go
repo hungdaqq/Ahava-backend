@@ -184,6 +184,8 @@ func (r *productRepository) UpdateProduct(product_id uint, p models.Product) (mo
 				Name:             p.Name,
 				Code:             p.Code,
 				Category:         p.Category,
+				DefaultImage:     p.DefaultImage,
+				Images:           p.Images,
 				Stock:            p.Stock,
 				Description:      p.Description,
 				ShortDescription: p.ShortDescription,

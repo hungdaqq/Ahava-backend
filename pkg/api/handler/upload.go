@@ -23,15 +23,16 @@ func NewUploadHandler(service services.UploadService) UploadHandler {
 }
 
 func (h *uploadHandler) FileUpload(ctx *gin.Context) {
-	// Get the default image from the form
-	file, err := ctx.FormFile("file")
+	// Get the files from the form
+	form, err := ctx.MultipartForm()
 	if err != nil {
-		errorRes := response.ClientErrorResponse("Tải hình ảnh không thành công", nil, err)
+		errorRes := response.ClientErrorResponse("Không thể tải hình ảnh", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
+	files := form.File["files"]
 	// Perform add product images operation
-	result, err := h.uploadService.FileUpload(file)
+	result, err := h.uploadService.FileUpload(files)
 	if err != nil {
 		errorRes := response.ClientErrorResponse("Không thể thêm hình ảnh", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
