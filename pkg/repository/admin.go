@@ -9,7 +9,7 @@ import (
 
 type AdminRepository interface {
 	Login(adminDetails models.AdminLogin) (domain.Admin, error)
-	GetAllUsers(limit, offset int) (models.ListUsers, error)
+	ListAllUsers(limit, offset int) (models.ListUsers, error)
 	UpdateBlockUser(user_id uint, is_blocked bool) error
 
 	// NewPaymentMethod(string) error
@@ -67,10 +67,10 @@ func (r *adminRepository) UpdateBlockUser(user_id uint, is_blocked bool) error {
 	return nil
 }
 
-func (r *adminRepository) GetAllUsers(limit, offset int) (models.ListUsers, error) {
+func (r *adminRepository) ListAllUsers(limit, offset int) (models.ListUsers, error) {
 	// Define list of users and user details
 	var listUsers models.ListUsers
-	var userDetails []models.UserDetailsResponse
+	var userDetails []models.UserDetailsAtAdmin
 	var total int64
 	// Define the query
 	query := r.DB.Model(&domain.User{})

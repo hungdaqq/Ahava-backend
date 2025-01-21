@@ -8,7 +8,7 @@ import (
 type OrderService interface {
 	PlaceOrder(order models.PlaceOrder) (models.Order, error)
 	GetOrderDetails(user_id, order_id uint) (models.Order, error)
-	GetAllOrders(limit, offset int) (models.ListOrders, error)
+	ListAllOrders(limit, offset int) (models.ListOrders, error)
 	UpdateOrder(order_id uint, updateOrder models.Order) (models.Order, error)
 }
 
@@ -66,9 +66,9 @@ func (or *orderService) UpdateOrder(order_id uint, updateOrder models.Order) (mo
 	return result, nil
 }
 
-func (or *orderService) GetAllOrders(limit, offset int) (models.ListOrders, error) {
+func (or *orderService) ListAllOrders(limit, offset int) (models.ListOrders, error) {
 	// Get all orders with limit and offset
-	result, err := or.repository.GetAllOrders(limit, offset)
+	result, err := or.repository.ListAllOrders(limit, offset)
 	if err != nil {
 		return models.ListOrders{}, err
 	}

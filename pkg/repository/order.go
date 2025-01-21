@@ -10,7 +10,7 @@ import (
 type OrderRepository interface {
 	PlaceOrder(order models.PlaceOrder, final_price uint64) (models.Order, error)
 	PlaceOrderItem(order_id uint, item models.CartItem) error
-	GetAllOrders(limit, offset int) (models.ListOrders, error)
+	ListAllOrders(limit, offset int) (models.ListOrders, error)
 	GetOrderDetails(user_id, order_id uint) (models.Order, error)
 	GetOrderForWebhook(order_id uint) (models.Order, error)
 	UpdateOrder(order_id uint, order models.Order) (models.Order, error)
@@ -26,15 +26,28 @@ func NewOrderRepository(db *gorm.DB) OrderRepository {
 	}
 }
 
-func (r *orderRepository) PlaceOrder(order models.PlaceOrder, final_price uint64) (models.Order, error) {
-
-	var orderDetails models.Order
-	if err := r.DB.Raw(`INSERT INTO orders (user_id, address, payment_method, final_price, coupon) VALUES (?,?,?,?,?) RETURNING *`,
-		order.UserID, order.Address, order.PaymentMethod, final_price, order.Coupon).Scan(&orderDetails).Error; err != nil {
+func (r *orderRepository) PlaceOrder(o models.PlaceOrder, final_price uint64) (models.Order, error) {
+	// Define the order
+	order := domain.Order{
+		UserID:        o.UserID,
+		Address:       o.Address,
+		PaymentMethod: o.PaymentMethod,
+		FinalPrice:    final_price,
+		Coupon:        o.Coupon,
+	}
+	// Create the order
+	err := r.DB.Create(&order).Error
+	if err != nil {
 		return models.Order{}, err
 	}
-
-	return orderDetails, nil
+	// Return the order
+	return models.Order{
+		ID:            order.ID,
+		UserID:        order.UserID,
+		Address:       order.Address,
+		PaymentMethod: order.PaymentMethod,
+		FinalPrice:    order.FinalPrice,
+	}, nil
 }
 
 func (r *orderRepository) PlaceOrderItem(order_id uint, item models.CartItem) error {
@@ -101,7 +114,7 @@ func (r *orderRepository) UpdateOrder(order_id uint, o models.Order) (models.Ord
 	return order, nil
 }
 
-func (r *orderRepository) GetAllOrders(limit, offset int) (models.ListOrders, error) {
+func (r *orderRepository) ListAllOrders(limit, offset int) (models.ListOrders, error) {
 	// Define the list of orders
 	var listOrders models.ListOrders
 	var orderDetails []models.Order

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"ahava/pkg/domain"
-	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -81,7 +80,6 @@ func SaveRequestTransaction(db *gorm.DB) {
 		select {
 		case <-ticker.C:
 			if len(trans) > 0 {
-				fmt.Printf("Saving request transactions, count: %d", len(trans))
 				db.Create(&trans)
 				trans = make([]domain.RequestTransaction, 0)
 			}
@@ -92,5 +90,5 @@ func SaveRequestTransaction(db *gorm.DB) {
 }
 
 var (
-	tranCh = make(chan domain.RequestTransaction, 100)
+	tranCh = make(chan domain.RequestTransaction, 500)
 )

@@ -14,6 +14,7 @@ import (
 type OrderHandler interface {
 	PlaceOrder(ctx *gin.Context)
 	GetOrderDetails(ctx *gin.Context)
+	ListAllOrders(ctx *gin.Context)
 }
 
 type orderHandler struct {
@@ -68,5 +69,27 @@ func (h *orderHandler) GetOrderDetails(ctx *gin.Context) {
 	}
 	// Return the response
 	successRes := response.ClientResponse(http.StatusOK, "Lấy thông tin đơn hàng thành công", order, nil)
+	ctx.JSON(http.StatusOK, successRes)
+}
+
+func (h *orderHandler) ListAllOrders(ctx *gin.Context) {
+	// Get the limit and offset from the query
+	limit, err := strconv.Atoi(ctx.Query("limit"))
+	if err != nil {
+		limit = 10
+	}
+	offset, err := strconv.Atoi(ctx.Query("offset"))
+	if err != nil {
+		offset = 0
+	}
+	// Perform list orders operation
+	orders, err := h.orderService.ListAllOrders(limit, offset)
+	if err != nil {
+		errorRes := response.ClientErrorResponse("Không thể lấy danh sách đơn hàng", nil, err)
+		ctx.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+	// Return the response
+	successRes := response.ClientResponse(http.StatusOK, "Lấy danh sách đơn hàng thành công", orders, nil)
 	ctx.JSON(http.StatusOK, successRes)
 }

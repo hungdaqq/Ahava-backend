@@ -53,28 +53,38 @@ func (i *productService) AddProduct(p models.Product) (models.Product, error) {
 	return product, nil
 }
 
-func (i *productService) UpdateProduct(product_id uint, product models.Product) (models.Product, error) {
+func (i *productService) UpdateProduct(product_id uint, p models.Product) (models.Product, error) {
 	// Update product
-	product, err := i.repository.UpdateProduct(product_id, product)
+	product, err := i.repository.UpdateProduct(product_id, p)
 	if err != nil {
 		return models.Product{}, err
 	}
 	// Update product price
 	prices := []models.Price{}
-	for _, pr := range product.Price {
+	for _, pr := range p.Price {
+		// If the price is new
 		if pr.ID == 0 {
 			price, err := i.repository.AddProductPrice(product_id, pr)
 			if err != nil {
 				return models.Product{}, err
 			}
 			prices = append(prices, price)
-		} else {
-			price, err := i.repository.UpdateProductPrice(product_id, pr.ID, pr)
+			continue
+		}
+		// If the price is to be deleted
+		if pr.OriginalPrice == 0 {
+			err := i.repository.DeleteProductPrice(product_id, pr.ID)
 			if err != nil {
 				return models.Product{}, err
 			}
-			prices = append(prices, price)
+			continue
 		}
+		// If the price is to be updated
+		price, err := i.repository.UpdateProductPrice(product_id, pr.ID, pr)
+		if err != nil {
+			return models.Product{}, err
+		}
+		prices = append(prices, price)
 	}
 	// Assign the price to the product
 	product.Price = prices
@@ -83,12 +93,11 @@ func (i *productService) UpdateProduct(product_id uint, product models.Product) 
 }
 
 func (i *productService) DeleteProduct(product_id uint) error {
-
+	// Delete product
 	err := i.repository.DeleteProduct(product_id)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

@@ -141,33 +141,6 @@ func (h *productHandler) SearchProducts(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, successRes)
 }
 
-// func (h *productHandler) UpdateProductImage(ctx *gin.Context) {
-// 	// Get the product id from the context
-// 	product_id, err := strconv.Atoi(ctx.Param("product_id"))
-// 	if err != nil {
-// 		errorRes := response.ClientErrorResponse("Request parameter problem", nil, err)
-// 		ctx.JSON(http.StatusBadRequest, errorRes)
-// 		return
-// 	}
-// 	// Get the image from the form
-// 	file, err := ctx.FormFile("default_image")
-// 	if err != nil {
-// 		errorRes := response.ClientErrorResponse("Tải hình ảnh không thành công", nil, err)
-// 		ctx.JSON(http.StatusBadRequest, errorRes)
-// 		return
-// 	}
-// 	// Perform update product image operation
-// 	results, err := h.ProductService.UpdateProductImage(uint(product_id), file)
-// 	if err != nil {
-// 		errorRes := response.ClientErrorResponse("Không thể cập nhật ảnh sản phẩm", nil, err)
-// 		ctx.JSON(http.StatusBadRequest, errorRes)
-// 		return
-// 	}
-// 	// Return the response
-// 	successRes := response.ClientResponse(http.StatusOK, "Cập nhật ảnh sản phẩm thành công", results, nil)
-// 	ctx.JSON(http.StatusOK, successRes)
-// }
-
 func (h *productHandler) UpdateProduct(ctx *gin.Context) {
 	// Get the product id from the context
 	product_id, err := strconv.Atoi(ctx.Param("product_id"))

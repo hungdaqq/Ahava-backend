@@ -120,18 +120,20 @@ type UserDetails struct {
 }
 
 type UserDetailsAtAdmin struct {
-	Id      uint   `json:"id"`
-	Name    string `json:"name"`
-	Email   string `json:"email"`
-	Phone   string `json:"phone"`
-	Blocked bool   `json:"blocked"`
+	ID        uint   `json:"id"`
+	Username  string `json:"username"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	Phone     string `json:"phone"`
+	Gender    string `json:"gender"`
+	IsBlocked bool   `json:"is_blocked"`
 }
 
 type ListUsers struct {
-	Total  int64                 `json:"total"`
-	Limit  int                   `json:"limit"`
-	Offset int                   `json:"offset"`
-	Users  []UserDetailsResponse `json:"users"`
+	Total  int64                `json:"total"`
+	Limit  int                  `json:"limit"`
+	Offset int                  `json:"offset"`
+	Users  []UserDetailsAtAdmin `json:"users"`
 }
 
 type Search struct {

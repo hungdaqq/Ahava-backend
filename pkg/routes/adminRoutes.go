@@ -12,10 +12,10 @@ func AdminRoutes(
 	adminHandler handler.AdminHandler,
 	productHandler handler.ProductHandler,
 	userHandler handler.UserHandler,
-	// orderHandler handler.OrderHandler,
 	// couponHandler handler.CouponHandler,
 	// offerHandler handler.OfferHandler,
 	uploadHandler handler.UploadHandler,
+	orderHandler handler.OrderHandler,
 ) {
 	engine.POST("/login", adminHandler.Login)
 	engine.Use(middleware.AdminAuthMiddleware)
@@ -24,9 +24,9 @@ func AdminRoutes(
 		{
 			filemanagement.POST("/upload", uploadHandler.FileUpload)
 		}
-		usermanagement := engine.Group("/users")
+		usermanagement := engine.Group("/user")
 		{
-			usermanagement.GET("", adminHandler.GetAllUsers)
+			usermanagement.GET("", adminHandler.ListAllUsers)
 			usermanagement.PUT("/block/:id", adminHandler.BlockUser)
 			usermanagement.PUT("/unblock/:id", adminHandler.UnBlockUser)
 		}
@@ -39,7 +39,10 @@ func AdminRoutes(
 			productmanagement.DELETE("/:product_id", productHandler.DeleteProduct)
 			productmanagement.PUT("/:product_id", productHandler.UpdateProduct)
 		}
-
+		ordermanagement := engine.Group("/order")
+		{
+			ordermanagement.GET("", orderHandler.ListAllOrders)
+		}
 		// payment := engine.Group("/payment-method")
 		// {
 		// 	payment.POST("", adminHandler.NewPaymentMethod)

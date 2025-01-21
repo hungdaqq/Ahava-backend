@@ -54,7 +54,7 @@ func NewServerHTTP(
 		productHandler,
 		userHandler,
 		uploadHandler,
-		// orderHandler,
+		orderHandler,
 		// couponHandler,
 		// offerhandler,
 	)

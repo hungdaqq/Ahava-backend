@@ -14,7 +14,7 @@ type AdminService interface {
 	Login(models.AdminLogin) (domain.TokenAdmin, error)
 	BlockUser(user_id uint) error
 	UnBlockUser(user_id uint) error
-	GetAllUsers(limit, offset int) (models.ListUsers, error)
+	ListAllUsers(limit, offset int) (models.ListUsers, error)
 	// NewPaymentMethod(string) error
 	// ListPaymentMethods() ([]domain.PaymentMethod, error)
 	// DeletePaymentMethod(id uint) error
@@ -80,9 +80,9 @@ func (ad *adminService) UnBlockUser(user_id uint) error {
 	return nil
 }
 
-func (ad *adminService) GetAllUsers(limit, offset int) (models.ListUsers, error) {
+func (ad *adminService) ListAllUsers(limit, offset int) (models.ListUsers, error) {
 	// Get all users with limit and offset
-	listUsers, err := ad.adminRepository.GetAllUsers(limit, offset)
+	listUsers, err := ad.adminRepository.ListAllUsers(limit, offset)
 	if err != nil {
 		return models.ListUsers{}, err
 	}

@@ -25,6 +25,7 @@ type ProductRepository interface {
 
 	AddProductPrice(product_id uint, price models.Price) (models.Price, error)
 	UpdateProductPrice(product_id, price_id uint, price models.Price) (models.Price, error)
+	DeleteProductPrice(product_id, price_id uint) error
 }
 
 type productRepository struct {
@@ -208,7 +209,7 @@ func (r *productRepository) UpdateProductPrice(product_id, price_id uint, p mode
 	var price models.Price
 	// Update the price
 	result := r.DB.Model(&domain.Price{}).
-		Where("product_id=? AND price_id=?", product_id, price_id).
+		Where("product_id=? AND id=?", product_id, price_id).
 		Updates(
 			domain.Price{
 				Size:          p.Size,
@@ -249,6 +250,7 @@ func (r *productRepository) AddProductPrice(product_id uint, p models.Price) (mo
 		DiscountPrice: price.DiscountPrice,
 	}, nil
 }
+
 func (r *productRepository) GetProductPrice(product_id uint) ([]models.Price, error) {
 	// Define the price
 	var prices []models.Price
@@ -261,4 +263,17 @@ func (r *productRepository) GetProductPrice(product_id uint) ([]models.Price, er
 	}
 	// Return the price details
 	return prices, nil
+}
+
+func (r *productRepository) DeleteProductPrice(product_id, price_id uint) error {
+	// Query to delete the price
+	result := r.DB.Delete(&domain.Price{}, price_id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return models.ErrEntityNotFound
+	}
+	// Return the price
+	return nil
 }

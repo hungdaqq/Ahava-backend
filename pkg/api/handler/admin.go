@@ -19,7 +19,7 @@ type AdminHandler interface {
 	Login(ctx *gin.Context)
 	BlockUser(ctx *gin.Context)
 	UnBlockUser(ctx *gin.Context)
-	GetAllUsers(ctx *gin.Context)
+	ListAllUsers(ctx *gin.Context)
 
 	// NewPaymentMethod(ctx *gin.Context)
 	// ListPaymentMethods(ctx *gin.Context)
@@ -100,7 +100,7 @@ func (ad *adminHandler) UnBlockUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, successRes)
 }
 
-func (ad *adminHandler) GetAllUsers(ctx *gin.Context) {
+func (ad *adminHandler) ListAllUsers(ctx *gin.Context) {
 	// Get the limit and offset from the query
 	limit, err := strconv.Atoi(ctx.DefaultQuery("limit", "10"))
 	if err != nil {
@@ -116,7 +116,7 @@ func (ad *adminHandler) GetAllUsers(ctx *gin.Context) {
 		return
 	}
 	// Perform get users operation
-	users, err := ad.adminService.GetAllUsers(limit, offset)
+	users, err := ad.adminService.ListAllUsers(limit, offset)
 	if err != nil {
 		errorRes := response.ClientErrorResponse("Không thể lấy danh sách khách hàng", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)

@@ -301,3 +301,25 @@ func (r *userDatabase) GetReferralCodeFromID(id uint) (string, error) {
 
 	return referral, nil
 }
+
+func (r *userDatabase) ListAllUsers(limit, offset int) (models.ListUsers, error) {
+	// Define the list of users
+	var listUsers models.ListUsers
+	var userDetails []models.UserDetailsAtAdmin
+	var total int64
+	// Define the query
+	query := r.DB.Model(&domain.User{})
+	if err := query.Count(&total).Error; err != nil {
+		return models.ListUsers{}, err
+	}
+	if err := query.Offset(offset).Limit(limit).Find(&userDetails).Error; err != nil {
+		return models.ListUsers{}, err
+	}
+	// Return the list of users
+	listUsers.Users = userDetails
+	listUsers.Total = total
+	listUsers.Limit = limit
+	listUsers.Offset = offset
+	// Return the list of users
+	return listUsers, nil
+}
