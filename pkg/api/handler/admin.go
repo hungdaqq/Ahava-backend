@@ -19,10 +19,11 @@ type AdminHandler interface {
 	Login(ctx *gin.Context)
 	BlockUser(ctx *gin.Context)
 	UnBlockUser(ctx *gin.Context)
-	GetUsers(ctx *gin.Context)
-	NewPaymentMethod(ctx *gin.Context)
-	ListPaymentMethods(ctx *gin.Context)
-	DeletePaymentMethod(ctx *gin.Context)
+	GetAllUsers(ctx *gin.Context)
+
+	// NewPaymentMethod(ctx *gin.Context)
+	// ListPaymentMethods(ctx *gin.Context)
+	// DeletePaymentMethod(ctx *gin.Context)
 	ValidateRefreshTokenAndCreateNewAccess(ctx *gin.Context)
 }
 
@@ -62,7 +63,7 @@ func (ad *adminHandler) BlockUser(ctx *gin.Context) {
 	// Get the user id from the context
 	user_id, err := strconv.Atoi(ctx.Param("user_id"))
 	if err != nil {
-		errorRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
+		errorRes := response.ClientErrorResponse("Request parameter problem", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
@@ -83,7 +84,7 @@ func (ad *adminHandler) UnBlockUser(ctx *gin.Context) {
 	// Get the user id from the context
 	user_id, err := strconv.Atoi(ctx.Param("user_id"))
 	if err != nil {
-		errorRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
+		errorRes := response.ClientErrorResponse("Request parameter problem", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
@@ -99,83 +100,86 @@ func (ad *adminHandler) UnBlockUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, successRes)
 }
 
-func (ad *adminHandler) GetUsers(ctx *gin.Context) {
-
-	pageStr := ctx.Query("page")
-	page, err := strconv.Atoi(pageStr)
-
+func (ad *adminHandler) GetAllUsers(ctx *gin.Context) {
+	// Get the limit and offset from the query
+	limit, err := strconv.Atoi(ctx.DefaultQuery("limit", "10"))
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "page number not in right format", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Request query problem", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-
-	users, err := ad.adminService.GetUsers(page)
+	// Get the offset from the query
+	offset, err := strconv.Atoi(ctx.DefaultQuery("offset", "0"))
 	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "could not retrieve records", nil, err.Error())
+		errorRes := response.ClientErrorResponse("Request query problem", nil, err)
 		ctx.JSON(http.StatusBadRequest, errorRes)
 		return
 	}
-	successRes := response.ClientResponse(http.StatusOK, "Successfully retrieved the users", users, nil)
+	// Perform get users operation
+	users, err := ad.adminService.GetAllUsers(limit, offset)
+	if err != nil {
+		errorRes := response.ClientErrorResponse("Không thể lấy danh sách khách hàng", nil, err)
+		ctx.JSON(http.StatusBadRequest, errorRes)
+		return
+	}
+	// Return the response
+	successRes := response.ClientResponse(http.StatusOK, "Lấy danh sách khách hàng thành công", users, nil)
 	ctx.JSON(http.StatusOK, successRes)
-
 }
 
-func (i *adminHandler) NewPaymentMethod(ctx *gin.Context) {
+// func (i *adminHandler) NewPaymentMethod(ctx *gin.Context) {
 
-	var method models.NewPaymentMethod
-	if err := ctx.BindJSON(&method); err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "Fields provided are in wrong format", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
+// 	var method models.NewPaymentMethod
+// 	if err := ctx.BindJSON(&method); err != nil {
+// 		errorRes := response.ClientResponse(http.StatusBadRequest, "Fields provided are in wrong format", nil, err.Error())
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
+// 		return
+// 	}
 
-	err := i.adminService.NewPaymentMethod(method.PaymentMethod)
-	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add the payment method", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
+// 	err := i.adminService.NewPaymentMethod(method.PaymentMethod)
+// 	if err != nil {
+// 		errorRes := response.ClientResponse(http.StatusBadRequest, "Could not add the payment method", nil, err.Error())
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
+// 		return
+// 	}
 
-	successRes := response.ClientResponse(http.StatusOK, "Successfully added Payment Method", nil, nil)
-	ctx.JSON(http.StatusOK, successRes)
+// 	successRes := response.ClientResponse(http.StatusOK, "Successfully added Payment Method", nil, nil)
+// 	ctx.JSON(http.StatusOK, successRes)
+// }
 
-}
+// func (a *adminHandler) ListPaymentMethods(ctx *gin.Context) {
 
-func (a *adminHandler) ListPaymentMethods(ctx *gin.Context) {
+// 	categories, err := a.adminService.ListPaymentMethods()
+// 	if err != nil {
+// 		errorRes := response.ClientResponse(http.StatusInternalServerError, "Fields provided are in wrong format", nil, err.Error())
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
+// 		return
+// 	}
 
-	categories, err := a.adminService.ListPaymentMethods()
-	if err != nil {
-		errorRes := response.ClientResponse(http.StatusInternalServerError, "Fields provided are in wrong format", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
+// 	successRes := response.ClientResponse(http.StatusOK, "Successfully got all payment methods", categories, nil)
+// 	ctx.JSON(http.StatusOK, successRes)
 
-	successRes := response.ClientResponse(http.StatusOK, "Successfully got all payment methods", categories, nil)
-	ctx.JSON(http.StatusOK, successRes)
+// }
 
-}
+// func (a *adminHandler) DeletePaymentMethod(ctx *gin.Context) {
 
-func (a *adminHandler) DeletePaymentMethod(ctx *gin.Context) {
+// 	id, err := strconv.Atoi(ctx.Query("id"))
+// 	if err != nil {
+// 		errorRes := response.ClientResponse(http.StatusBadRequest, "Fields provided are in wrong format", nil, err.Error())
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
+// 		return
+// 	}
 
-	id, err := strconv.Atoi(ctx.Query("id"))
-	if err != nil {
-		errorRes := response.ClientResponse(http.StatusBadRequest, "Fields provided are in wrong format", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
+// 	err = a.adminService.DeletePaymentMethod(uint(id))
+// 	if err != nil {
+// 		errorRes := response.ClientResponse(http.StatusInternalServerError, "error in deleting data", nil, err.Error())
+// 		ctx.JSON(http.StatusBadRequest, errorRes)
+// 		return
+// 	}
 
-	err = a.adminService.DeletePaymentMethod(uint(id))
-	if err != nil {
-		errorRes := response.ClientResponse(http.StatusInternalServerError, "error in deleting data", nil, err.Error())
-		ctx.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
-
-	successRes := response.ClientResponse(http.StatusOK, "Successfully deleted the Category", nil, nil)
-	ctx.JSON(http.StatusOK, successRes)
-
-}
+// 	successRes := response.ClientResponse(http.StatusOK, "Successfully deleted the Category", nil, nil)
+// 	ctx.JSON(http.StatusOK, successRes)
+// }
 
 func (a *adminHandler) ValidateRefreshTokenAndCreateNewAccess(ctx *gin.Context) {
 

@@ -10,6 +10,7 @@ import (
 type OrderRepository interface {
 	PlaceOrder(order models.PlaceOrder, final_price uint64) (models.Order, error)
 	PlaceOrderItem(order_id uint, item models.CartItem) error
+	GetAllOrders(limit, offset int) (models.ListOrders, error)
 	GetOrderDetails(user_id, order_id uint) (models.Order, error)
 	GetOrderForWebhook(order_id uint) (models.Order, error)
 	UpdateOrder(order_id uint, order models.Order) (models.Order, error)
@@ -37,7 +38,7 @@ func (r *orderRepository) PlaceOrder(order models.PlaceOrder, final_price uint64
 }
 
 func (r *orderRepository) PlaceOrderItem(order_id uint, item models.CartItem) error {
-
+	// Create the order item
 	err := r.DB.Create(&domain.OrderItem{
 		OrderID:           order_id,
 		ProductID:         item.ProductID,
@@ -46,44 +47,42 @@ func (r *orderRepository) PlaceOrderItem(order_id uint, item models.CartItem) er
 		ItemPrice:         item.ItemPrice,
 		ItemDiscountPrice: item.ItemDiscountPrice},
 	).Error
-
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func (r *orderRepository) GetOrderForWebhook(order_id uint) (models.Order, error) {
-
-	var orderDetails models.Order
-
+	// Define the order
+	var order models.Order
+	// Query to get the order details
 	err := r.DB.Raw(`SELECT id,final_price FROM orders WHERE id=?`,
-		order_id).Scan(&orderDetails).Error
+		order_id).Scan(&order).Error
 	if err != nil {
 		return models.Order{}, err
 	}
-
-	return orderDetails, nil
+	// Return the order details
+	return order, nil
 }
 
 func (r *orderRepository) GetOrderDetails(user_id, order_id uint) (models.Order, error) {
-
-	var orderDetails models.Order
-
-	err := r.DB.Raw(`SELECT * FROM orders WHERE id=? AND user_id=?`,
-		order_id, user_id).Scan(&orderDetails).Error
+	// Define the order
+	var order models.Order
+	// Query to get the order details
+	err := r.DB.Where("order_id=? AND user_id=?").
+		Find(&order).Error
 	if err != nil {
 		return models.Order{}, err
 	}
-
-	return orderDetails, nil
+	// Return the order details
+	return order, nil
 }
 
 func (r *orderRepository) UpdateOrder(order_id uint, o models.Order) (models.Order, error) {
-
+	// Define the order
 	var order models.Order
-
+	// Update the order
 	result := r.DB.Model(&domain.Order{}).
 		Where("id = ?", order_id).
 		Updates(domain.Order{
@@ -92,16 +91,36 @@ func (r *orderRepository) UpdateOrder(order_id uint, o models.Order) (models.Ord
 			PaymentStatus: o.PaymentStatus,
 		}).
 		Scan(&order)
-
 	if result.Error != nil {
 		return models.Order{}, result.Error
 	}
-
 	if result.RowsAffected == 0 {
 		return models.Order{}, models.ErrEntityNotFound
 	}
-
+	// Return the updated order
 	return order, nil
+}
+
+func (r *orderRepository) GetAllOrders(limit, offset int) (models.ListOrders, error) {
+	// Define the list of orders
+	var listOrders models.ListOrders
+	var orderDetails []models.Order
+	var total int64
+	// Define the query
+	query := r.DB.Model(&domain.Order{})
+	if err := query.Count(&total).Error; err != nil {
+		return models.ListOrders{}, err
+	}
+	if err := query.Offset(offset).Limit(limit).Find(&orderDetails).Error; err != nil {
+		return models.ListOrders{}, err
+	}
+	// Return the list of orders
+	listOrders.Orders = orderDetails
+	listOrders.Total = total
+	listOrders.Limit = limit
+	listOrders.Offset = offset
+	// Return the list of orders
+	return listOrders, nil
 }
 
 // func (r *orderRepository) GetOrders(order models.) ([]domain.Order, error) {

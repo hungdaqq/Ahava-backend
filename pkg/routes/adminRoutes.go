@@ -26,7 +26,7 @@ func AdminRoutes(
 		}
 		usermanagement := engine.Group("/users")
 		{
-			usermanagement.GET("", adminHandler.GetUsers)
+			usermanagement.GET("", adminHandler.GetAllUsers)
 			usermanagement.PUT("/block/:id", adminHandler.BlockUser)
 			usermanagement.PUT("/unblock/:id", adminHandler.UnBlockUser)
 		}
@@ -63,14 +63,5 @@ func AdminRoutes(
 		// 	//reactivation of coupons
 		// 	coupons.PUT("", couponHandler.ReActivateCoupon)
 		// }
-
-		// offers := engine.Group("/offer")
-		// {
-		// 	offers.GET("", offerHandler.GetOffers)
-		// 	offers.POST("", offerHandler.AddNewOffer)
-		// 	offers.DELETE("/:product_id", offerHandler.ExpireOffer)
-		// 	offers.PUT("/:product_id", offerHandler.UpdateOffer)
-		// }
 	}
-
 }

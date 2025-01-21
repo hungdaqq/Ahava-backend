@@ -8,6 +8,7 @@ import (
 type OrderService interface {
 	PlaceOrder(order models.PlaceOrder) (models.Order, error)
 	GetOrderDetails(user_id, order_id uint) (models.Order, error)
+	GetAllOrders(limit, offset int) (models.ListOrders, error)
 	UpdateOrder(order_id uint, updateOrder models.Order) (models.Order, error)
 }
 
@@ -65,12 +66,12 @@ func (or *orderService) UpdateOrder(order_id uint, updateOrder models.Order) (mo
 	return result, nil
 }
 
-// func (or *orderService) UpdateOrderPaidStatus(order_id uint, status string) error {
-
-// 	err := or.repository.UpdateOrderPaidStatus(order_id, status)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
+func (or *orderService) GetAllOrders(limit, offset int) (models.ListOrders, error) {
+	// Get all orders with limit and offset
+	result, err := or.repository.GetAllOrders(limit, offset)
+	if err != nil {
+		return models.ListOrders{}, err
+	}
+	// Return the list of orders
+	return result, nil
+}

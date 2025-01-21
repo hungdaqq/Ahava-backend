@@ -37,31 +37,35 @@ func NewProductService(
 	}
 }
 
-func (i *productService) AddProduct(product models.Product) (models.Product, error) {
-
-	addProduct, err := i.repository.AddProduct(product)
+func (i *productService) AddProduct(p models.Product) (models.Product, error) {
+	// Add product
+	product, err := i.repository.AddProduct(p)
 	if err != nil {
 		return models.Product{}, err
 	}
-
-	addPrice, err := i.repository.AddProductPrice(addProduct.ID, product.Price)
-	if err != nil {
-		return models.Product{}, err
+	// Add product price
+	prices := []models.Price{}
+	for _, pr := range p.Price {
+		price, err := i.repository.AddProductPrice(product.ID, pr)
+		if err != nil {
+			return models.Product{}, err
+		}
+		prices = append(prices, price)
 	}
-
-	addProduct.Price = addPrice
-
-	return addProduct, nil
+	// Assign the price to the product
+	product.Price = prices
+	// Return the product
+	return product, nil
 }
 
-func (i *productService) UpdateProduct(product_id uint, model models.Product) (models.Product, error) {
+func (i *productService) UpdateProduct(product_id uint, product models.Product) (models.Product, error) {
 
-	updateProduct, err := i.repository.UpdateProduct(product_id, model)
+	updateProduct, err := i.repository.UpdateProduct(product_id, product)
 	if err != nil {
 		return models.Product{}, err
 	}
 
-	updatePrice, err := i.repository.UpdateProductPrice(product_id, model.Price)
+	updatePrice, err := i.repository.UpdateProductPrice(product_id, product.Price)
 	if err != nil {
 		return models.Product{}, err
 	}

@@ -38,6 +38,7 @@ type ListProducts struct {
 
 type Price struct {
 	Size          string `json:"size"`
+	Image         string `json:"image"`
 	OriginalPrice uint64 `json:"original_price" gorm:"default:1"`
 	DiscountPrice uint64 `json:"discount_price"`
 }
@@ -47,7 +48,6 @@ type Product struct {
 	Category         string         `json:"category"`
 	Name             string         `json:"name"`
 	Code             string         `json:"code"`
-	DefaultImage     string         `json:"default_image"`
 	Images           pq.StringArray `json:"images"`
 	Stock            uint           `json:"stock"`
 	Price            []Price        `json:"price"`
@@ -123,6 +123,13 @@ type UserDetailsAtAdmin struct {
 	Email   string `json:"email"`
 	Phone   string `json:"phone"`
 	Blocked bool   `json:"blocked"`
+}
+
+type ListUsers struct {
+	Total  int64                 `json:"total"`
+	Limit  int                   `json:"limit"`
+	Offset int                   `json:"offset"`
+	Users  []UserDetailsResponse `json:"users"`
 }
 
 type Search struct {
@@ -204,6 +211,13 @@ type Wishlist struct {
 type AddToWishlist struct {
 	ProductID uint   `json:"product_id" validate:"required"`
 	Size      string `json:"size" validate:"required"`
+}
+
+type ListOrders struct {
+	Total  int64   `json:"total"`
+	Limit  int     `json:"limit"`
+	Offset int     `json:"offset"`
+	Orders []Order `json:"orders"`
 }
 
 type Order struct {
