@@ -24,7 +24,7 @@ type ProductRepository interface {
 	GetProductPrice(product_id uint) ([]models.Price, error)
 
 	AddProductPrice(product_id uint, price models.Price) (models.Price, error)
-	UpdateProductPrice(product_id uint, price []models.Price) ([]models.Price, error)
+	UpdateProductPrice(product_id, price_id uint, price models.Price) (models.Price, error)
 }
 
 type productRepository struct {
@@ -41,6 +41,7 @@ func (r *productRepository) AddProduct(p models.Product) (models.Product, error)
 		Name:             p.Name,
 		Code:             p.Code,
 		Category:         p.Category,
+		DefaultImage:     p.DefaultImage,
 		Images:           p.Images,
 		Stock:            p.Stock,
 		ShortDescription: p.ShortDescription,
@@ -58,6 +59,7 @@ func (r *productRepository) AddProduct(p models.Product) (models.Product, error)
 		Name:             product.Name,
 		Code:             product.Code,
 		Category:         product.Category,
+		DefaultImage:     product.DefaultImage,
 		Images:           product.Images,
 		Stock:            product.Stock,
 		ShortDescription: product.ShortDescription,
@@ -97,6 +99,7 @@ func (r *productRepository) GetProductDetails(product_id uint) (models.Product, 
 		Name:             product.Name,
 		Code:             product.Code,
 		Category:         product.Category,
+		DefaultImage:     product.DefaultImage,
 		Images:           product.Images,
 		Stock:            product.Stock,
 		ShortDescription: product.ShortDescription,
@@ -181,6 +184,7 @@ func (r *productRepository) UpdateProduct(product_id uint, p models.Product) (mo
 				Name:             p.Name,
 				Code:             p.Code,
 				Category:         p.Category,
+				DefaultImage:     p.DefaultImage,
 				Images:           p.Images,
 				Stock:            p.Stock,
 				Description:      p.Description,
@@ -199,35 +203,28 @@ func (r *productRepository) UpdateProduct(product_id uint, p models.Product) (mo
 	return product, nil
 }
 
-func (r *productRepository) UpdateProductPrice(product_id uint, price []models.Price) ([]models.Price, error) {
-	// Define the updated price
-	var updatePrice []models.Price
-	// Update the price details
-	for _, p := range price {
-		result := r.DB.Model(&domain.Price{}).
-			Where("product_id = ? AND size = ?", product_id, p.Size).
-			Updates(
-				domain.Price{
-
-					OriginalPrice: p.OriginalPrice,
-					DiscountPrice: p.DiscountPrice,
-				}).
-			Scan(&p)
-		if result.Error != nil {
-			return nil, result.Error
-		}
-		if result.RowsAffected == 0 {
-			return nil, models.ErrEntityNotFound
-		}
-		// Append the updated price
-		updatePrice = append(updatePrice, models.Price{
-			Size:          p.Size,
-			OriginalPrice: p.OriginalPrice,
-			DiscountPrice: p.DiscountPrice,
-		})
+func (r *productRepository) UpdateProductPrice(product_id, price_id uint, p models.Price) (models.Price, error) {
+	// Define the price
+	var price models.Price
+	// Update the price
+	result := r.DB.Model(&domain.Price{}).
+		Where("product_id=? AND price_id=?", product_id, price_id).
+		Updates(
+			domain.Price{
+				Size:          p.Size,
+				Image:         p.Image,
+				OriginalPrice: p.OriginalPrice,
+				DiscountPrice: p.DiscountPrice,
+			}).
+		Scan(&price)
+	if result.Error != nil {
+		return models.Price{}, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return models.Price{}, models.ErrEntityNotFound
 	}
 	// Return the updated price
-	return updatePrice, nil
+	return price, nil
 }
 
 func (r *productRepository) AddProductPrice(product_id uint, p models.Price) (models.Price, error) {
@@ -239,11 +236,13 @@ func (r *productRepository) AddProductPrice(product_id uint, p models.Price) (mo
 		OriginalPrice: p.OriginalPrice,
 		DiscountPrice: p.DiscountPrice,
 	}
+	// Create the price
 	if err := r.DB.Create(&price).Error; err != nil {
 		return models.Price{}, err
 	}
 	// Return the price
 	return models.Price{
+		ID:            price.ID,
 		Size:          price.Size,
 		Image:         price.Image,
 		OriginalPrice: price.OriginalPrice,

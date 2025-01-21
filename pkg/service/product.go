@@ -8,13 +8,8 @@ import (
 
 type ProductService interface {
 	AddProduct(product models.Product) (models.Product, error)
-	// AddProductImages(product_id uint, default_image *multipart.FileHeader, images []*multipart.FileHeader) (models.Product, error)
-
 	UpdateProduct(uint, models.Product) (models.Product, error)
-	// UpdateProductImage(product_id uint, file *multipart.FileHeader) (models.Product, error)
-
 	DeleteProduct(product_id uint) error
-
 	GetProductDetails(product_id uint) (models.Product, error)
 	ListAllProducts(limit, offest int) (models.ListProducts, error)
 	ListCategoryProducts(category string) ([]models.Product, error)
@@ -59,20 +54,32 @@ func (i *productService) AddProduct(p models.Product) (models.Product, error) {
 }
 
 func (i *productService) UpdateProduct(product_id uint, product models.Product) (models.Product, error) {
-
-	updateProduct, err := i.repository.UpdateProduct(product_id, product)
+	// Update product
+	product, err := i.repository.UpdateProduct(product_id, product)
 	if err != nil {
 		return models.Product{}, err
 	}
-
-	updatePrice, err := i.repository.UpdateProductPrice(product_id, product.Price)
-	if err != nil {
-		return models.Product{}, err
+	// Update product price
+	prices := []models.Price{}
+	for _, pr := range product.Price {
+		if pr.ID == 0 {
+			price, err := i.repository.AddProductPrice(product_id, pr)
+			if err != nil {
+				return models.Product{}, err
+			}
+			prices = append(prices, price)
+		} else {
+			price, err := i.repository.UpdateProductPrice(product_id, pr.ID, pr)
+			if err != nil {
+				return models.Product{}, err
+			}
+			prices = append(prices, price)
+		}
 	}
-
-	updateProduct.Price = updatePrice
-
-	return updateProduct, nil
+	// Assign the price to the product
+	product.Price = prices
+	// Return the updated product
+	return product, nil
 }
 
 func (i *productService) DeleteProduct(product_id uint) error {

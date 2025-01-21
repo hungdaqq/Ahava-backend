@@ -37,6 +37,7 @@ type ListProducts struct {
 }
 
 type Price struct {
+	ID            uint   `json:"id"`
 	Size          string `json:"size"`
 	Image         string `json:"image"`
 	OriginalPrice uint64 `json:"original_price" gorm:"default:1"`
@@ -48,6 +49,7 @@ type Product struct {
 	Category         string         `json:"category"`
 	Name             string         `json:"name"`
 	Code             string         `json:"code"`
+	DefaultImage     string         `json:"default_image"`
 	Images           pq.StringArray `json:"images"`
 	Stock            uint           `json:"stock"`
 	Price            []Price        `json:"price"`
