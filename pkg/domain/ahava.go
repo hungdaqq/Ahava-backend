@@ -115,7 +115,7 @@ type Price struct {
 	ProductID     uint    `json:"product_id"`
 	Product       Product `json:"-" gorm:"foreignkey:ProductID;constraint:OnDelete:CASCADE"`
 	Size          string  `json:"size"`
-	Image         string  `json:"image"`
+	Image         string  `json:"image" gorm:"default:'https://minio.ahava.com.vn/ahava/default_product_image.png'"`
 	OriginalPrice uint64  `json:"original_price" gorm:"default:1"`
 	DiscountPrice uint64  `json:"discount_price"`
 }
@@ -131,6 +131,7 @@ type Product struct {
 	Description      string         `json:"description"`
 	HowToUse         string         `json:"how_to_use"`
 	IsFeatured       *bool          `json:"is_featured" gorm:"default:false"`
+	IsHidden         *bool          `json:"is_hidden" gorm:"default:false"`
 	CreateAt         time.Time      `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
 	UpdateAt         time.Time      `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
