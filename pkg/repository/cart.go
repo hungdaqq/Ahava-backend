@@ -29,24 +29,25 @@ func NewCartRepository(db *gorm.DB) CartRepository {
 }
 
 func (r *cartRepository) GetCart(user_id uint, cart_ids []uint) ([]models.CartItem, error) {
-
+	// Create a slice of cart items
 	var cart []models.CartItem
-
+	// Create a query to get the cart items
 	query := r.DB.Model(&domain.CartItem{}).
 		Joins("JOIN products p ON cart_items.product_id = p.id").
-		Joins("JOIN prices pr ON pr.product_id = p.id AND pr.size = cart_items.size").                                                                                                                                                         // Join with prices table on product_id and size
-		Select("cart_items.id, p.id as product_id, p.name, p.default_image, cart_items.quantity, cart_items.size, (cart_items.quantity * pr.original_price) AS item_price, (cart_items.quantity * pr.discount_price) AS item_discount_price"). // Calculate item_price using the price from the prices table
+		Joins("JOIN prices pr ON pr.product_id = p.id AND pr.size = cart_items.size").
+		Select(`cart_items.id, p.id as product_id, p.name, p.default_image, cart_items.quantity, cart_items.size, pr.original_price, pr.discount_price,
+				(cart_items.quantity * pr.original_price) AS item_price, 
+				(cart_items.quantity * pr.discount_price) AS item_discount_price`).
 		Where("cart_items.user_id = ?", user_id)
-
+	// If there are cart ids, add a where clause to the query
 	if len(cart_ids) > 0 {
 		query = query.Where("cart_items.id IN ?", cart_ids)
 	}
-
 	// Execute the query and scan the result into the cart slice
 	if err := query.Find(&cart).Error; err != nil {
 		return nil, err
 	}
-
+	// Return the cart slice
 	return cart, nil
 }
 
@@ -56,9 +57,8 @@ func (r *cartRepository) CheckIfItemIsAlreadyAdded(user_id, product_id uint, siz
 
 	err := r.DB.Model(&domain.CartItem{}).
 		Select("id").
-		Where("user_id = ? AND product_id = ? AND size = ?", user_id, product_id, size).
+		Where("user_id=? AND product_id=? AND size=?", user_id, product_id, size).
 		Scan(&cart_id).Error
-
 	if err != nil {
 		return 0, err
 	}
@@ -67,9 +67,8 @@ func (r *cartRepository) CheckIfItemIsAlreadyAdded(user_id, product_id uint, siz
 }
 
 func (r *cartRepository) RemoveFromCart(user_id, cart_id uint) error {
-
-	result := r.DB.Exec(`DELETE FROM cart_items WHERE id=$1 AND user_id=$2`,
-		cart_id, user_id)
+	// Delete the cart item
+	result := r.DB.Where("id=? AND user_id=?", cart_id, user_id).Delete(&domain.CartItem{})
 	if result.Error != nil {
 		return result.Error
 	}
@@ -136,23 +135,24 @@ func (r *cartRepository) UpdateQuantity(user_id, cart_id, quantity uint) (models
 	return cartDetails, nil
 }
 
-func (r *cartRepository) AddToCart(user_id uint, cart_item models.UpdateCartItem) (models.CartDetails, error) {
+func (r *cartRepository) AddToCart(user_id uint, i models.UpdateCartItem) (models.CartDetails, error) {
 
-	newCartItem := domain.CartItem{
+	cart_item := domain.CartItem{
 		UserID:    user_id,
-		ProductID: cart_item.ProductID,
-		Quantity:  cart_item.Quantity,
-		Size:      cart_item.Size,
+		ProductID: i.ProductID,
+		Quantity:  i.Quantity,
+		Size:      i.Size,
 	}
 
-	if err := r.DB.Create(&newCartItem).Error; err != nil {
+	if err := r.DB.Create(&cart_item).Error; err != nil {
 		return models.CartDetails{}, err
 	}
 
 	return models.CartDetails{
-		ID:        newCartItem.ID,
-		UserID:    newCartItem.UserID,
-		ProductID: newCartItem.ProductID,
-		Quantity:  newCartItem.Quantity,
+		ID:        cart_item.ID,
+		UserID:    cart_item.UserID,
+		ProductID: cart_item.ProductID,
+		Quantity:  cart_item.Quantity,
+		Size:      cart_item.Size,
 	}, nil
 }

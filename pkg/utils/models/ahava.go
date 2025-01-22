@@ -154,6 +154,8 @@ type CartItem struct {
 	DefaultImage      string `json:"default_image"`
 	Size              string `json:"size"`
 	Quantity          uint   `json:"quantity"`
+	OriginalPrice     uint64 `json:"original_price"`
+	DiscountPrice     uint64 `json:"discount_price"`
 	ItemPrice         uint64 `json:"item_price"`
 	ItemDiscountPrice uint64 `json:"item_discount_price"`
 }
@@ -165,11 +167,13 @@ type UpdateCartItem struct {
 }
 
 type CartDetails struct {
-	ID        uint   `json:"id"`
-	UserID    uint   `json:"user_id"`
-	ProductID uint   `json:"product_id"`
-	Size      string `json:"size"`
-	Quantity  uint   `json:"quantity"`
+	ID            uint   `json:"id"`
+	UserID        uint   `json:"user_id"`
+	ProductID     uint   `json:"product_id"`
+	Size          string `json:"size"`
+	Quantity      uint   `json:"quantity"`
+	OriginalPrice uint64 `json:"original_price"`
+	DiscountPrice uint64 `json:"discount_price"`
 }
 
 type SearchHistory struct {
@@ -240,6 +244,8 @@ type Order struct {
 type PlaceOrder struct {
 	UserID        uint   `json:"user_id"`
 	Address       string `json:"address"`
+	Name          string `json:"name"`
+	Phone         string `json:"phone"`
 	PaymentMethod string `json:"payment_method"`
 	CartIDs       []uint `json:"cart_ids"`
 	Coupon        string `json:"coupon"`

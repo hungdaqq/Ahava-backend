@@ -54,39 +54,56 @@ func (i *productService) AddProduct(p models.Product) (models.Product, error) {
 }
 
 func (i *productService) UpdateProduct(product_id uint, p models.Product) (models.Product, error) {
-	// Update product
+	// Update product details
 	product, err := i.repository.UpdateProduct(product_id, p)
 	if err != nil {
 		return models.Product{}, err
 	}
-	// Update product price
-	prices := []models.Price{}
+	// Get old prices
+	old_prices, err := i.repository.GetProductPrice(product_id)
+	if err != nil {
+		return models.Product{}, err
+	}
+	// Initialize slices to track prices
+	var prices []models.Price
+	updatedPriceIDs := make(map[uint]struct{}) // Use a map to track updated prices
+	// Flag to check if all prices are new (ID == 0)
+	allNewPrices := true
+	// Handle adding new prices and updating existing ones
 	for _, pr := range p.Price {
-		// If the price is new
+		// If the price is new (ID == 0), add it
 		if pr.ID == 0 {
 			price, err := i.repository.AddProductPrice(product_id, pr)
 			if err != nil {
 				return models.Product{}, err
 			}
 			prices = append(prices, price)
-			continue
-		}
-		// If the price is to be deleted
-		if pr.OriginalPrice == 0 {
-			err := i.repository.DeleteProductPrice(product_id, pr.ID)
+			updatedPriceIDs[price.ID] = struct{}{}
+		} else {
+			// If the price already exists, update it
+			price, err := i.repository.UpdateProductPrice(product_id, pr.ID, pr)
 			if err != nil {
 				return models.Product{}, err
 			}
-			continue
+			prices = append(prices, price)
+			updatedPriceIDs[pr.ID] = struct{}{}
+			allNewPrices = false // There's at least one existing price, so not all are new
 		}
-		// If the price is to be updated
-		price, err := i.repository.UpdateProductPrice(product_id, pr.ID, pr)
-		if err != nil {
-			return models.Product{}, err
-		}
-		prices = append(prices, price)
 	}
-	// Assign the price to the product
+	// If not all prices are new, delete obsolete prices
+	if !allNewPrices {
+		// Identify which old prices are no longer in the updated list (obsolete prices)
+		for _, oldPrice := range old_prices {
+			// If this price ID is not in the updated list, delete it
+			if _, exists := updatedPriceIDs[oldPrice.ID]; !exists {
+				err := i.repository.DeleteProductPrice(product_id, oldPrice.ID)
+				if err != nil {
+					return models.Product{}, err
+				}
+			}
+		}
+	}
+	// Assign the updated prices to the product
 	product.Price = prices
 	// Return the updated product
 	return product, nil

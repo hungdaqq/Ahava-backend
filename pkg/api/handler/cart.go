@@ -16,7 +16,6 @@ type CartHandler interface {
 	GetCart(ctx *gin.Context)
 	RemoveFromCart(ctx *gin.Context)
 	UpdateQuantity(ctx *gin.Context)
-	CheckOut(ctx *gin.Context)
 }
 
 type cartHandler struct {
@@ -123,24 +122,3 @@ func (i *cartHandler) UpdateQuantity(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, successRes)
 }
 
-func (i *cartHandler) CheckOut(ctx *gin.Context) {
-	// Get the user id from the context
-	user_id := ctx.MustGet("id").(int)
-	// Bind the request body to the model
-	var model models.CartCheckout
-	if err := ctx.BindJSON(&model); err != nil {
-		errorRes := response.ClientErrorResponse("Fields provided are in wrong format", nil, err)
-		ctx.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
-	// Perform checkout operation
-	result, err := i.service.CheckOut(uint(user_id), model.CartIDs)
-	if err != nil {
-		errorRes := response.ClientErrorResponse("Không thể Checkout", nil, err)
-		ctx.JSON(http.StatusBadRequest, errorRes)
-		return
-	}
-	// Return the response
-	successRes := response.ClientResponse(http.StatusOK, "Checkout thành công", result, nil)
-	ctx.JSON(http.StatusOK, successRes)
-}

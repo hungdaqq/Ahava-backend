@@ -23,15 +23,14 @@ type TokenAdmin struct {
 }
 
 type CartItem struct {
-	ID        uint      `json:"id" gorm:"primarykey"`
-	UserID    uint      `json:"user_id" gorm:"not null"`
-	User      User      `json:"-" gorm:"foreignkey:UserID;constraint:OnDelete:CASCADE"`
-	ProductID uint      `json:"product_id" gorm:"not null"`
-	Product   Product   `json:"-" gorm:"foreignkey:ProductID;constraint:OnDelete:CASCADE"`
-	Size      string    `json:"size" gorm:"not null"`
-	Quantity  uint      `json:"quantity" gorm:"default:1;check:quantity > 0"`
-	CreateAt  time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdateAt  time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
+	gorm.Model
+	ID        uint    `json:"id" gorm:"primarykey"`
+	UserID    uint    `json:"user_id" gorm:"not null"`
+	User      User    `json:"-" gorm:"foreignkey:UserID;constraint:OnDelete:CASCADE"`
+	ProductID uint    `json:"product_id" gorm:"not null"`
+	Product   Product `json:"-" gorm:"foreignkey:ProductID;constraint:OnDelete:CASCADE"`
+	Size      string  `json:"size" gorm:"not null"`
+	Quantity  uint    `json:"quantity" gorm:"default:1;check:quantity>0"`
 }
 
 type Coupons struct {
@@ -61,6 +60,8 @@ type Order struct {
 	UserID        uint   `json:"user_id" gorm:"not null"`
 	User          User   `json:"-" gorm:"foreignkey:UserID"`
 	Address       string `json:"address" gorm:"not null"`
+	Name          string `json:"name" gorm:"not null"`
+	Phone         string `json:"phone" gorm:"not null"`
 	PaymentMethod string `json:"payment_method"`
 	Coupon        string `json:"coupon" gorm:"default:null"`
 	FinalPrice    uint64 `json:"price" gorm:"not null"`

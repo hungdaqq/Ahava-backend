@@ -78,7 +78,6 @@ func UserRoutes(
 			cart.POST("", cartHandler.AddToCart)
 			cart.DELETE("/:cart_id", cartHandler.RemoveFromCart)
 			cart.PUT("/:cart_id", cartHandler.UpdateQuantity)
-			cart.POST("/check-out", cartHandler.CheckOut)
 		}
 
 		wishlist := engine.Group("/wishlist")
