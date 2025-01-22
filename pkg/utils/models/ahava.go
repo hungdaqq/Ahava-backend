@@ -231,6 +231,8 @@ type ListOrders struct {
 type Order struct {
 	ID            uint      `json:"id"`
 	UserID        uint      `json:"user_id"`
+	Name          string    `json:"name"`
+	Phone         string    `json:"phone"`
 	Address       string    `json:"address"`
 	PaymentMethod string    `json:"payment_method"`
 	FinalPrice    uint64    `json:"final_price"`

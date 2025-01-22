@@ -59,9 +59,9 @@ type Order struct {
 	gorm.Model
 	UserID        uint   `json:"user_id" gorm:"not null"`
 	User          User   `json:"-" gorm:"foreignkey:UserID"`
-	Address       string `json:"address" gorm:"not null"`
 	Name          string `json:"name" gorm:"not null"`
 	Phone         string `json:"phone" gorm:"not null"`
+	Address       string `json:"address" gorm:"not null"`
 	PaymentMethod string `json:"payment_method"`
 	Coupon        string `json:"coupon" gorm:"default:null"`
 	FinalPrice    uint64 `json:"price" gorm:"not null"`
