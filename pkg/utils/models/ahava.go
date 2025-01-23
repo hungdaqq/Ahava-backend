@@ -52,6 +52,8 @@ type Product struct {
 	DefaultImage     string         `json:"default_image"`
 	Images           pq.StringArray `json:"images"`
 	Stock            uint           `json:"stock"`
+	Type             string         `json:"type"`
+	Tag              string         `json:"tag"`
 	Price            []Price        `json:"price"`
 	ShortDescription string         `json:"short_description"`
 	Description      string         `json:"description"`
@@ -222,25 +224,28 @@ type AddToWishlist struct {
 }
 
 type ListOrders struct {
-	Total  int64   `json:"total"`
-	Limit  int     `json:"limit"`
-	Offset int     `json:"offset"`
-	Orders []Order `json:"orders"`
+	Total  int64          `json:"total"`
+	Limit  int            `json:"limit"`
+	Offset int            `json:"offset"`
+	Orders []OrderDetails `json:"orders"`
+}
+
+type OrderDetails struct {
+	Order
+	Details []OrderItem `json:"details"`
 }
 
 type Order struct {
-	ID            uint      `json:"id"`
-	UserID        uint      `json:"user_id"`
-	Name          string    `json:"name"`
-	Phone         string    `json:"phone"`
-	Address       string    `json:"address"`
-	PaymentMethod string    `json:"payment_method"`
-	FinalPrice    uint64    `json:"final_price"`
-	Coupon        string    `json:"coupon"`
-	OrderStatus   string    `json:"order_status"`
-	PaymentStatus string    `json:"payment_status"`
-	CreateAt      time.Time `json:"create_at"`
-	UpdateAt      time.Time `json:"update_at"`
+	ID            uint   `json:"id"`
+	UserID        uint   `json:"user_id"`
+	Name          string `json:"name"`
+	Phone         string `json:"phone"`
+	Address       string `json:"address"`
+	PaymentMethod string `json:"payment_method"`
+	FinalPrice    uint64 `json:"final_price"`
+	Coupon        string `json:"coupon"`
+	OrderStatus   string `json:"order_status"`
+	PaymentStatus string `json:"payment_status"`
 }
 
 type PlaceOrder struct {
@@ -254,12 +259,14 @@ type PlaceOrder struct {
 }
 
 type OrderItem struct {
-	OrderID         uint   `json:"order_id"`
-	ProductID       uint   `json:"product_id"`
-	Size            string `json:"size"`
-	Quantity        uint   `json:"quantity"`
-	ItemPrice       uint64 `json:"item_price"`
-	DiscountedPrice uint64 `json:"item_discounted_price"`
+	OrderID             uint   `json:"order_id"`
+	ProductID           uint   `json:"product_id"`
+	Size                string `json:"size"`
+	Quantity            uint   `json:"quantity"`
+	OriginalPrice       uint64 `json:"original_price"`
+	DiscountPrice       uint64 `json:"discounted_price"`
+	ItemPrice           uint64 `json:"item_price"`
+	ItemDiscountedPrice uint64 `json:"item_discount_price"`
 }
 
 type CreateQR struct {

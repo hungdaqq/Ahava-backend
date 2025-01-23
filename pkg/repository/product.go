@@ -45,6 +45,8 @@ func (r *productRepository) AddProduct(p models.Product) (models.Product, error)
 		DefaultImage:     p.DefaultImage,
 		Images:           p.Images,
 		Stock:            p.Stock,
+		Type:             p.Type,
+		Tag:              p.Tag,
 		ShortDescription: p.ShortDescription,
 		Description:      p.Description,
 		HowToUse:         p.HowToUse,
@@ -63,6 +65,8 @@ func (r *productRepository) AddProduct(p models.Product) (models.Product, error)
 		DefaultImage:     product.DefaultImage,
 		Images:           product.Images,
 		Stock:            product.Stock,
+		Type:             product.Type,
+		Tag:              product.Tag,
 		ShortDescription: product.ShortDescription,
 		Description:      product.Description,
 		HowToUse:         product.HowToUse,
@@ -103,6 +107,8 @@ func (r *productRepository) GetProductDetails(product_id uint) (models.Product, 
 		DefaultImage:     product.DefaultImage,
 		Images:           product.Images,
 		Stock:            product.Stock,
+		Type:             product.Type,
+		Tag:              product.Tag,
 		ShortDescription: product.ShortDescription,
 		Description:      product.Description,
 		HowToUse:         product.HowToUse,
@@ -113,7 +119,8 @@ func (r *productRepository) GetProductDetails(product_id uint) (models.Product, 
 func (r *productRepository) ListAllProducts(limit, offset int) (models.ListProducts, error) {
 	// Define list of products and product details
 	var listProducts models.ListProducts
-	var productDetails []models.Product
+	var productDetails []domain.Product
+	var products []models.Product
 	var total int64
 	// Define the query
 	query := r.DB.Model(&domain.Product{})
@@ -123,8 +130,25 @@ func (r *productRepository) ListAllProducts(limit, offset int) (models.ListProdu
 	if err := query.Offset(offset).Limit(limit).Find(&productDetails).Error; err != nil {
 		return models.ListProducts{}, err
 	}
+	for _, productDetail := range productDetails {
+		products = append(products, models.Product{
+			ID:               productDetail.ID,
+			Name:             productDetail.Name,
+			Code:             productDetail.Code,
+			Category:         productDetail.Category,
+			DefaultImage:     productDetail.DefaultImage,
+			Images:           productDetail.Images,
+			Stock:            productDetail.Stock,
+			Type:             productDetail.Type,
+			Tag:              productDetail.Tag,
+			ShortDescription: productDetail.ShortDescription,
+			Description:      productDetail.Description,
+			HowToUse:         productDetail.HowToUse,
+			IsFeatured:       *productDetail.IsFeatured,
+		})
+	}
 	// Assign the values to the listProducts
-	listProducts.Products = productDetails
+	listProducts.Products = products
 	listProducts.Total = total
 	listProducts.Limit = limit
 	listProducts.Offset = offset
@@ -180,19 +204,20 @@ func (r *productRepository) UpdateProduct(product_id uint, p models.Product) (mo
 	// Update the product details
 	result := r.DB.Model(&domain.Product{}).
 		Where("id = ?", product_id).
-		Updates(
-			domain.Product{
-				Name:             p.Name,
-				Code:             p.Code,
-				Category:         p.Category,
-				DefaultImage:     p.DefaultImage,
-				Images:           p.Images,
-				Stock:            p.Stock,
-				Description:      p.Description,
-				ShortDescription: p.ShortDescription,
-				IsFeatured:       &p.IsFeatured,
-				HowToUse:         p.HowToUse,
-			}).
+		Updates(domain.Product{
+			Name:             p.Name,
+			Code:             p.Code,
+			Category:         p.Category,
+			DefaultImage:     p.DefaultImage,
+			Images:           p.Images,
+			Stock:            p.Stock,
+			Type:             p.Type,
+			Tag:              p.Tag,
+			Description:      p.Description,
+			ShortDescription: p.ShortDescription,
+			IsFeatured:       &p.IsFeatured,
+			HowToUse:         p.HowToUse,
+		}).
 		Scan(&product)
 	if result.Error != nil {
 		return models.Product{}, result.Error
@@ -210,13 +235,12 @@ func (r *productRepository) UpdateProductPrice(product_id, price_id uint, p mode
 	// Update the price
 	result := r.DB.Model(&domain.Price{}).
 		Where("product_id=? AND id=?", product_id, price_id).
-		Updates(
-			domain.Price{
-				Size:          p.Size,
-				Image:         p.Image,
-				OriginalPrice: p.OriginalPrice,
-				DiscountPrice: p.DiscountPrice,
-			}).
+		Updates(domain.Price{
+			Size:          p.Size,
+			Image:         p.Image,
+			OriginalPrice: p.OriginalPrice,
+			DiscountPrice: p.DiscountPrice,
+		}).
 		Scan(&price)
 	if result.Error != nil {
 		return models.Price{}, result.Error

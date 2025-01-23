@@ -13,7 +13,7 @@ ${BINARY_DIR}:
 	mkdir -p $(BINARY_DIR)
 
 build: ${BINARY_DIR} ## Compile the code, build Executable File
-	$(GOCMD) build -o $(BINARY_DIR) -v ./cmd/api
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOCMD) build -o $(BINARY_DIR) -v ./cmd/api
 	scp ./build/bin/api ahava:/home/ahava/app/api
 
 run: ## Start application

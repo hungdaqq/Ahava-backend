@@ -10,6 +10,7 @@ import (
 type OrderRepository interface {
 	PlaceOrder(order models.PlaceOrder, final_price uint64) (models.Order, error)
 	PlaceOrderItem(order_id uint, item models.CartItem) error
+	GetOrderItems(order_id uint) ([]models.OrderItem, error)
 	ListAllOrders(limit, offset int) (models.ListOrders, error)
 	GetOrderDetails(user_id, order_id uint) (models.Order, error)
 	GetOrderForWebhook(order_id uint) (models.Order, error)
@@ -31,6 +32,8 @@ func (r *orderRepository) PlaceOrder(o models.PlaceOrder, final_price uint64) (m
 	order := domain.Order{
 		UserID:        o.UserID,
 		Address:       o.Address,
+		Name:          o.Name,
+		Phone:         o.Phone,
 		PaymentMethod: o.PaymentMethod,
 		FinalPrice:    final_price,
 		Coupon:        o.Coupon,
@@ -45,8 +48,13 @@ func (r *orderRepository) PlaceOrder(o models.PlaceOrder, final_price uint64) (m
 		ID:            order.ID,
 		UserID:        order.UserID,
 		Address:       order.Address,
+		Name:          order.Name,
+		Phone:         order.Phone,
 		PaymentMethod: order.PaymentMethod,
 		FinalPrice:    order.FinalPrice,
+		Coupon:        order.Coupon,
+		OrderStatus:   order.OrderStatus,
+		PaymentStatus: order.PaymentStatus,
 	}, nil
 }
 
@@ -57,6 +65,8 @@ func (r *orderRepository) PlaceOrderItem(order_id uint, item models.CartItem) er
 		ProductID:         item.ProductID,
 		Quantity:          item.Quantity,
 		Size:              item.Size,
+		OriginalPrice:     item.OriginalPrice,
+		DiscountPrice:     item.DiscountPrice,
 		ItemPrice:         item.ItemPrice,
 		ItemDiscountPrice: item.ItemDiscountPrice},
 	).Error
@@ -117,15 +127,19 @@ func (r *orderRepository) UpdateOrder(order_id uint, o models.Order) (models.Ord
 func (r *orderRepository) ListAllOrders(limit, offset int) (models.ListOrders, error) {
 	// Define the list of orders
 	var listOrders models.ListOrders
-	var orderDetails []models.Order
+	var orders []models.Order
 	var total int64
 	// Define the query
 	query := r.DB.Model(&domain.Order{})
 	if err := query.Count(&total).Error; err != nil {
 		return models.ListOrders{}, err
 	}
-	if err := query.Offset(offset).Limit(limit).Find(&orderDetails).Error; err != nil {
+	if err := query.Offset(offset).Limit(limit).Find(&orders).Error; err != nil {
 		return models.ListOrders{}, err
+	}
+	var orderDetails []models.OrderDetails
+	for _, order := range orders {
+		orderDetails = append(orderDetails, models.OrderDetails{Order: order})
 	}
 	// Return the list of orders
 	listOrders.Orders = orderDetails
@@ -134,6 +148,19 @@ func (r *orderRepository) ListAllOrders(limit, offset int) (models.ListOrders, e
 	listOrders.Offset = offset
 	// Return the list of orders
 	return listOrders, nil
+}
+
+func (r *orderRepository) GetOrderItems(order_id uint) ([]models.OrderItem, error) {
+	// Define the order items
+	var orderItems []models.OrderItem
+	// Query to get the order items
+	err := r.DB.Where("order_id=?", order_id).
+		Find(&orderItems).Error
+	if err != nil {
+		return nil, err
+	}
+	// Return the order items
+	return orderItems, nil
 }
 
 // func (r *orderRepository) GetOrders(order models.) ([]domain.Order, error) {

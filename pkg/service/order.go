@@ -68,10 +68,18 @@ func (or *orderService) UpdateOrder(order_id uint, updateOrder models.Order) (mo
 
 func (or *orderService) ListAllOrders(limit, offset int) (models.ListOrders, error) {
 	// Get all orders with limit and offset
-	result, err := or.repository.ListAllOrders(limit, offset)
+	orders, err := or.repository.ListAllOrders(limit, offset)
 	if err != nil {
 		return models.ListOrders{}, err
 	}
-	// Return the list of orders
-	return result, nil
+	// Get all items of the order
+	for idx, order := range orders.Orders {
+		items, err := or.repository.GetOrderItems(order.ID)
+		if err != nil {
+			return models.ListOrders{}, err
+		}
+		orders.Orders[idx].Details = items
+	}
+	// Return the orders
+	return orders, nil
 }

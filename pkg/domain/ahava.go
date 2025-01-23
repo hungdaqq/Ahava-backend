@@ -77,16 +77,10 @@ type OrderItem struct {
 	Product           Product `json:"-" gorm:"foreignkey:ProductID"`
 	Size              string  `json:"size" gorm:"not null"`
 	Quantity          uint    `json:"quantity" gorm:"not null"`
+	OriginalPrice     uint64  `json:"original_price" gorm:"not null"`
+	DiscountPrice     uint64  `json:"discounted_price" gorm:"not null"`
 	ItemPrice         uint64  `json:"item_price" gorm:"not null"`
-	ItemDiscountPrice uint64  `json:"item_discounted_price" gorm:"not null"`
-}
-
-type AdminOrdersResponse struct {
-	Pending   []OrderDetails
-	Shipped   []OrderDetails
-	Delivered []OrderDetails
-	Canceled  []OrderDetails
-	Returned  []OrderDetails
+	ItemDiscountPrice uint64  `json:"item_discount_price" gorm:"not null"`
 }
 
 type OrderDetails struct {
@@ -115,6 +109,8 @@ type Product struct {
 	DefaultImage     string         `json:"default_image" gorm:"default:'https://minio.ahava.com.vn/ahava/default_product_image.png'"`
 	Images           pq.StringArray `json:"images" gorm:"type:varchar[]"`
 	Stock            uint           `json:"stock" gorm:"default:100"`
+	Type             string         `json:"type"`
+	Tag              string         `json:"tag"`
 	ShortDescription string         `json:"short_description"`
 	Description      string         `json:"description"`
 	HowToUse         string         `json:"how_to_use"`
