@@ -88,7 +88,7 @@ func (r *wishlistRepository) GetWishList(user_id uint, order_by string) ([]model
 
 	query := r.DB.Model(&domain.Product{}).
 		Select(`products.id AS product_id, products.name, products.default_image, wishlists.id,
-				COUNT(wishlists.product_id) AS total_count, prices.original_price, prices.discount_price, wishlists.create_at, prices.size`).
+				COUNT(wishlists.product_id) AS total_count, prices.original_price, prices.discount_price, wishlists.created_at, prices.size`).
 		Joins("JOIN wishlists ON wishlists.product_id = products.id").
 		Joins("JOIN prices ON prices.product_id = products.id AND prices.size = wishlists.size").
 		Where("wishlists.is_deleted = false AND wishlists.user_id = ?", user_id).
@@ -100,13 +100,13 @@ func (r *wishlistRepository) GetWishList(user_id uint, order_by string) ([]model
 	case "price_desc":
 		query = query.Order("prices.discount_price DESC")
 	case "latest":
-		query = query.Order("products.create_at DESC")
+		query = query.Order("products.created_at DESC")
 	case "most_favorite":
 		query = query.Order("total_count DESC")
 	case "most_viewed":
-		query = query.Order("products.create_at DESC")
+		query = query.Order("products.created_at DESC")
 	default:
-		query = query.Order("products.create_at DESC")
+		query = query.Order("products.created_at DESC")
 	}
 
 	if err := query.Scan(&wishlistProducts).Error; err != nil {

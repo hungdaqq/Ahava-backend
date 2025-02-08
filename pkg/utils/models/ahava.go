@@ -182,7 +182,7 @@ type SearchHistory struct {
 	ID        uint      `json:"id"`
 	UserID    uint      `json:"user_id"`
 	SearchKey string    `json:"search_key"`
-	CreateAt  time.Time `json:"create_at"`
+	CreateAt  time.Time `json:"created_at"`
 }
 
 type CartCheckout struct {

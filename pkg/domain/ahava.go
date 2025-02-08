@@ -40,15 +40,6 @@ type Coupons struct {
 	Valid        bool   `json:"valid" gorm:"default:true"`
 }
 
-type Offer struct {
-	ProductID uint      `json:"product_id" gorm:"not null;unique"`
-	Product   Product   `json:"-" gorm:"foreignkey:ProductID;constraint:OnDelete:CASCADE"`
-	OfferRate uint      `json:"offer_rate" validate:"min=0,max=100" gorm:"not null"`
-	ExpireAt  time.Time `json:"expire_at"`
-	CreateAt  time.Time `json:"create_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdateAt  time.Time `json:"update_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
-}
-
 type PaymentMethod struct {
 	ID          uint   `json:"id" gorm:"primarykey"`
 	PaymentName string `json:"payment_name"`
