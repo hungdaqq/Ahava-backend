@@ -27,6 +27,7 @@ func InitializeAPI(cfg config.Config) (*http.ServerHTTP, error) {
 		repository.NewCartRepository,
 		repository.NewOrderRepository,
 		repository.NewPaymentRepository,
+		repository.NewNewsRepository,
 
 		service.NewUserService,
 		service.NewAdminService,
@@ -37,6 +38,7 @@ func InitializeAPI(cfg config.Config) (*http.ServerHTTP, error) {
 		service.NewOrderService,
 		service.NewPaymentService,
 		service.NewUploadService,
+		service.NewNewsService,
 
 		handler.NewUserHandler,
 		handler.NewAdminHandler,
@@ -47,6 +49,7 @@ func InitializeAPI(cfg config.Config) (*http.ServerHTTP, error) {
 		handler.NewOrderHandler,
 		handler.NewPaymentHandler,
 		handler.NewUploadHandler,
+		handler.NewNewsHandler,
 
 		helper.NewHelper,
 

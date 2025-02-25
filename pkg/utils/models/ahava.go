@@ -300,6 +300,22 @@ type Offer struct {
 	ExpireAt  time.Time `json:"expire_at"`
 }
 
+type News struct {
+	ID           uint   `json:"id"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	Content      string `json:"content"`
+	DefaultImage string `json:"default_image"`
+	IsFeatured   bool   `json:"is_featured"`
+}
+
+type ListNews struct {
+	Total  int64  `json:"total"`
+	Limit  int    `json:"limit"`
+	Offset int    `json:"offset"`
+	News   []News `json:"news"`
+}
+
 var (
 	ErrEntityNotFound  = errors.New("entity not found")
 	ErrInternalServer  = errors.New("internal server error")

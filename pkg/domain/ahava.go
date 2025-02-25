@@ -140,6 +140,15 @@ type Address struct {
 	Type         string `json:"type" gorm:"default:'HOME';check:type IN ('HOME', 'WORK')"`
 }
 
+type News struct {
+	gorm.Model
+	Title        string `json:"title" gorm:"not null"`
+	Description  string `json:"description" gorm:"not null"`
+	Content      string `json:"content" gorm:"not null"`
+	DefaultImage string `json:"default_image" gorm:"not null"`
+	IsFeatured   *bool  `json:"is_featured" gorm:"default:false"`
+}
+
 type Wishlist struct {
 	gorm.Model
 	UserID    uint    `json:"user_id" gorm:"not null"`
