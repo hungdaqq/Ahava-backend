@@ -301,12 +301,18 @@ type Offer struct {
 }
 
 type News struct {
-	ID           uint   `json:"id"`
-	Title        string `json:"title"`
-	Description  string `json:"description"`
-	Content      string `json:"content"`
-	DefaultImage string `json:"default_image"`
-	IsFeatured   bool   `json:"is_featured"`
+	ID             uint   `json:"id"`
+	Title          string `json:"title"`
+	Description    string `json:"description"`
+	Content        string `json:"content"`
+	DefaultImage   string `json:"default_image"`
+	IsFeatured     bool   `json:"is_featured"`
+	IsHomepage     bool   `json:"is_homepage"`
+	IsDisplay      bool   `json:"is_display"`
+	Category       string `json:"category"`
+	TitleSEO       string `json:"title_seo"`
+	DescriptionSEO string `json:"description_seo"`
+	LinkSEO        string `json:"link_seo"`
 }
 
 type ListNews struct {

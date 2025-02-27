@@ -142,11 +142,17 @@ type Address struct {
 
 type News struct {
 	gorm.Model
-	Title        string `json:"title" gorm:"not null"`
-	Description  string `json:"description" gorm:"not null"`
-	Content      string `json:"content" gorm:"not null"`
-	DefaultImage string `json:"default_image" gorm:"not null"`
-	IsFeatured   *bool  `json:"is_featured" gorm:"default:false"`
+	Title          string `json:"title" gorm:"not null"`
+	Description    string `json:"description" gorm:"not null"`
+	Content        string `json:"content" gorm:"not null"`
+	DefaultImage   string `json:"default_image" gorm:"not null"`
+	IsFeatured     *bool  `json:"is_featured" gorm:"default:false"`
+	IsHomepage     *bool  `json:"is_homepage" gorm:"default:false"`
+	IsDisplay      *bool  `json:"is_display" gorm:"default:false"`
+	Category       string `json:"category" gorm:"default:'NEWS';check:category IN ('NEWS', 'TIPS', 'NEW_ARRIVALS', 'RECRUITMENT')"`
+	TitleSEO       string `json:"title_seo"`
+	DescriptionSEO string `json:"description_seo"`
+	LinkSEO        string `json:"link_seo"`
 }
 
 type Wishlist struct {

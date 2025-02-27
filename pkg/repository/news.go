@@ -31,11 +31,17 @@ func (r *newsRepository) AddNews(n models.News) (models.News, error) {
 	var news models.News
 
 	if err := r.DB.Create(&domain.News{
-		Title:        n.Title,
-		Description:  n.Description,
-		Content:      n.Content,
-		DefaultImage: n.DefaultImage,
-		IsFeatured:   &n.IsFeatured,
+		Title:          n.Title,
+		Description:    n.Description,
+		Content:        n.Content,
+		DefaultImage:   n.DefaultImage,
+		IsFeatured:     &n.IsFeatured,
+		IsHomepage:     &n.IsHomepage,
+		IsDisplay:      &n.IsDisplay,
+		Category:       n.Category,
+		TitleSEO:       n.TitleSEO,
+		DescriptionSEO: n.DescriptionSEO,
+		LinkSEO:        n.LinkSEO,
 	}).Scan(&news).Error; err != nil {
 		return news, err
 	}
@@ -48,11 +54,16 @@ func (r *newsRepository) UpdateNews(news_id uint, n models.News) (models.News, e
 	var news models.News
 
 	if err := r.DB.Model(&domain.News{}).Where("id = ?", news_id).Updates(domain.News{
-		Title:        n.Title,
-		Description:  n.Description,
-		Content:      n.Content,
-		DefaultImage: n.DefaultImage,
-		IsFeatured:   &n.IsFeatured,
+		Title:          n.Title,
+		Description:    n.Description,
+		Content:        n.Content,
+		DefaultImage:   n.DefaultImage,
+		IsFeatured:     &n.IsFeatured,
+		IsHomepage:     &n.IsHomepage,
+		IsDisplay:      &n.IsDisplay,
+		Category:       n.Category,
+		TitleSEO:       n.TitleSEO,
+		DescriptionSEO: n.DescriptionSEO,
 	}).Scan(&news).Error; err != nil {
 		return news, err
 	}
