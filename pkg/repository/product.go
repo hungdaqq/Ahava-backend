@@ -118,12 +118,11 @@ func (r *productRepository) GetProductDetails(product_id uint) (models.Product, 
 
 func (r *productRepository) ListAllProducts(limit, offset int) (models.ListProducts, error) {
 	// Define list of products and product details
-	var listProducts models.ListProducts
 	var productDetails []domain.Product
 	var products []models.Product
 	var total int64
 	// Define the query
-	query := r.DB.Model(&domain.Product{})
+	query := r.DB.Model(&domain.Product{}).Select("id, name, code, category, default_image, images, type, tag, is_featured")
 	if err := query.Count(&total).Error; err != nil {
 		return models.ListProducts{}, err
 	}
@@ -132,37 +131,33 @@ func (r *productRepository) ListAllProducts(limit, offset int) (models.ListProdu
 	}
 	for _, productDetail := range productDetails {
 		products = append(products, models.Product{
-			ID:               productDetail.ID,
-			Name:             productDetail.Name,
-			Code:             productDetail.Code,
-			Category:         productDetail.Category,
-			DefaultImage:     productDetail.DefaultImage,
-			Images:           productDetail.Images,
-			Stock:            productDetail.Stock,
-			Type:             productDetail.Type,
-			Tag:              productDetail.Tag,
-			ShortDescription: productDetail.ShortDescription,
-			Description:      productDetail.Description,
-			HowToUse:         productDetail.HowToUse,
-			IsFeatured:       *productDetail.IsFeatured,
+			ID:           productDetail.ID,
+			Name:         productDetail.Name,
+			Code:         productDetail.Code,
+			Category:     productDetail.Category,
+			DefaultImage: productDetail.DefaultImage,
+			Images:       productDetail.Images,
+			Stock:        productDetail.Stock,
+			Type:         productDetail.Type,
+			Tag:          productDetail.Tag,
+			IsFeatured:   *productDetail.IsFeatured,
 		})
 	}
-	// Assign the values to the listProducts
-	listProducts.Products = products
-	listProducts.Total = total
-	listProducts.Limit = limit
-	listProducts.Offset = offset
 	// Return the list of products
-	return listProducts, nil
+	return models.ListProducts{
+		Products: products,
+		Total:    total,
+		Limit:    limit,
+		Offset:   offset,
+	}, nil
 }
 
 func (r *productRepository) ListCategoryProducts(category string) ([]models.Product, error) {
 	// Define list of products and product details
 	var products []models.Product
 	// Query to get the products based on the category
-	err := r.DB.Model(&domain.Product{}).
-		Where("category = ?", category).
-		Find(&products).Error
+	err := r.DB.Model(&domain.Product{}).Select("id, name, code, category, default_image, images, type, tag, is_featured, short_description").
+		Where("category = ?", category).Find(&products).Error
 	if err != nil {
 		return nil, err
 	}
@@ -174,9 +169,8 @@ func (r *productRepository) ListFeaturedProducts() ([]models.Product, error) {
 	// Define list of products and product details
 	var products []models.Product
 	// Query to get the featured products
-	err := r.DB.Model(&domain.Product{}).
-		Where("is_featured = true").
-		Scan(&products).Error
+	err := r.DB.Model(&domain.Product{}).Select("id, name, code, category, default_image, images, type, tag, is_featured, short_description").
+		Where("is_featured = true").Find(&products).Error
 	if err != nil {
 		return nil, err
 	}
@@ -188,9 +182,9 @@ func (r *productRepository) SearchProducts(key string) ([]models.Product, error)
 	// Define list of products and product details
 	var products []models.Product
 	// Query to search the products based on the key
-	err := r.DB.Model(&domain.Product{}).
+	err := r.DB.Model(&domain.Product{}).Select("id, name, code, category, default_image, images, type, tag, is_featured, short_description").
 		Where("name ILIKE ? OR category ILIKE ?", "%"+key+"%", "%"+key+"%").
-		Scan(&products).Error
+		Find(&products).Error
 	if err != nil {
 		return nil, err
 	}
@@ -202,8 +196,7 @@ func (r *productRepository) UpdateProduct(product_id uint, p models.Product) (mo
 	// Define the product
 	var product models.Product
 	// Update the product details
-	result := r.DB.Model(&domain.Product{}).
-		Where("id = ?", product_id).
+	result := r.DB.Model(&domain.Product{}).Where("id = ?", product_id).
 		Updates(domain.Product{
 			Name:             p.Name,
 			Code:             p.Code,
@@ -217,8 +210,7 @@ func (r *productRepository) UpdateProduct(product_id uint, p models.Product) (mo
 			ShortDescription: p.ShortDescription,
 			IsFeatured:       &p.IsFeatured,
 			HowToUse:         p.HowToUse,
-		}).
-		Scan(&product)
+		}).Scan(&product)
 	if result.Error != nil {
 		return models.Product{}, result.Error
 	}

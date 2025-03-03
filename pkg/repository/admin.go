@@ -69,8 +69,7 @@ func (r *adminRepository) UpdateBlockUser(user_id uint, is_blocked bool) error {
 
 func (r *adminRepository) ListAllUsers(limit, offset int) (models.ListUsers, error) {
 	// Define list of users and user details
-	var listUsers models.ListUsers
-	var userDetails []models.UserDetailsAtAdmin
+	var detailts []models.UserDetailsAtAdmin
 	var total int64
 	// Define the query
 	query := r.DB.Model(&domain.User{})
@@ -79,16 +78,16 @@ func (r *adminRepository) ListAllUsers(limit, offset int) (models.ListUsers, err
 		return models.ListUsers{}, err
 	}
 	// Query to get the user details
-	if err := query.Offset(offset).Limit(limit).Find(&userDetails).Error; err != nil {
+	if err := query.Offset(offset).Limit(limit).Find(&detailts).Error; err != nil {
 		return models.ListUsers{}, err
 	}
-	// Assign the values to the listUsers
-	listUsers.Total = total
-	listUsers.Limit = limit
-	listUsers.Offset = offset
-	listUsers.Users = userDetails
 	// Return the list of users
-	return listUsers, nil
+	return models.ListUsers{
+		Users:  detailts,
+		Total:  total,
+		Limit:  limit,
+		Offset: offset,
+	}, nil
 }
 
 // func (r *adminRepository) NewPaymentMethod(pay string) error {

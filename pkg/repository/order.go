@@ -126,7 +126,6 @@ func (r *orderRepository) UpdateOrder(order_id uint, o models.Order) (models.Ord
 
 func (r *orderRepository) ListAllOrders(limit, offset int) (models.ListOrders, error) {
 	// Define the list of orders
-	var listOrders models.ListOrders
 	var orders []models.Order
 	var total int64
 	// Define the query
@@ -142,12 +141,12 @@ func (r *orderRepository) ListAllOrders(limit, offset int) (models.ListOrders, e
 		orderDetails = append(orderDetails, models.OrderDetails{Order: order})
 	}
 	// Return the list of orders
-	listOrders.Orders = orderDetails
-	listOrders.Total = total
-	listOrders.Limit = limit
-	listOrders.Offset = offset
-	// Return the list of orders
-	return listOrders, nil
+	return models.ListOrders{
+		Orders: orderDetails,
+		Total:  total,
+		Limit:  limit,
+		Offset: offset,
+	}, nil
 }
 
 func (r *orderRepository) GetOrderItems(order_id uint) ([]models.OrderItem, error) {

@@ -110,7 +110,7 @@ func UserRoutes(
 	}
 	news := engine.Group("/news")
 	{
-		news.GET("", newsHandler.GetFeaturedNews)
+		news.GET("", newsHandler.ListAllNews)
 		news.GET("/:news_id", newsHandler.GetNewsByID)
 	}
 	engine.Use(middleware.UserAuthMiddleware)
@@ -133,7 +133,6 @@ func UserRoutes(
 
 			}
 		}
-
 		cart := engine.Group("/cart")
 		{
 			cart.GET("", cartHandler.GetCart)
@@ -141,20 +140,17 @@ func UserRoutes(
 			cart.DELETE("/:cart_id", cartHandler.RemoveFromCart)
 			cart.PUT("/:cart_id", cartHandler.UpdateQuantity)
 		}
-
 		wishlist := engine.Group("/wishlist")
 		{
 			wishlist.POST("", wishlisthandler.AddToWishlist)
 			wishlist.GET("", wishlisthandler.GetWishList)
 			wishlist.DELETE("/:wishlist_id", wishlisthandler.RemoveFromWishlist)
 		}
-
 		order := engine.Group("/order")
 		{
 			order.GET("/detail", orderHandler.GetOrderDetails)
 			order.POST("", orderHandler.PlaceOrder)
 		}
-
 		payment := engine.Group("/payment")
 		{
 			payment.POST("/qr", paymentHandler.CreateQR)
